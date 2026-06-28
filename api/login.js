@@ -1,28 +1,22 @@
-// api/login.js
-// Reindirizza l'utente alla pagina di login ESI di CCP
 
 export default function handler(req, res) {
   const clientId = process.env.EVE_CLIENT_ID;
   const callbackUrl = process.env.EVE_CALLBACK_URL;
 
-  // Tutti gli scope - potrai usarli per i tool futuri
+
   const scopes = [
     'esi-alliances.read_contacts.v1',
     'esi-assets.read_assets.v1',
     'esi-assets.read_corporation_assets.v1',
-    'esi-bookmarks.read_character_bookmarks.v1',
-    'esi-bookmarks.read_corporation_bookmarks.v1',
     'esi-calendar.read_calendar_events.v1',
     'esi-characters.read_agents_research.v1',
     'esi-characters.read_blueprints.v1',
     'esi-characters.read_contacts.v1',
     'esi-characters.read_corporation_roles.v1',
     'esi-characters.read_fatigue.v1',
-    'esi-characters.read_fw_stats.v1',
     'esi-characters.read_loyalty.v1',
     'esi-characters.read_medals.v1',
     'esi-characters.read_notifications.v1',
-    'esi-characters.read_opportunities.v1',
     'esi-characters.read_standings.v1',
     'esi-characters.read_titles.v1',
     'esi-clones.read_clones.v1',
@@ -35,7 +29,6 @@ export default function handler(req, res) {
     'esi-corporations.read_corporation_membership.v1',
     'esi-corporations.read_divisions.v1',
     'esi-corporations.read_facilities.v1',
-    'esi-corporations.read_fw_stats.v1',
     'esi-corporations.read_medals.v1',
     'esi-corporations.read_standings.v1',
     'esi-corporations.read_starbases.v1',
@@ -73,7 +66,7 @@ export default function handler(req, res) {
     'esi-wallet.read_corporation_wallets.v1',
   ].join(' ');
 
-  // State random per sicurezza CSRF
+
   const state = Math.random().toString(36).substring(2, 15);
 
   const authUrl = new URL('https://login.eveonline.com/v2/oauth/authorize');
@@ -83,7 +76,7 @@ export default function handler(req, res) {
   authUrl.searchParams.set('scope', scopes);
   authUrl.searchParams.set('state', state);
 
-  // Salva state nel cookie per verifica al callback
+ 
   res.setHeader('Set-Cookie', `eve_state=${state}; HttpOnly; Secure; SameSite=Lax; Max-Age=300; Path=/`);
   res.redirect(302, authUrl.toString());
 }
