@@ -11,14 +11,16 @@ export default async function handler(req, res) {
 
   const clientId     = process.env.EVE_CLIENT_ID;
   const clientSecret = process.env.EVE_CLIENT_SECRET;
-  const callbackUrl  = process.env.EVE_CALLBACK_URL;
+  const callbackUrl  = process.env.EVE_CALLBACK_URL; // deve essere https://the-keymaker-ruby.vercel.app/api/callback
 
   try {
+    // 1. Scambia il code per un token
     const tokenRes = await fetch('https://login.eveonline.com/v2/oauth/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
+        'Host': 'login.eveonline.com',
       },
       body: new URLSearchParams({
         grant_type:   'authorization_code',
@@ -30,41 +32,44 @@ export default async function handler(req, res) {
     if (!tokenRes.ok) {
       const err = await tokenRes.text();
       console.error('Token exchange failed:', err);
-      return res.status(500).send('Token exchange failed.');
+      return res.status(500).send('Token exchange failed: ' + err);
     }
 
-    const tokenData = await tokenRes.json();
+    const tokenData   = await tokenRes.json();
     const accessToken = tokenData.access_token;
 
-    // 2. Verifica identità del personaggio
-    const verifyRes = await fetch('https://login.eveonline.com/oauth/verify', {
-      headers: { 'Authorization': `Bearer ${accessToken}` },
-    });
+    // 2. Decodifica il JWT per ottenere i dati del personaggio
+    //    EVE SSO v2 restituisce l'access_token come JWT firmato — niente chiamata /verify
+    const jwtPayload = JSON.parse(
+      Buffer.from(accessToken.split('.')[1], 'base64url').toString('utf8')
+    );
 
-    if (!verifyRes.ok) {
-      return res.status(500).send('Could not verify character.');
+    // Il sub è nel formato "CHARACTER:EVE:<id>"
+    const subParts    = (jwtPayload.sub || '').split(':');
+    const characterId = subParts[2] || null;
+    const characterName = jwtPayload.name || '';
+
+    if (!characterId) {
+      console.error('Could not extract characterId from JWT sub:', jwtPayload.sub);
+      return res.status(500).send('Could not identify character.');
     }
-
-    const charData = await verifyRes.json();
-    const characterId   = charData.CharacterID;
-    const characterName = charData.CharacterName;
 
     // 3. Controlla whitelist
     const whitelist = (process.env.WHITELIST_CHARACTER_IDS || '')
       .split(',')
-      .map(id => id.trim());
-    const ceoId = process.env.CEO_CHARACTER_ID;
+      .map(id => id.trim())
+      .filter(Boolean);
 
+    const ceoId    = (process.env.CEO_CHARACTER_ID || '').trim();
     const isAllowed = whitelist.includes(String(characterId));
     const isCeo     = String(characterId) === String(ceoId);
 
     if (!isAllowed) {
-      // Non autorizzato — redirect alla pagina pubblica con messaggio
       return res.redirect(302, '/?auth=denied&name=' + encodeURIComponent(characterName));
     }
 
-    // 4. Crea sessione — salva token e ruolo in cookie HttpOnly
-    const sessionData = JSON.stringify({
+    // 4. Crea sessione firmata con HMAC-SHA256
+    const sessionPayload = JSON.stringify({
       characterId,
       characterName,
       accessToken,
@@ -73,10 +78,15 @@ export default async function handler(req, res) {
       expires: Date.now() + (tokenData.expires_in * 1000),
     });
 
-    const encoded = Buffer.from(sessionData).toString('base64');
+    // Firma HMAC per evitare manomissioni del cookie
+    const secret = process.env.SESSION_SECRET || 'changeme-use-a-real-secret';
+    const { createHmac } = await import('crypto');
+    const encoded   = Buffer.from(sessionPayload).toString('base64');
+    const signature = createHmac('sha256', secret).update(encoded).digest('hex');
+    const cookieValue = `${encoded}.${signature}`;
 
     res.setHeader('Set-Cookie', [
-      `eve_session=${encoded}; HttpOnly; Secure; SameSite=Lax; Max-Age=3600; Path=/`,
+      `eve_session=${cookieValue}; HttpOnly; Secure; SameSite=Lax; Max-Age=3600; Path=/`,
     ]);
 
     // 5. Redirect alla dashboard
@@ -86,13 +96,4 @@ export default async function handler(req, res) {
     console.error('Callback error:', err);
     return res.status(500).send('Internal server error during authentication.');
   }
-}
-
-function parseCookies(cookieHeader) {
-  const cookies = {};
-  cookieHeader.split(';').forEach(part => {
-    const [key, ...val] = part.trim().split('=');
-    if (key) cookies[key.trim()] = decodeURIComponent(val.join('='));
-  });
-  return cookies;
 }
