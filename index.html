@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The-Keymaker [THE-K] — EVE Online Corporation</title>
+  <meta name="description" content="A chill, friendly EVE Online corporation based in Hek. PvP roams, mining fleets, PvE missions. Real life first, always." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:      #07070f;
+      --surface: #0e0e1c;
+      --border:  #191928;
+      --green:   #39FF14;
+      --white:   #EEEEF5;
+      --muted:   #666888;
+      --display: 'Syne', sans-serif;
+      --body:    'Inter', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--body);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 4rem;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      background: rgba(7,7,15,0.8);
+    }
+    .nav-left { display: flex; align-items: center; gap: 1rem; }
+    .nav-corp-logo {
+      width: 36px; height: 36px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+    }
+    .nav-logo {
+      font-family: var(--display);
+      font-size: 1rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--white);
+    }
+    .nav-logo em { color: var(--green); font-style: normal; }
+    .nav-ticker {
+      font-size: 0.65rem; letter-spacing: 0.18em;
+      color: var(--muted); margin-left: 0.1rem;
+    }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-size: 0.75rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted);
+      text-decoration: none; transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-apply {
+      font-family: var(--display);
+      font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--green); background: transparent;
+      border: 1px solid var(--green);
+      padding: 0.5rem 1.3rem;
+      cursor: pointer; transition: all .2s;
+      text-decoration: none; display: inline-block;
+    }
+    .nav-apply:hover { background: var(--green); color: #000; }
+
+    /* HERO */
+    .hero {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: flex-start; justify-content: center;
+      padding: 0 4rem;
+      max-width: 900px;
+    }
+    .hero-tag {
+      font-size: 0.7rem; letter-spacing: 0.32em;
+      text-transform: uppercase; color: var(--green);
+      opacity: 0.7; margin-bottom: 2rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .hero-tag::before {
+      content: ''; display: block;
+      width: 28px; height: 1px;
+      background: var(--green); opacity: 0.6;
+    }
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(3rem, 6.5vw, 5.5rem);
+      font-weight: 800; line-height: 1.02;
+      letter-spacing: -0.03em; margin-bottom: 1.75rem;
+    }
+    h1 .dim { color: var(--muted); font-weight: 400; }
+    .hero-body {
+      font-size: 1.05rem; color: var(--muted);
+      max-width: 480px; line-height: 1.8; margin-bottom: 3rem;
+    }
+    .hero-ctas { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn-primary {
+      font-family: var(--display);
+      font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      background: var(--green); color: #000;
+      border: none; padding: 0.9rem 2.2rem;
+      cursor: pointer; transition: background .2s;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-primary:hover { background: #50ff30; }
+    .btn-ghost {
+      font-family: var(--display);
+      font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 0.9rem 2.2rem;
+      cursor: pointer; transition: all .2s;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-ghost:hover { border-color: var(--muted); color: var(--white); }
+
+    /* LIVE STATS BAR */
+    .stats-bar {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+    }
+    .stat-cell {
+      flex: 1; padding: 2rem 4rem;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 0.3rem;
+    }
+    .stat-cell:last-child { border-right: none; }
+    .stat-label {
+      font-size: 0.65rem; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .stat-value {
+      font-family: var(--display);
+      font-size: 1.6rem; font-weight: 700;
+      color: var(--white);
+    }
+    .stat-value.live { color: var(--green); }
+    .stat-value.loading { color: var(--muted); font-size: 1rem; opacity: 0.5; }
+
+    /* SECTIONS */
+    section { position: relative; z-index: 1; padding: 8rem 4rem; }
+    .inner { max-width: 960px; margin: 0 auto; }
+    .eyebrow {
+      font-size: 0.68rem; letter-spacing: 0.3em;
+      text-transform: uppercase; color: var(--green);
+      opacity: 0.7; margin-bottom: 1.25rem;
+    }
+    h2 {
+      font-family: var(--display);
+      font-size: clamp(1.9rem, 3.5vw, 3rem);
+      font-weight: 700; line-height: 1.1;
+      letter-spacing: -0.02em; margin-bottom: 1.25rem;
+    }
+    .lead { font-size: 1rem; color: var(--muted); max-width: 520px; line-height: 1.8; }
+    .divider { width: 100%; height: 1px; background: var(--border); position: relative; z-index: 1; }
+
+    /* OFFER GRID */
+    .offer-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: var(--border); margin-top: 4rem;
+    }
+    .offer-card { background: var(--surface); padding: 2.5rem 2rem; transition: background .2s; }
+    .offer-card:hover { background: #111120; }
+    .offer-icon {
+      width: 36px; height: 36px; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.5rem; font-size: 1rem;
+    }
+    .offer-title {
+      font-family: var(--display); font-size: 0.95rem;
+      font-weight: 600; letter-spacing: 0.04em; margin-bottom: 0.6rem;
+    }
+    .offer-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.7; }
+
+    /* ABOUT */
+    .about-layout {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 6rem; align-items: start; margin-top: 4rem;
+    }
+    .about-meta { display: flex; flex-direction: column; gap: 2rem; }
+    .meta-label {
+      font-size: 0.65rem; letter-spacing: 0.24em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem;
+    }
+    .meta-val { font-family: var(--display); font-size: 1rem; font-weight: 600; }
+    .meta-link {
+      font-family: var(--display); font-size: 0.82rem; font-weight: 500;
+      color: var(--green); text-decoration: none; opacity: 0.8;
+      transition: opacity .2s;
+    }
+    .meta-link:hover { opacity: 1; }
+
+    /* RULES */
+    .rules-list { margin-top: 4rem; border-top: 1px solid var(--border); }
+    .rule {
+      display: grid; grid-template-columns: 3rem 1fr;
+      gap: 2rem; padding: 1.8rem 0;
+      border-bottom: 1px solid var(--border); align-items: baseline;
+    }
+    .rule-n { font-family: var(--display); font-size: 0.65rem; letter-spacing: 0.2em; color: var(--green); opacity: 0.5; }
+    .rule-text { font-size: 0.92rem; color: var(--muted); line-height: 1.7; }
+    .rule-text strong { color: var(--white); font-weight: 500; }
+
+    /* JOIN */
+    .join-box {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 5rem; display: grid;
+      grid-template-columns: 1fr auto; gap: 4rem; align-items: center;
+    }
+    .join-box p { color: var(--muted); font-size: 0.95rem; line-height: 1.75; margin-top: 0.5rem; }
+    .join-actions { display: flex; flex-direction: column; gap: 0.75rem; min-width: 200px; }
+    .join-actions .btn-primary,
+    .join-actions .btn-ghost { text-align: center; }
+    .join-contact {
+      font-size: 0.7rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted);
+      opacity: 0.5; text-align: center; margin-top: 0.25rem;
+    }
+
+    /* FOOTER */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 2rem 4rem;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .footer-left { display: flex; align-items: center; gap: 0.75rem; }
+    .footer-corp-logo { width: 24px; height: 24px; border-radius: 3px; opacity: 0.6; }
+    .footer-name {
+      font-family: var(--display); font-size: 0.82rem;
+      font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .footer-name em { color: var(--green); font-style: normal; }
+    .footer-note { font-size: 0.7rem; color: var(--muted); opacity: 0.35; }
+
+    /* HERO SCROLL */
+    .hero-scroll {
+      position: absolute; bottom: 3rem; left: 4rem;
+      font-size: 0.65rem; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--muted); opacity: 0.4;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .hero-scroll::after {
+      content: ''; display: block;
+      width: 1px; height: 40px;
+      background: var(--muted); opacity: 0.4;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .hero { padding: 0 1.5rem; }
+      .hero-scroll { left: 1.5rem; }
+      section { padding: 5rem 1.5rem; }
+      .stats-bar { flex-direction: column; }
+      .stat-cell { border-right: none; border-bottom: 1px solid var(--border); padding: 1.5rem; }
+      .offer-grid { grid-template-columns: 1fr; }
+      .about-layout { grid-template-columns: 1fr; gap: 3rem; }
+      .join-box { grid-template-columns: 1fr; padding: 2.5rem; }
+      footer { padding: 1.5rem; flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-left">
+    <img class="nav-corp-logo" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt="The-Keymaker logo" />
+    <div class="nav-logo">The-<em>Keymaker</em> <span class="nav-ticker">[THE-K]</span></div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#offer">What we offer</a></li>
+    <li><a href="#rules">Rules</a></li>
+    <li><a href="#join">Join</a></li>
+  </ul>
+  <div style="display:flex;gap:0.75rem;align-items:center">
+    <a href="/api/login" class="nav-apply" id="nav-login">⬡ Login with EVE</a>
+    <a href="/dashboard.html" id="nav-dashboard" style="display:none" class="nav-apply">Dashboard</a>
+    <a href="#join" class="nav-apply" style="border-color:var(--border);color:var(--muted)">Apply</a>
+  </div>
+</nav>
+<div id="auth-notice" style="display:none;position:fixed;top:70px;right:1.5rem;z-index:99;background:var(--surface);border:1px solid var(--border);padding:0.75rem 1.25rem;font-size:0.8rem;color:var(--muted)">
+  ⛔ Access denied — character not on whitelist.
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">Hek IV — Krusual Tribe Bureau · THE-K</div>
+  <h1>
+    Fly together.<br>
+    <span class="dim">Your pace.</span>
+  </h1>
+  <p class="hero-body">
+    A chill, friendly corporation for pilots who want to actually play EVE.
+    PvP roams, mining ops, PvE missions — come as you are.
+    Real life always comes first.
+  </p>
+  <div class="hero-ctas">
+    <a href="#join" class="btn-primary">Apply in-game</a>
+    <a href="#" class="btn-ghost">Join Discord</a>
+  </div>
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- LIVE STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-cell">
+    <div class="stat-label">Members</div>
+    <div class="stat-value live" id="stat-members"><span class="loading">—</span></div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-label">Ticker</div>
+    <div class="stat-value">THE-K</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-label">Home base</div>
+    <div class="stat-value" style="font-size:1rem; padding-top:0.4rem">Hek IV — Minmatar</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-label">Focus</div>
+    <div class="stat-value" style="font-size:0.9rem; padding-top:0.4rem">PvP · Industry · Mining</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="inner">
+    <div class="eyebrow">Who we are</div>
+    <h2>Good people.<br>Good fights.<br>No pressure.</h2>
+    <div class="about-layout">
+      <p class="lead">
+        The-Keymaker is built for pilots who want a real group without the
+        politics and mandatory ops. We don't do drama. We don't do elitism.
+        Whether you want to hunt in low-sec or mine in peace while chatting —
+        there's a place for you here.
+      </p>
+      <div class="about-meta">
+        <div>
+          <div class="meta-label">CEO</div>
+          <div class="meta-val">Choi du'jour</div>
+        </div>
+        <div>
+          <div class="meta-label">Diplomacy</div>
+          <div class="meta-val">H-ket equal E-Ket</div>
+        </div>
+        <div>
+          <div class="meta-label">Security status</div>
+          <div class="meta-val" id="stat-sec"><span style="color:var(--muted);font-size:0.85rem">—</span></div>
+        </div>
+        <div>
+          <div class="meta-label">External links</div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem;margin-top:0.1rem">
+            <a class="meta-link" href="https://zkillboard.com/corporation/98800626/" target="_blank" rel="noopener">zKillboard ↗</a>
+            <a class="meta-link" href="https://evemaps.dotlan.net/corp/The-Keymaker" target="_blank" rel="noopener">DOTLAN ↗</a>
+            <a class="meta-link" href="https://evewho.com/corporation/98800626" target="_blank" rel="noopener">EveWho ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- OFFER -->
+<section id="offer">
+  <div class="inner">
+    <div class="eyebrow">What we offer</div>
+    <h2>Everything you need<br>to enjoy EVE.</h2>
+    <div class="offer-grid">
+      <div class="offer-card">
+        <div class="offer-icon">⚔</div>
+        <div class="offer-title">PvP Roams</div>
+        <div class="offer-desc">Regular roams in low and null. FC experience welcome but not required — we learn together.</div>
+      </div>
+      <div class="offer-card">
+        <div class="offer-icon">🚀</div>
+        <div class="offer-title">PvE & Missions</div>
+        <div class="offer-desc">Mission fleets and combat sites. Good ISK, good company, no stress.</div>
+      </div>
+      <div class="offer-card">
+        <div class="offer-icon">⛏</div>
+        <div class="offer-title">Mining Fleets</div>
+        <div class="offer-desc">Organized mining with boosts. Chill atmosphere while you grind that ore.</div>
+      </div>
+      <div class="offer-card">
+        <div class="offer-icon">🎁</div>
+        <div class="offer-title">Free T1 Ships</div>
+        <div class="offer-desc">We provide free T1 ships for corp activities. ISK shouldn't stop you from joining fleet.</div>
+      </div>
+      <div class="offer-card">
+        <div class="offer-icon">📖</div>
+        <div class="offer-title">Newbro Support</div>
+        <div class="offer-desc">Guidance for new and returning players. No dumb questions, ever.</div>
+      </div>
+      <div class="offer-card">
+        <div class="offer-icon">💬</div>
+        <div class="offer-title">Active Discord</div>
+        <div class="offer-desc">Coordination and chat. Optional except for PvP ops, where listening is required.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- RULES -->
+<section id="rules">
+  <div class="inner">
+    <div class="eyebrow">The vibe</div>
+    <h2>Simple rules.<br>Maximum freedom.</h2>
+    <p class="lead">If you're a decent human who enjoys EVE, you'll fit right in.</p>
+    <div class="rules-list">
+      <div class="rule">
+        <div class="rule-n">01</div>
+        <div class="rule-text"><strong>Real life comes first.</strong> No attendance requirements, no guilt trips. Log in when you want.</div>
+      </div>
+      <div class="rule">
+        <div class="rule-n">02</div>
+        <div class="rule-text"><strong>No drama.</strong> Respect each other. Disagreements happen — keep them civil.</div>
+      </div>
+      <div class="rule">
+        <div class="rule-n">03</div>
+        <div class="rule-text"><strong>Discord for PvP ops.</strong> You don't need to talk, but you need to listen when fleets are active.</div>
+      </div>
+      <div class="rule">
+        <div class="rule-n">04</div>
+        <div class="rule-text"><strong>Help when you can.</strong> If someone needs advice or a fleet buddy, be the person who says yes.</div>
+      </div>
+      <div class="rule">
+        <div class="rule-n">05</div>
+        <div class="rule-text"><strong>You don't need to be a pro.</strong> Just enjoy the game and want to be part of something.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- JOIN -->
+<section id="join">
+  <div class="inner">
+    <div class="join-box">
+      <div>
+        <div class="eyebrow">Ready?</div>
+        <h2>We'll save you<br>a seat in fleet.</h2>
+        <p>Apply in-game or reach out on Discord.<br>New and returning pilots always welcome.</p>
+      </div>
+      <div class="join-actions">
+        <a href="#" class="btn-primary">Apply in EVE Online</a>
+        <a href="#" class="btn-ghost">Join Discord</a>
+        <div class="join-contact">Diplo · H-ket equal E-Ket</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    <img class="footer-corp-logo" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt="" />
+    <div class="footer-name">The-<em>Keymaker</em> · [THE-K] · Hek IV</div>
+  </div>
+  <div class="footer-note">EVE Online is a trademark of CCP hf. Independent fan site, not affiliated with CCP.</div>
+</footer>
+
+<script>
+/* ── STARFIELD ── */
+const canvas = document.getElementById('starfield');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() {
+  canvas.width  = window.innerWidth;
+  canvas.height = Math.max(document.body.scrollHeight, window.innerHeight);
+}
+let stars = [];
+function initStars() {
+  stars = [];
+  const count = Math.floor((canvas.width * canvas.height) / 5500);
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.1 + 0.15,
+      o: Math.random() * 0.4 + 0.05,
+      flicker: Math.random() * 0.003 + 0.001,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+}
+let frame = 0;
+function drawStars() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  frame++;
+  stars.forEach(s => {
+    const op = s.o + Math.sin(frame * s.flicker + s.phase) * 0.1;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(210,210,255,${Math.max(0, Math.min(0.65, op))})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+resizeCanvas(); initStars(); drawStars();
+window.addEventListener('resize', () => { resizeCanvas(); initStars(); });
+
+/* ── LIVE ESI DATA ── */
+const CORP_ID = 98800626;
+async function fetchCorpData() {
+  try {
+    const res = await fetch(`https://esi.evetech.net/latest/corporations/${CORP_ID}/?datasource=tranquility`);
+    if (!res.ok) return;
+    const data = await res.json();
+
+    const membersEl = document.getElementById('stat-members');
+    if (membersEl && data.member_count !== undefined) {
+      membersEl.textContent = data.member_count;
+    }
+
+    const secEl = document.getElementById('stat-sec');
+    if (secEl) {
+      // Security status comes from alliance/public info
+      secEl.textContent = 'Minmatar space';
+    }
+  } catch (e) {
+    console.warn('ESI fetch failed', e);
+  }
+}
+fetchCorpData();
+
+/* ── AUTH STATE CHECK ── */
+(async () => {
+  try {
+    const res = await fetch('/api/me');
+    if (res.ok) {
+      const s = await res.json();
+      if (s.authenticated) {
+        document.getElementById('nav-login').style.display = 'none';
+        document.getElementById('nav-dashboard').style.display = 'inline-block';
+      }
+    }
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('auth') === 'denied') {
+      document.getElementById('auth-notice').style.display = 'block';
+      setTimeout(() => document.getElementById('auth-notice').style.display = 'none', 5000);
+    }
+  } catch {}
+})();
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.08 });
+
+document.querySelectorAll('.offer-card, .rule, .about-meta, .join-box, .stat-cell').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(18px)';
+  el.style.transition = 'opacity 0.55s ease, transform 0.55s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
