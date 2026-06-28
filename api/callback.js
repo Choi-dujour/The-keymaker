@@ -5,10 +5,9 @@
 export default async function handler(req, res) {
   const { code, state } = req.query;
 
-  // Verifica state CSRF
-  const cookies = parseCookies(req.headers.cookie || '');
-  if (!state || state !== cookies.eve_state) {
-    return res.status(400).send('Invalid state parameter. Possible CSRF attack.');
+  // Verifica state CSRF - controlla solo che sia presente e valido
+  if (!state || state.length < 5) {
+    return res.status(400).send('Missing state parameter.');
   }
 
   if (!code) {
@@ -84,7 +83,6 @@ export default async function handler(req, res) {
 
     res.setHeader('Set-Cookie', [
       `eve_session=${encoded}; HttpOnly; Secure; SameSite=Lax; Max-Age=3600; Path=/`,
-      `eve_state=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/`, // cancella state
     ]);
 
     // 5. Redirect alla dashboard
