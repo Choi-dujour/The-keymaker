@@ -1,11 +1,6 @@
-// api/callback.js
-// CCP reindirizza qui dopo il login ESI
-// Scambia il code con access_token e verifica l'identità
-
 export default async function handler(req, res) {
   const { code, state } = req.query;
 
-  // Verifica state CSRF - controlla solo che sia presente e valido
   if (!state || state.length < 5) {
     return res.status(400).send('Missing state parameter.');
   }
@@ -19,7 +14,6 @@ export default async function handler(req, res) {
   const callbackUrl  = process.env.EVE_CALLBACK_URL;
 
   try {
-    // 1. Scambia code → access_token
     const tokenRes = await fetch('https://login.eveonline.com/v2/oauth/token', {
       method: 'POST',
       headers: {
