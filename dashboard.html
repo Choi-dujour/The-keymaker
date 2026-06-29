@@ -1,610 +1,610 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard — The-Keymaker</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    :root {
-      --bg: #07070f; --surface: #0e0e1c; --border: #191928;
-      --green: #39FF14; --white: #EEEEF5; --muted: #666888;
-      --red: #ff4444; --yellow: #ffcc00;
-    }
-    body { background: var(--bg); color: var(--white); font-family: 'Inter', sans-serif; min-height: 100vh; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard — The-Keymaker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060e;--s:#0c0c1a;--s2:#101020;--b:#16162a;--b2:#1e1e36;
+  --g:#39FF14;--w:#ECEDF5;--m:#5a5a7a;--m2:#8080a0;
+  --red:#ff4455;--yellow:#ffcc33;--blue:#4488ff;
+  --mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;overflow:hidden}
+@media(max-width:768px){html,body{overflow:auto}}
+body{background:var(--bg);color:var(--w);font-family:'Inter',sans-serif;font-size:14px}
 
-    /* AUTH GUARD */
-    #auth-loading {
-      position: fixed; inset: 0; background: var(--bg);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 999; flex-direction: column; gap: 1rem;
-    }
-    .spinner {
-      width: 40px; height: 40px; border: 2px solid var(--border);
-      border-top-color: var(--green); border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #auth-loading p { font-size: 0.8rem; color: var(--muted); letter-spacing: 0.1em; }
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:200px 1fr;height:100vh}
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr;height:auto}
+}
 
-    /* LAYOUT */
-    .layout { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+/* SIDEBAR */
+aside{
+  background:var(--s);border-right:1px solid var(--b);
+  display:flex;flex-direction:column;overflow-y:auto;
+  position:sticky;top:0;height:100vh;
+}
+@media(max-width:768px){
+  aside{position:static;height:auto;border-right:none;border-bottom:1px solid var(--b)}
+}
+.sb-head{
+  padding:1rem 1.25rem;border-bottom:1px solid var(--b);
+  display:flex;align-items:center;gap:0.6rem;
+}
+.sb-logo-img{width:24px;height:24px;border-radius:3px;object-fit:cover}
+.sb-name{font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.04em}
+.sb-name em{color:var(--g);font-style:normal}
 
-    /* SIDEBAR */
-    aside {
-      background: var(--surface); border-right: 1px solid var(--border);
-      padding: 2rem 0; display: flex; flex-direction: column;
-      position: fixed; top: 0; left: 0; bottom: 0; width: 220px;
-    }
-    .aside-logo {
-      font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0 1.5rem 2rem; border-bottom: 1px solid var(--border);
-      color: var(--white);
-    }
-    .aside-logo em { color: var(--green); font-style: normal; }
+.sb-user{
+  padding:0.9rem 1.25rem;border-bottom:1px solid var(--b);
+  display:flex;align-items:center;gap:0.6rem;
+}
+.sb-portrait{width:30px;height:30px;border-radius:50%;border:1px solid var(--b);object-fit:cover}
+.sb-uname{font-size:0.78rem;font-weight:500;line-height:1.2}
+.sb-role{font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--g);margin-top:0.1rem}
 
-    .aside-user {
-      padding: 1.5rem; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 0.75rem;
-    }
-    .user-portrait {
-      width: 36px; height: 36px; border-radius: 50%;
-      border: 1px solid var(--border); object-fit: cover;
-    }
-    .user-name { font-size: 0.82rem; font-weight: 500; }
-    .user-role {
-      font-size: 0.65rem; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--green); margin-top: 0.1rem;
-    }
+.sb-nav{flex:1;padding:0.5rem 0}
+@media(max-width:768px){
+  .sb-nav{display:flex;overflow-x:auto;padding:0}
+  .sb-section{display:none}
+}
+.sb-section{font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--m);padding:0.75rem 1.25rem 0.3rem}
+.sb-item{
+  display:flex;align-items:center;gap:0.6rem;
+  padding:0.55rem 1.25rem;cursor:pointer;
+  font-size:0.78rem;color:var(--m2);
+  border-left:2px solid transparent;
+  transition:all .15s;text-decoration:none;
+  white-space:nowrap;
+}
+.sb-item:hover{color:var(--w);background:rgba(255,255,255,0.03)}
+.sb-item.active{color:var(--w);border-left-color:var(--g);background:rgba(57,255,20,0.05)}
+@media(max-width:768px){
+  .sb-item{border-left:none;border-bottom:2px solid transparent;padding:0.75rem 1rem}
+  .sb-item.active{border-bottom-color:var(--g);border-left:none;background:transparent}
+}
+.sb-icon{font-size:0.85rem;width:14px;text-align:center}
+.sb-foot{padding:0.75rem 1.25rem;border-top:1px solid var(--b)}
+@media(max-width:768px){.sb-foot{display:none}}
+.sb-logout{
+  width:100%;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--m);background:transparent;border:1px solid var(--b);
+  padding:0.5rem;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s;
+}
+.sb-logout:hover{border-color:var(--red);color:var(--red)}
 
-    nav.aside-nav { padding: 1rem 0; flex: 1; }
-    .nav-section {
-      font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
-      color: var(--muted); padding: 1rem 1.5rem 0.5rem;
-    }
-    .nav-item {
-      display: flex; align-items: center; gap: 0.75rem;
-      padding: 0.65rem 1.5rem; cursor: pointer;
-      font-size: 0.82rem; color: var(--muted);
-      border-left: 2px solid transparent;
-      transition: all .15s; text-decoration: none;
-    }
-    .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.03); }
-    .nav-item.active { color: var(--white); border-left-color: var(--green); background: rgba(57,255,20,0.05); }
-    .nav-icon { font-size: 0.9rem; width: 16px; }
+/* MAIN */
+main{overflow-y:auto;height:100vh;padding:2rem}
+@media(max-width:768px){main{height:auto;padding:1.25rem}}
 
-    .aside-logout {
-      padding: 1.5rem; border-top: 1px solid var(--border);
-    }
-    .logout-btn {
-      width: 100%; font-size: 0.72rem; letter-spacing: 0.12em;
-      text-transform: uppercase; color: var(--muted);
-      background: transparent; border: 1px solid var(--border);
-      padding: 0.6rem; cursor: pointer; transition: all .2s;
-      font-family: 'Syne', sans-serif;
-    }
-    .logout-btn:hover { border-color: var(--red); color: var(--red); }
+.page{display:none}
+.page.active{display:block}
 
-    /* MAIN */
-    main { margin-left: 220px; padding: 3rem; }
+/* PAGE HEADER */
+.ph{margin-bottom:2rem;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.ph-left{}
+.ph-eye{font-size:0.58rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--g);opacity:0.7;margin-bottom:0.3rem}
+.ph-title{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;letter-spacing:-0.02em}
 
-    .page { display: none; }
-    .page.active { display: block; }
+/* BUTTON */
+.btn{
+  font-family:'Syne',sans-serif;font-size:0.65rem;font-weight:700;
+  letter-spacing:0.1em;text-transform:uppercase;
+  padding:0.5rem 1.1rem;cursor:pointer;transition:all .2s;
+  display:inline-flex;align-items:center;gap:0.4rem;border:none;
+}
+.btn-g{background:var(--g);color:#000}
+.btn-g:hover{background:#50ff30}
+.btn-o{background:transparent;border:1px solid var(--b);color:var(--m2)}
+.btn-o:hover{border-color:var(--m2);color:var(--w)}
+.btn-r{background:transparent;border:1px solid var(--red);color:var(--red)}
+.btn-r:hover{background:var(--red);color:#fff}
+.btn-sm{padding:0.35rem 0.75rem;font-size:0.6rem}
 
-    .page-header { margin-bottom: 3rem; }
-    .page-eyebrow {
-      font-size: 0.65rem; letter-spacing: 0.28em;
-      text-transform: uppercase; color: var(--green);
-      opacity: 0.7; margin-bottom: 0.5rem;
-    }
-    h1 {
-      font-family: 'Syne', sans-serif; font-size: 2rem;
-      font-weight: 700; letter-spacing: -0.02em;
-    }
+/* CARDS ROW */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--b);margin-bottom:2rem}
+.card{background:var(--s);padding:1.25rem}
+.card-l{font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--m);margin-bottom:0.4rem}
+.card-v{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700}
+.card-v.g{color:var(--g)}
+.card-sub{font-size:0.68rem;color:var(--m);margin-top:0.2rem}
 
-    /* CARDS */
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: var(--border); margin-bottom: 3rem; }
-    .card { background: var(--surface); padding: 1.75rem; }
-    .card-label { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
-    .card-value { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; }
-    .card-value.green { color: var(--green); }
-    .card-sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; }
+/* TABLE */
+.tbl-wrap{background:var(--s);border:1px solid var(--b);margin-bottom:1.5rem;overflow:hidden}
+.tbl-head{padding:0.9rem 1.25rem;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap}
+.tbl-title{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:400px}
+th{text-align:left;font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);padding:0.7rem 1.25rem;border-bottom:1px solid var(--b);white-space:nowrap}
+td{padding:0.7rem 1.25rem;font-size:0.82rem;border-bottom:1px solid rgba(22,22,42,0.6)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.015)}
+.td-port{display:flex;align-items:center;gap:0.6rem}
+.td-img{width:24px;height:24px;border-radius:50%;border:1px solid var(--b);object-fit:cover;flex-shrink:0}
+.badge{display:inline-block;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.18rem 0.5rem;border:1px solid currentColor}
+.badge.g{color:var(--g)}
+.badge.r{color:var(--red)}
+.badge.y{color:var(--yellow)}
+.badge.b{color:var(--blue)}
+.empty-row td{color:var(--m);font-style:italic;font-size:0.78rem}
 
-    /* TABLE */
-    .table-wrap { background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem; }
-    .table-header {
-      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .table-title { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 600; }
-    table { width: 100%; border-collapse: collapse; }
-    th {
-      text-align: left; font-size: 0.65rem; letter-spacing: 0.18em;
-      text-transform: uppercase; color: var(--muted);
-      padding: 0.9rem 1.5rem; border-bottom: 1px solid var(--border);
-    }
-    td { padding: 0.9rem 1.5rem; font-size: 0.85rem; border-bottom: 1px solid rgba(25,25,40,0.5); }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(255,255,255,0.02); }
+/* POSTS CMS */
+.cms-layout{display:grid;grid-template-columns:1fr 380px;gap:1.5rem;align-items:start}
+@media(max-width:900px){.cms-layout{grid-template-columns:1fr}}
 
-    .badge {
-      display: inline-block; font-size: 0.6rem; letter-spacing: 0.12em;
-      text-transform: uppercase; padding: 0.2rem 0.6rem;
-      border: 1px solid currentColor; border-radius: 2px;
-    }
-    .badge.green { color: var(--green); }
-    .badge.red { color: var(--red); }
-    .badge.yellow { color: var(--yellow); }
+.form-wrap{background:var(--s);border:1px solid var(--b);padding:1.5rem}
+.form-title{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:0.75rem;border-bottom:1px solid var(--b)}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.4rem}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--s2);border:1px solid var(--b);
+  color:var(--w);padding:0.6rem 0.85rem;
+  font-family:'Inter',sans-serif;font-size:0.82rem;
+  outline:none;transition:border-color .2s;
+  -webkit-appearance:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--g)}
+.field textarea{resize:vertical;min-height:180px;font-size:0.82rem;line-height:1.65}
+.field select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a5a7a'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.75rem center;padding-right:2rem}
+.form-actions{display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--b)}
+.form-msg{font-size:0.72rem;color:var(--g);margin-top:0.5rem;min-height:1.2em}
+.form-msg.err{color:var(--red)}
 
-    .loading-row td { color: var(--muted); font-style: italic; font-size: 0.8rem; }
+.posts-list{display:flex;flex-direction:column;gap:1px;background:var(--b)}
+.post-item{
+  background:var(--s);padding:1rem 1.25rem;
+  display:flex;align-items:flex-start;gap:1rem;
+}
+.post-item-body{flex:1;min-width:0}
+.post-item-tag{font-size:0.55rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--g);opacity:0.7;margin-bottom:0.25rem}
+.post-item-title{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;margin-bottom:0.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.post-item-date{font-size:0.62rem;color:var(--m)}
+.post-item-acts{display:flex;gap:0.4rem;flex-shrink:0}
+.no-posts{background:var(--s);padding:2rem;text-align:center;font-size:0.78rem;color:var(--m)}
 
-    /* WHITELIST FORM */
-    .form-row { display: flex; gap: 1rem; margin-bottom: 1rem; }
-    .form-input {
-      flex: 1; background: var(--surface); border: 1px solid var(--border);
-      color: var(--white); padding: 0.7rem 1rem;
-      font-family: 'Inter', sans-serif; font-size: 0.85rem;
-      outline: none; transition: border-color .2s;
-    }
-    .form-input:focus { border-color: var(--green); }
-    .form-input::placeholder { color: var(--muted); }
-    .btn-sm {
-      font-family: 'Syne', sans-serif; font-size: 0.72rem;
-      font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
-      padding: 0.7rem 1.5rem; border: none; cursor: pointer;
-      transition: all .2s;
-    }
-    .btn-sm.primary { background: var(--green); color: #000; }
-    .btn-sm.primary:hover { background: #50ff30; }
-    .btn-sm.danger { background: transparent; border: 1px solid var(--red); color: var(--red); }
-    .btn-sm.danger:hover { background: var(--red); color: #fff; }
+/* WHITELIST */
+.wl-wrap{background:var(--s);border:1px solid var(--b);padding:1.5rem;margin-bottom:1.5rem}
+.wl-title{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--b)}
+.wl-row{display:flex;gap:0.6rem;margin-bottom:1rem}
+.wl-row input{flex:1;background:var(--s2);border:1px solid var(--b);color:var(--w);padding:0.55rem 0.85rem;font-family:'Inter',sans-serif;font-size:0.82rem;outline:none;transition:border-color .2s}
+.wl-row input:focus{border-color:var(--g)}
+.wl-list{display:flex;flex-direction:column;gap:1px;background:var(--b)}
+.wl-item{background:var(--s);padding:0.65rem 1rem;display:flex;align-items:center;gap:0.75rem}
+.wl-item img{width:24px;height:24px;border-radius:50%;object-fit:cover;border:1px solid var(--b)}
+.wl-item span{flex:1;font-size:0.8rem}
+.wl-env{background:var(--s2);border:1px solid var(--b);border-left:2px solid var(--g);padding:0.85rem 1rem;margin-top:1rem}
+.wl-env-label{font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.3rem}
+.wl-env-val{font-family:var(--mono);font-size:0.75rem;color:var(--g);word-break:break-all}
 
-    /* NOTICE */
-    .notice {
-      padding: 1rem 1.5rem; border-left: 2px solid var(--green);
-      background: rgba(57,255,20,0.05); font-size: 0.85rem;
-      color: var(--muted); margin-bottom: 2rem; line-height: 1.6;
-    }
-    .notice strong { color: var(--white); }
-  </style>
+/* NOTICE */
+.notice{border-left:2px solid var(--g);background:rgba(57,255,20,0.04);padding:0.85rem 1rem;font-size:0.8rem;color:var(--m);margin-bottom:1.5rem;line-height:1.65}
+.notice strong{color:var(--w)}
+
+/* LOADING */
+#auth-gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:0.75rem}
+.spin{width:32px;height:32px;border:2px solid var(--b);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#auth-gate p{font-size:0.7rem;color:var(--m);letter-spacing:0.1em}
+</style>
 </head>
 <body>
 
-<!-- AUTH LOADING OVERLAY -->
-<div id="auth-loading">
-  <div class="spinner"></div>
-  <p>Verifying identity...</p>
-</div>
+<div id="auth-gate"><div class="spin"></div><p>Verifying...</p></div>
 
 <div class="layout" id="app" style="display:none">
 
-  <!-- SIDEBAR -->
-  <aside>
-    <div class="aside-logo">The-<em>Keymaker</em></div>
-    <div class="aside-user">
-      <img id="user-portrait" class="user-portrait" src="https://images.evetech.net/characters/1/portrait?size=64" alt="" />
+<!-- SIDEBAR -->
+<aside>
+  <div class="sb-head">
+    <img class="sb-logo-img" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt=""/>
+    <div class="sb-name">The-<em>Keymaker</em></div>
+  </div>
+  <div class="sb-user">
+    <img id="sb-portrait" class="sb-portrait" src="https://images.evetech.net/characters/1/portrait?size=64" alt=""/>
+    <div><div class="sb-uname" id="sb-name">—</div><div class="sb-role" id="sb-role">Member</div></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Overview</div>
+    <a class="sb-item active" data-page="overview" href="#"><span class="sb-icon">◈</span>Overview</a>
+    <a class="sb-item" data-page="members" href="#"><span class="sb-icon">◉</span>Members</a>
+    <a class="sb-item" data-page="killboard" href="#"><span class="sb-icon">⚔</span>Killboard</a>
+    <div class="sb-section">Corp</div>
+    <a class="sb-item" data-page="wallet" href="#"><span class="sb-icon">◎</span>Wallet</a>
+    <a class="sb-item" data-page="industry" href="#"><span class="sb-icon">⛏</span>Industry</a>
+    <div class="sb-section" id="ceo-label" style="display:none">CEO</div>
+    <a class="sb-item" data-page="posts" href="#" id="nav-posts" style="display:none"><span class="sb-icon">✦</span>Posts</a>
+    <a class="sb-item" data-page="access" href="#" id="nav-access" style="display:none"><span class="sb-icon">🔑</span>Access</a>
+    <div class="sb-section">Site</div>
+    <a class="sb-item" href="/" style="border-left:none"><span class="sb-icon">↗</span>Public site</a>
+    <a class="sb-item" href="/api/logout" style="border-left:none;color:var(--red)"><span class="sb-icon">⏻</span>Logout</a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<main>
+
+  <!-- OVERVIEW -->
+  <div class="page active" id="page-overview">
+    <div class="ph"><div class="ph-left"><div class="ph-eye">Dashboard</div><div class="ph-title">Overview</div></div></div>
+    <div class="cards">
+      <div class="card"><div class="card-l">Members</div><div class="card-v g" id="ov-members">—</div></div>
+      <div class="card"><div class="card-l">Wallet</div><div class="card-v" id="ov-wallet" style="font-size:1rem;padding-top:0.3rem">—</div></div>
+      <div class="card"><div class="card-l">Kills (30d)</div><div class="card-v" id="ov-kills">—</div></div>
+      <div class="card"><div class="card-l">Industry</div><div class="card-v" id="ov-jobs">—</div><div class="card-sub">Active jobs</div></div>
+    </div>
+    <div class="notice"><strong>Live data</strong> fetched from ESI API using your authenticated session. Corp-level data requires Director+ roles in-game.</div>
+  </div>
+
+  <!-- MEMBERS -->
+  <div class="page" id="page-members">
+    <div class="ph"><div class="ph-left"><div class="ph-eye">Corporation</div><div class="ph-title">Members</div></div></div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><div class="tbl-title">Active pilots</div></div>
+      <div class="tbl-scroll">
+        <table><thead><tr><th>Character</th><th>Status</th></tr></thead>
+        <tbody id="members-tbody"><tr class="empty-row"><td colspan="2">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- KILLBOARD -->
+  <div class="page" id="page-killboard">
+    <div class="ph"><div class="ph-left"><div class="ph-eye">PvP</div><div class="ph-title">Killboard</div></div></div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><div class="tbl-title">Recent activity</div></div>
+      <div class="tbl-scroll">
+        <table><thead><tr><th>Type</th><th>Value</th><th>Date</th><th>Link</th></tr></thead>
+        <tbody id="kills-tbody"><tr class="empty-row"><td colspan="4">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- WALLET -->
+  <div class="page" id="page-wallet">
+    <div class="ph"><div class="ph-left"><div class="ph-eye">Finance</div><div class="ph-title">Corp Wallet</div></div></div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><div class="tbl-title">Divisions</div></div>
+      <div class="tbl-scroll">
+        <table><thead><tr><th>Division</th><th>Balance</th></tr></thead>
+        <tbody id="wallet-tbody"><tr class="empty-row"><td colspan="2">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- INDUSTRY -->
+  <div class="page" id="page-industry">
+    <div class="ph"><div class="ph-left"><div class="ph-eye">Production</div><div class="ph-title">Industry</div></div></div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><div class="tbl-title">Active jobs</div></div>
+      <div class="tbl-scroll">
+        <table><thead><tr><th>Activity</th><th>Runs</th><th>Status</th><th>End</th></tr></thead>
+        <tbody id="industry-tbody"><tr class="empty-row"><td colspan="4">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSTS CMS (CEO) -->
+  <div class="page" id="page-posts">
+    <div class="ph">
+      <div class="ph-left"><div class="ph-eye">CEO · Content</div><div class="ph-title">Posts</div></div>
+      <button class="btn btn-g btn-sm" onclick="newPost()">+ New post</button>
+    </div>
+    <div class="cms-layout">
       <div>
-        <div class="user-name" id="user-name">—</div>
-        <div class="user-role" id="user-role">Member</div>
-      </div>
-    </div>
-    <nav class="aside-nav">
-      <div class="nav-section">Overview</div>
-      <a class="nav-item active" data-page="overview" href="#">
-        <span class="nav-icon">◈</span> Overview
-      </a>
-      <a class="nav-item" data-page="members" href="#">
-        <span class="nav-icon">◉</span> Members
-      </a>
-      <a class="nav-item" data-page="killboard" href="#">
-        <span class="nav-icon">⚔</span> Killboard
-      </a>
-      <div class="nav-section">Corporation</div>
-      <a class="nav-item" data-page="wallet" href="#">
-        <span class="nav-icon">◎</span> Wallet
-      </a>
-      <a class="nav-item" data-page="industry" href="#">
-        <span class="nav-icon">⛏</span> Industry
-      </a>
-      <div class="nav-section" id="ceo-section" style="display:none">CEO Only</div>
-      <a class="nav-item" data-page="whitelist" href="#" id="nav-whitelist" style="display:none">
-        <span class="nav-icon">🔑</span> Access Control
-      </a>
-    </nav>
-    <div class="aside-logout">
-      <button class="logout-btn" onclick="location.href='/api/logout'">Logout</button>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main>
-
-    <!-- OVERVIEW PAGE -->
-    <div class="page active" id="page-overview">
-      <div class="page-header">
-        <div class="page-eyebrow">Dashboard</div>
-        <h1>Corporation Overview</h1>
-      </div>
-      <div class="cards">
-        <div class="card">
-          <div class="card-label">Members</div>
-          <div class="card-value green" id="ov-members">—</div>
-          <div class="card-sub">Active pilots</div>
-        </div>
-        <div class="card">
-          <div class="card-label">Corp Wallet</div>
-          <div class="card-value" id="ov-wallet">—</div>
-          <div class="card-sub">ISK total</div>
-        </div>
-        <div class="card">
-          <div class="card-label">Kills (30d)</div>
-          <div class="card-value" id="ov-kills">—</div>
-          <div class="card-sub">From zKillboard</div>
-        </div>
-        <div class="card">
-          <div class="card-label">Industry Jobs</div>
-          <div class="card-value" id="ov-jobs">—</div>
-          <div class="card-sub">Active corp jobs</div>
-        </div>
-      </div>
-      <div class="notice">
-        <strong>Welcome to the CEO dashboard.</strong> Data is fetched live from the ESI API using your authenticated session. Some endpoints may take a moment to load.
-      </div>
-    </div>
-
-    <!-- MEMBERS PAGE -->
-    <div class="page" id="page-members">
-      <div class="page-header">
-        <div class="page-eyebrow">Corporation</div>
-        <h1>Members</h1>
-      </div>
-      <div class="table-wrap">
-        <div class="table-header">
-          <div class="table-title">Active Members</div>
-        </div>
-        <table>
-          <thead>
-            <tr><th>Character</th><th>Joined</th><th>Roles</th><th>Status</th></tr>
-          </thead>
-          <tbody id="members-tbody">
-            <tr class="loading-row"><td colspan="4">Loading members...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- KILLBOARD PAGE -->
-    <div class="page" id="page-killboard">
-      <div class="page-header">
-        <div class="page-eyebrow">PvP</div>
-        <h1>Killboard</h1>
-      </div>
-      <div class="table-wrap">
-        <div class="table-header">
-          <div class="table-title">Recent Kills & Losses</div>
-        </div>
-        <table>
-          <thead>
-            <tr><th>Type</th><th>Ship</th><th>System</th><th>Value (ISK)</th><th>Date</th></tr>
-          </thead>
-          <tbody id="kills-tbody">
-            <tr class="loading-row"><td colspan="5">Loading killmails...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- WALLET PAGE -->
-    <div class="page" id="page-wallet">
-      <div class="page-header">
-        <div class="page-eyebrow">Finance</div>
-        <h1>Corp Wallet</h1>
-      </div>
-      <div class="table-wrap">
-        <div class="table-header">
-          <div class="table-title">Wallet Divisions</div>
-        </div>
-        <table>
-          <thead>
-            <tr><th>Division</th><th>Balance</th></tr>
-          </thead>
-          <tbody id="wallet-tbody">
-            <tr class="loading-row"><td colspan="2">Loading wallet...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- INDUSTRY PAGE -->
-    <div class="page" id="page-industry">
-      <div class="page-header">
-        <div class="page-eyebrow">Production</div>
-        <h1>Industry Jobs</h1>
-      </div>
-      <div class="table-wrap">
-        <div class="table-header">
-          <div class="table-title">Active & Recent Jobs</div>
-        </div>
-        <table>
-          <thead>
-            <tr><th>Activity</th><th>Installer</th><th>Runs</th><th>Status</th><th>End Date</th></tr>
-          </thead>
-          <tbody id="industry-tbody">
-            <tr class="loading-row"><td colspan="5">Loading industry jobs...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- WHITELIST PAGE (CEO only) -->
-    <div class="page" id="page-whitelist">
-      <div class="page-header">
-        <div class="page-eyebrow">CEO Only</div>
-        <h1>Access Control</h1>
-      </div>
-      <div class="notice">
-        Aggiungi i <strong>Character ID</strong> dei piloti a cui vuoi dare accesso alla dashboard. Puoi trovare il Character ID cercando il nome su <a href="https://evewho.com" target="_blank" style="color:var(--green)">evewho.com</a>. Dopo aver modificato la whitelist, aggiorna la variabile <strong>WHITELIST_CHARACTER_IDS</strong> su Vercel con i valori separati da virgola.
-      </div>
-      <div class="table-wrap">
-        <div class="table-header">
-          <div class="table-title">Whitelist attuale</div>
-        </div>
-        <div style="padding:1.5rem">
-          <div class="form-row">
-            <input class="form-input" id="wl-input" type="text" placeholder="Character ID (es: 123456789)" />
-            <button class="btn-sm primary" onclick="addToWhitelist()">Add</button>
+        <div class="form-wrap">
+          <div class="form-title" id="form-mode-label">New post</div>
+          <div class="field">
+            <label>Title</label>
+            <input type="text" id="f-title" placeholder="Post title…"/>
           </div>
-          <div id="whitelist-display" style="font-size:0.82rem; color:var(--muted); line-height:2">
-            Caricamento...
+          <div class="field">
+            <label>Tag / Category</label>
+            <select id="f-tag">
+              <option>Announcement</option>
+              <option>PvP</option>
+              <option>Mining</option>
+              <option>Recruitment</option>
+              <option>Industry</option>
+              <option>Other</option>
+            </select>
           </div>
+          <div class="field">
+            <label>Content</label>
+            <textarea id="f-body" placeholder="Write your post…"></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-g" onclick="savePost()">Save post</button>
+            <button class="btn btn-o" onclick="newPost()">Clear</button>
+          </div>
+          <div class="form-msg" id="form-msg"></div>
         </div>
       </div>
+      <div>
+        <div class="tbl-head" style="background:var(--s);border:1px solid var(--b);border-bottom:none;padding:0.9rem 1.25rem">
+          <div class="tbl-title">Published posts</div>
+        </div>
+        <div class="posts-list" id="cms-posts-list"><div class="no-posts">No posts yet.</div></div>
+      </div>
     </div>
+  </div>
 
-  </main>
+  <!-- ACCESS CONTROL (CEO) -->
+  <div class="page" id="page-access">
+    <div class="ph"><div class="ph-left"><div class="ph-eye">CEO</div><div class="ph-title">Access Control</div></div></div>
+    <div class="notice">
+      Add <strong>Character IDs</strong> of pilots you want to grant dashboard access. Find IDs on <a href="https://evewho.com" target="_blank" style="color:var(--g)">evewho.com</a>. After updating, copy the string below to <strong>WHITELIST_CHARACTER_IDS</strong> on Vercel.
+    </div>
+    <div class="wl-wrap">
+      <div class="wl-title">Whitelist</div>
+      <div class="wl-row">
+        <input type="text" id="wl-input" placeholder="Character ID…"/>
+        <button class="btn btn-g btn-sm" onclick="addWl()">Add</button>
+      </div>
+      <div class="wl-list" id="wl-list"></div>
+      <div class="wl-env">
+        <div class="wl-env-label">WHITELIST_CHARACTER_IDS → paste to Vercel env vars</div>
+        <div class="wl-env-val" id="wl-env-val">—</div>
+      </div>
+    </div>
+  </div>
+
+</main>
 </div>
 
 <script>
-const CORP_ID = 98800626;
-let SESSION = null;
+const CORP=98800626;
+let SESSION=null;
+const ACT={'1':'Manufacturing','3':'Research TE','4':'Research ME','5':'Copying','8':'Invention','11':'Reactions'};
+const STORAGE_KEY='tkm_posts';
 
-// ── AUTH CHECK ──
-async function init() {
-  try {
-    const res = await fetch('/api/me');
-    if (!res.ok) { window.location.href = '/'; return; }
-    SESSION = await res.json();
-    if (!SESSION.authenticated) { window.location.href = '/'; return; }
-  } catch {
-    window.location.href = '/';
-    return;
+// ── AUTH ──
+async function init(){
+  try{
+    const r=await fetch('/api/me');
+    if(!r.ok){location.href='/';return}
+    SESSION=await r.json();
+    if(!SESSION.authenticated){location.href='/';return}
+  }catch{location.href='/';return}
+
+  document.getElementById('auth-gate').style.display='none';
+  document.getElementById('app').style.display='grid';
+  document.getElementById('sb-name').textContent=SESSION.characterName;
+  document.getElementById('sb-portrait').src=`https://images.evetech.net/characters/${SESSION.characterId}/portrait?size=64`;
+
+  if(SESSION.isCeo){
+    document.getElementById('sb-role').textContent='CEO';
+    document.getElementById('ceo-label').style.display='block';
+    document.getElementById('nav-posts').style.display='flex';
+    document.getElementById('nav-access').style.display='flex';
   }
-
-  // Mostra UI
-  document.getElementById('auth-loading').style.display = 'none';
-  document.getElementById('app').style.display = 'grid';
-
-  // Popola user info
-  document.getElementById('user-name').textContent = SESSION.characterName;
-  document.getElementById('user-portrait').src =
-    `https://images.evetech.net/characters/${SESSION.characterId}/portrait?size=64`;
-
-  if (SESSION.isCeo) {
-    document.getElementById('user-role').textContent = 'CEO';
-    document.getElementById('ceo-section').style.display = 'block';
-    document.getElementById('nav-whitelist').style.display = 'flex';
-  } else {
-    document.getElementById('user-role').textContent = 'Member';
-  }
-
-  // Carica dati overview
   loadOverview();
 }
 
-// ── ESI FETCH ──
-async function esiFetch(path) {
-  const res = await fetch(`https://esi.evetech.net/latest${path}`, {
-    headers: { 'Authorization': `Bearer ${SESSION.accessToken}` }
-  });
-  if (!res.ok) throw new Error(`ESI ${res.status}: ${path}`);
-  return res.json();
+// ── ESI ──
+async function esi(path){
+  const r=await fetch(`https://esi.evetech.net/latest${path}`,{headers:{'Authorization':`Bearer ${SESSION.accessToken}`}});
+  if(!r.ok)throw new Error(`ESI ${r.status}`);
+  return r.json();
 }
 
 // ── OVERVIEW ──
-async function loadOverview() {
-  try {
-    const corp = await esiFetch(`/corporations/${CORP_ID}/?datasource=tranquility`);
-    document.getElementById('ov-members').textContent = corp.member_count ?? '—';
-  } catch(e) { document.getElementById('ov-members').textContent = 'Err'; }
+async function loadOverview(){
+  esi(`/corporations/${CORP}/?datasource=tranquility`).then(d=>{
+    document.getElementById('ov-members').textContent=d.member_count??'—';
+  }).catch(()=>{document.getElementById('ov-members').textContent='N/A'});
 
-  try {
-    const wallets = await esiFetch(`/corporations/${CORP_ID}/wallets/`);
-    const total = wallets.reduce((s, w) => s + (w.balance || 0), 0);
-    document.getElementById('ov-wallet').textContent = formatISK(total);
-  } catch { document.getElementById('ov-wallet').textContent = 'N/A'; }
+  esi(`/corporations/${CORP}/wallets/`).then(ws=>{
+    const t=ws.reduce((s,w)=>s+(w.balance||0),0);
+    document.getElementById('ov-wallet').textContent=fisk(t)+' ISK';
+  }).catch(()=>{document.getElementById('ov-wallet').textContent='N/A'});
 
-  try {
-    const kills = await fetch(`https://zkillboard.com/api/kills/corporationID/${CORP_ID}/pastSeconds/2592000/`);
-    const kdata = await kills.json();
-    document.getElementById('ov-kills').textContent = Array.isArray(kdata) ? kdata.length : '—';
-  } catch { document.getElementById('ov-kills').textContent = '—'; }
+  fetch(`https://zkillboard.com/api/kills/corporationID/${CORP}/pastSeconds/2592000/`)
+    .then(r=>r.json()).then(d=>{
+      document.getElementById('ov-kills').textContent=Array.isArray(d)?d.length:'—';
+    }).catch(()=>{});
 
-  try {
-    const jobs = await esiFetch(`/corporations/${CORP_ID}/industry/jobs/?include_completed=false`);
-    document.getElementById('ov-jobs').textContent = jobs.length;
-  } catch { document.getElementById('ov-jobs').textContent = 'N/A'; }
+  esi(`/corporations/${CORP}/industry/jobs/?include_completed=false`).then(j=>{
+    document.getElementById('ov-jobs').textContent=j.length;
+  }).catch(()=>{document.getElementById('ov-jobs').textContent='N/A'});
 }
 
 // ── MEMBERS ──
-async function loadMembers() {
-  const tbody = document.getElementById('members-tbody');
-  try {
-    const ids = await esiFetch(`/corporations/${CORP_ID}/members/`);
-    const names = await esiFetch(`/characters/affiliation/?datasource=tranquility`,
-      { method: 'POST', body: JSON.stringify(ids.slice(0,50)) });
-
-    // Resolve names
-    const nameRes = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(ids.slice(0, 50))
+async function loadMembers(){
+  const tb=document.getElementById('members-tbody');
+  try{
+    const ids=await esi(`/corporations/${CORP}/members/`);
+    const chunk=ids.slice(0,100);
+    const nr=await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(chunk)
     });
-    const nameData = await nameRes.json();
-
-    tbody.innerHTML = nameData.map(c => `
-      <tr>
-        <td style="display:flex;align-items:center;gap:0.75rem">
-          <img src="https://images.evetech.net/characters/${c.id}/portrait?size=32"
-               style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border)" />
-          ${c.name}
-        </td>
-        <td>—</td>
-        <td>—</td>
-        <td><span class="badge green">Active</span></td>
-      </tr>
-    `).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr class="loading-row"><td colspan="4">Error loading members: ${e.message}</td></tr>`;
-  }
+    const names=await nr.json();
+    tb.innerHTML=names.map(c=>`
+      <tr><td><div class="td-port">
+        <img class="td-img" src="https://images.evetech.net/characters/${c.id}/portrait?size=32" loading="lazy"/>
+        ${esc(c.name)}
+      </div></td><td><span class="badge g">Active</span></td></tr>`).join('');
+  }catch(e){tb.innerHTML=`<tr class="empty-row"><td colspan="2">Error: ${e.message}</td></tr>`}
 }
 
 // ── KILLBOARD ──
-async function loadKillboard() {
-  const tbody = document.getElementById('kills-tbody');
-  try {
-    const res = await fetch(`https://zkillboard.com/api/corporationID/${CORP_ID}/limit/20/`);
-    const kills = await res.json();
-    if (!Array.isArray(kills) || kills.length === 0) {
-      tbody.innerHTML = '<tr class="loading-row"><td colspan="5">No killmails found.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = kills.map(k => {
-      const isKill = !k.zkb?.labels?.includes('loss');
-      const val = k.zkb?.totalValue ? formatISK(k.zkb.totalValue) : '—';
-      const date = k.killmail_time ? new Date(k.killmail_time).toLocaleDateString() : '—';
-      return `
-        <tr>
-          <td><span class="badge ${isKill ? 'green' : 'red'}">${isKill ? 'Kill' : 'Loss'}</span></td>
-          <td>—</td>
-          <td>—</td>
-          <td>${val}</td>
-          <td>${date}</td>
-        </tr>`;
+async function loadKillboard(){
+  const tb=document.getElementById('kills-tbody');
+  try{
+    const r=await fetch(`https://zkillboard.com/api/corporationID/${CORP}/limit/25/`);
+    const ks=await r.json();
+    if(!Array.isArray(ks)||!ks.length){tb.innerHTML='<tr class="empty-row"><td colspan="4">No killmails found.</td></tr>';return}
+    tb.innerHTML=ks.map(k=>{
+      const loss=k.zkb?.labels?.includes('loss');
+      const val=k.zkb?.totalValue?fisk(k.zkb.totalValue)+' ISK':'—';
+      const date=k.killmail_time?new Date(k.killmail_time).toLocaleDateString('en-GB'):'—';
+      const km_id=k.killmail_id;
+      return`<tr>
+        <td><span class="badge ${loss?'r':'g'}">${loss?'Loss':'Kill'}</span></td>
+        <td style="font-family:var(--mono);font-size:0.75rem">${val}</td>
+        <td>${date}</td>
+        <td><a href="https://zkillboard.com/kill/${km_id}/" target="_blank" style="color:var(--g);font-size:0.72rem;opacity:0.8">zkb ↗</a></td>
+      </tr>`;
     }).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr class="loading-row"><td colspan="5">Error: ${e.message}</td></tr>`;
-  }
+  }catch(e){tb.innerHTML=`<tr class="empty-row"><td colspan="4">Error: ${e.message}</td></tr>`}
 }
 
 // ── WALLET ──
-async function loadWallet() {
-  const tbody = document.getElementById('wallet-tbody');
-  try {
-    const wallets = await esiFetch(`/corporations/${CORP_ID}/wallets/`);
-    tbody.innerHTML = wallets.map(w => `
-      <tr>
-        <td>Division ${w.division}</td>
-        <td style="color:var(--green)">${formatISK(w.balance || 0)} ISK</td>
-      </tr>
-    `).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr class="loading-row"><td colspan="2">Error: ${e.message}</td></tr>`;
-  }
+async function loadWallet(){
+  const tb=document.getElementById('wallet-tbody');
+  try{
+    const ws=await esi(`/corporations/${CORP}/wallets/`);
+    tb.innerHTML=ws.map(w=>`
+      <tr><td>Division ${w.division}</td>
+      <td style="font-family:var(--mono);color:var(--g)">${fisk(w.balance||0)} ISK</td></tr>`).join('');
+  }catch(e){tb.innerHTML=`<tr class="empty-row"><td colspan="2">Error: ${e.message}</td></tr>`}
 }
 
 // ── INDUSTRY ──
-async function loadIndustry() {
-  const tbody = document.getElementById('industry-tbody');
-  const activities = { 1:'Manufacturing', 3:'Researching TE', 4:'Researching ME', 5:'Copying', 8:'Invention', 11:'Reactions' };
-  try {
-    const jobs = await esiFetch(`/corporations/${CORP_ID}/industry/jobs/?include_completed=false`);
-    if (jobs.length === 0) {
-      tbody.innerHTML = '<tr class="loading-row"><td colspan="5">No active jobs.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = jobs.map(j => `
+async function loadIndustry(){
+  const tb=document.getElementById('industry-tbody');
+  try{
+    const js=await esi(`/corporations/${CORP}/industry/jobs/?include_completed=false`);
+    if(!js.length){tb.innerHTML='<tr class="empty-row"><td colspan="4">No active jobs.</td></tr>';return}
+    tb.innerHTML=js.map(j=>`
       <tr>
-        <td>${activities[j.activity_id] || j.activity_id}</td>
-        <td>${j.installer_id}</td>
+        <td>${ACT[j.activity_id]||'Activity '+j.activity_id}</td>
         <td>${j.runs}</td>
-        <td><span class="badge ${j.status === 'active' ? 'green' : 'yellow'}">${j.status}</span></td>
-        <td>${new Date(j.end_date).toLocaleDateString()}</td>
-      </tr>
-    `).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr class="loading-row"><td colspan="5">Error: ${e.message}</td></tr>`;
+        <td><span class="badge ${j.status==='active'?'g':'y'}">${j.status}</span></td>
+        <td>${new Date(j.end_date).toLocaleDateString('en-GB')}</td>
+      </tr>`).join('');
+  }catch(e){tb.innerHTML=`<tr class="empty-row"><td colspan="4">Error: ${e.message}</td></tr>`}
+}
+
+// ── POSTS CMS ──
+let editIdx=null;
+function getPosts(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch{return[]}}
+function savePosts(p){localStorage.setItem(STORAGE_KEY,JSON.stringify(p))}
+
+function renderCmsPosts(){
+  const posts=getPosts();
+  const el=document.getElementById('cms-posts-list');
+  if(!posts.length){el.innerHTML='<div class="no-posts">No posts yet.</div>';return}
+  el.innerHTML=posts.slice().reverse().map((p,ri)=>{
+    const i=posts.length-1-ri;
+    return`<div class="post-item">
+      <div class="post-item-body">
+        <div class="post-item-tag">${esc(p.tag)}</div>
+        <div class="post-item-title">${esc(p.title)}</div>
+        <div class="post-item-date">${new Date(p.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+      </div>
+      <div class="post-item-acts">
+        <button class="btn btn-o btn-sm" onclick="editPost(${i})">Edit</button>
+        <button class="btn btn-r btn-sm" onclick="deletePost(${i})">Del</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function newPost(){
+  editIdx=null;
+  document.getElementById('f-title').value='';
+  document.getElementById('f-body').value='';
+  document.getElementById('f-tag').value='Announcement';
+  document.getElementById('form-mode-label').textContent='New post';
+  document.getElementById('form-msg').textContent='';
+  document.getElementById('f-title').focus();
+}
+
+function editPost(i){
+  const posts=getPosts();const p=posts[i];if(!p)return;
+  editIdx=i;
+  document.getElementById('f-title').value=p.title;
+  document.getElementById('f-body').value=p.body;
+  document.getElementById('f-tag').value=p.tag;
+  document.getElementById('form-mode-label').textContent='Edit post';
+  document.getElementById('form-msg').textContent='';
+}
+
+function savePost(){
+  const title=document.getElementById('f-title').value.trim();
+  const body=document.getElementById('f-body').value.trim();
+  const tag=document.getElementById('f-tag').value;
+  const msg=document.getElementById('form-msg');
+  if(!title){msg.textContent='Title required.';msg.className='form-msg err';return}
+  if(!body){msg.textContent='Content required.';msg.className='form-msg err';return}
+  const posts=getPosts();
+  if(editIdx!==null&&editIdx<posts.length){
+    posts[editIdx]={...posts[editIdx],title,body,tag,updated:Date.now()};
+    msg.textContent='Post updated.';
+  }else{
+    posts.push({title,body,tag,date:Date.now(),author:SESSION.characterName});
+    msg.textContent='Post published.';
   }
+  msg.className='form-msg';
+  savePosts(posts);
+  renderCmsPosts();
+  setTimeout(()=>{msg.textContent='';editIdx=null;document.getElementById('form-mode-label').textContent='New post'},2000);
+}
+
+function deletePost(i){
+  if(!confirm('Delete this post?'))return;
+  const posts=getPosts();posts.splice(i,1);savePosts(posts);
+  renderCmsPosts();
+  if(editIdx===i)newPost();
 }
 
 // ── WHITELIST ──
-let wlIds = ('{CEO_ID}' === '{CEO_ID}') ? ['2123276160'] : ['{CEO_ID}'];
-function renderWhitelist() {
-  const el = document.getElementById('whitelist-display');
-  if (wlIds.length === 0) { el.textContent = 'Nessun pilota in whitelist.'; return; }
-  el.innerHTML = wlIds.map(id => `
-    <div style="display:flex;align-items:center;gap:1rem;padding:0.5rem 0;border-bottom:1px solid var(--border)">
-      <img src="https://images.evetech.net/characters/${id}/portrait?size=32"
-           style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border)" />
-      <span style="flex:1;color:var(--white)">ID: ${id}</span>
-      <button class="btn-sm danger" onclick="removeFromWhitelist('${id}')">Remove</button>
-    </div>
-  `).join('') + `
-    <div style="margin-top:1rem;padding:1rem;background:rgba(57,255,20,0.05);border:1px solid rgba(57,255,20,0.15);font-size:0.8rem;color:var(--muted)">
-      Copia questa stringa nella env var <strong style="color:var(--white)">WHITELIST_CHARACTER_IDS</strong> su Vercel:<br/>
-      <code style="color:var(--green);font-size:0.85rem">${wlIds.join(',')}</code>
-    </div>`;
+let wlIds=[];
+function initWl(){
+  wlIds=[String(SESSION.characterId)];
+  renderWl();
 }
-function addToWhitelist() {
-  const val = document.getElementById('wl-input').value.trim();
-  if (!val || wlIds.includes(val)) return;
-  wlIds.push(val);
-  document.getElementById('wl-input').value = '';
-  renderWhitelist();
+function renderWl(){
+  const el=document.getElementById('wl-list');
+  el.innerHTML=wlIds.map(id=>`
+    <div class="wl-item">
+      <img src="https://images.evetech.net/characters/${id}/portrait?size=32" loading="lazy"/>
+      <span>ID: ${id}</span>
+      <button class="btn btn-r btn-sm" onclick="removeWl('${id}')">Remove</button>
+    </div>`).join('');
+  document.getElementById('wl-env-val').textContent=wlIds.join(',');
 }
-function removeFromWhitelist(id) {
-  wlIds = wlIds.filter(i => i !== id);
-  renderWhitelist();
+function addWl(){
+  const v=document.getElementById('wl-input').value.trim();
+  if(!v||wlIds.includes(v))return;
+  wlIds.push(v);document.getElementById('wl-input').value='';renderWl();
 }
+function removeWl(id){wlIds=wlIds.filter(i=>i!==id);renderWl()}
 
-// ── NAVIGATION ──
-const pageLoaders = {
-  overview: loadOverview,
-  members: loadMembers,
-  killboard: loadKillboard,
-  wallet: loadWallet,
-  industry: loadIndustry,
-  whitelist: () => renderWhitelist(),
-};
-const loadedPages = new Set(['overview']);
-
-document.querySelectorAll('.nav-item').forEach(link => {
-  link.addEventListener('click', e => {
+// ── NAV ──
+const loaders={members:loadMembers,killboard:loadKillboard,wallet:loadWallet,industry:loadIndustry};
+const loaded=new Set(['overview']);
+document.querySelectorAll('.sb-item[data-page]').forEach(a=>{
+  a.addEventListener('click',e=>{
     e.preventDefault();
-    const page = link.dataset.page;
-
-    document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
-    link.classList.add('active');
-
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(`page-${page}`).classList.add('active');
-
-    if (!loadedPages.has(page) && pageLoaders[page]) {
-      loadedPages.add(page);
-      pageLoaders[page]();
+    const pg=a.dataset.page;
+    document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+    a.classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById(`page-${pg}`).classList.add('active');
+    if(!loaded.has(pg)){
+      loaded.add(pg);
+      if(loaders[pg])loaders[pg]();
+      if(pg==='posts')renderCmsPosts();
+      if(pg==='access')initWl();
     }
   });
 });
 
 // ── UTILS ──
-function formatISK(n) {
-  if (n >= 1e12) return (n/1e12).toFixed(2) + ' T';
-  if (n >= 1e9)  return (n/1e9).toFixed(2) + ' B';
-  if (n >= 1e6)  return (n/1e6).toFixed(2) + ' M';
-  return n.toLocaleString();
+function fisk(n){
+  if(n>=1e12)return(n/1e12).toFixed(2)+'T';
+  if(n>=1e9)return(n/1e9).toFixed(2)+'B';
+  if(n>=1e6)return(n/1e6).toFixed(2)+'M';
+  return Math.round(n).toLocaleString();
 }
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 init();
 </script>
