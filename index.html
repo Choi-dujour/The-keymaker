@@ -3,6 +3,204 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The-Keymaker [THE-K] — EVE Online</title>
+<meta name="description" content="The-Keymaker [THE-K] — EVE Online corporation. Hek IV."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060e;--s:#0c0c1a;--b:#16162a;
+  --g:#39FF14;--w:#ECEDF5;--m:#5a5a7a;
+}
+html,body{height:100%;overflow:hidden}
+@media(max-width:600px){html,body{overflow:auto}}
+body{background:var(--bg);color:var(--w);font-family:'Inter',sans-serif}
+
+#c{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* SINGLE SCREEN LAYOUT */
+.screen{
+  position:relative;z-index:1;
+  height:100svh;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  padding:0 clamp(1.5rem,5vw,4rem);
+}
+@media(max-width:600px){.screen{height:auto;min-height:100svh}}
+
+/* TOP BAR */
+.top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.5rem 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.top-left{display:flex;align-items:center;gap:0.75rem}
+.corp-logo{width:32px;height:32px;border-radius:4px;object-fit:cover;opacity:0.9}
+.corp-name{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.04em}
+.corp-name em{color:var(--g);font-style:normal}
+.ticker{font-size:0.6rem;color:var(--m);letter-spacing:0.1em;margin-left:0.15rem}
+.top-right{display:flex;gap:0.6rem;align-items:center}
+
+/* BUTTONS */
+.btn{
+  font-family:'Syne',sans-serif;font-size:0.65rem;font-weight:700;
+  letter-spacing:0.12em;text-transform:uppercase;
+  padding:0.5rem 1rem;cursor:pointer;transition:all .18s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:0.35rem;
+  white-space:nowrap;border:none;
+}
+.btn-outline{background:transparent;border:1px solid var(--b);color:var(--m)}
+.btn-outline:hover{border-color:var(--m);color:var(--w)}
+.btn-green{background:var(--g);color:#000}
+.btn-green:hover{background:#50ff30}
+#btn-dashboard{display:none}
+
+/* CENTER */
+.center{
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;gap:2rem;
+  padding:3rem 0;
+}
+.corp-logo-big{
+  width:clamp(72px,12vw,100px);
+  height:clamp(72px,12vw,100px);
+  border-radius:clamp(8px,1.5vw,14px);
+  object-fit:cover;
+  border:1px solid var(--b);
+  opacity:0.92;
+}
+h1{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(2rem,6vw,4.5rem);
+  font-weight:800;
+  letter-spacing:-0.03em;
+  line-height:1;
+}
+h1 em{color:var(--g);font-style:normal}
+.sub{
+  font-size:clamp(0.78rem,1.5vw,0.9rem);
+  color:var(--m);
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+}
+.ctas{display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center}
+.ctas .btn{font-size:0.7rem;padding:0.65rem 1.4rem}
+
+/* BOTTOM BAR */
+.bottom{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.25rem 0;
+  border-top:1px solid rgba(255,255,255,0.05);
+  flex-wrap:wrap;gap:0.75rem;
+}
+.bottom-stats{display:flex;gap:2rem;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column;gap:0.15rem}
+.stat-l{font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--m)}
+.stat-v{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700}
+.stat-v.g{color:var(--g)}
+.bottom-links{display:flex;gap:1rem;flex-wrap:wrap}
+.ext-link{
+  font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--m);text-decoration:none;transition:color .18s;
+}
+.ext-link:hover{color:var(--w)}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="screen">
+
+  <!-- TOP -->
+  <div class="top">
+    <div class="top-left">
+      <img class="corp-logo" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt=""/>
+      <div class="corp-name">The-<em>Keymaker</em><span class="ticker">[THE-K]</span></div>
+    </div>
+    <div class="top-right">
+      <a href="/about.html" class="btn btn-outline">About</a>
+      <a href="/api/login" class="btn btn-outline" id="btn-login">⬡ Login</a>
+      <a href="/dashboard.html" class="btn btn-outline" id="btn-dashboard">Dashboard</a>
+      <a href="https://www.eveonline.com/open-information-window?type=corporation&id=98800626" target="_blank" class="btn btn-green">Apply</a>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center">
+    <img class="corp-logo-big" src="https://images.evetech.net/corporations/98800626/logo?size=256" alt="The-Keymaker"/>
+    <h1>The-<em>Keymaker</em></h1>
+    <div class="sub">Hek IV · Krusual Tribe Bureau · Minmatar space</div>
+    <div class="ctas">
+      <a href="https://www.eveonline.com/open-information-window?type=corporation&id=98800626" target="_blank" class="btn btn-green">Apply in-game</a>
+      <a href="/about.html" class="btn btn-outline">About the corp</a>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bottom">
+    <div class="bottom-stats">
+      <div class="stat"><div class="stat-l">Members</div><div class="stat-v g" id="stat-members">—</div></div>
+      <div class="stat"><div class="stat-l">Ticker</div><div class="stat-v">THE-K</div></div>
+      <div class="stat"><div class="stat-l">CEO</div><div class="stat-v">Choi du'jour</div></div>
+    </div>
+    <div class="bottom-links">
+      <a class="ext-link" href="https://zkillboard.com/corporation/98800626/" target="_blank">zKillboard ↗</a>
+      <a class="ext-link" href="https://evemaps.dotlan.net/corp/The-Keymaker" target="_blank">DOTLAN ↗</a>
+      <a class="ext-link" href="https://evewho.com/corporation/98800626" target="_blank">EveWho ↗</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// STARFIELD
+const cv=document.getElementById('c'),cx=cv.getContext('2d');
+let st=[];
+function rs(){
+  cv.width=innerWidth;cv.height=innerHeight;
+  st=Array.from({length:Math.floor(cv.width*cv.height/6000)},()=>({
+    x:Math.random()*cv.width,y:Math.random()*cv.height,
+    r:Math.random()*0.9+0.15,o:Math.random()*0.35+0.05,
+    f:Math.random()*0.002+0.001,p:Math.random()*Math.PI*2
+  }));
+}
+let fr=0;
+(function draw(){
+  cx.clearRect(0,0,cv.width,cv.height);fr++;
+  st.forEach(s=>{
+    const o=s.o+Math.sin(fr*s.f+s.p)*0.07;
+    cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    cx.fillStyle=`rgba(200,200,255,${Math.max(0,Math.min(0.5,o))})`;cx.fill();
+  });
+  requestAnimationFrame(draw);
+})();
+rs();window.addEventListener('resize',rs);
+
+// AUTH STATE
+(async()=>{
+  try{
+    const r=await fetch('/api/me');
+    if(r.ok){const s=await r.json();if(s.authenticated){
+      document.getElementById('btn-login').style.display='none';
+      document.getElementById('btn-dashboard').style.display='inline-flex';
+    }}
+  }catch{}
+})();
+
+// MEMBERS
+fetch('https://esi.evetech.net/latest/corporations/98800626/?datasource=tranquility')
+  .then(r=>r.json()).then(d=>{
+    if(d.member_count)document.getElementById('stat-members').textContent=d.member_count;
+  }).catch(()=>{});
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>The-Keymaker [THE-K]</title>
 <meta name="description" content="EVE Online corporation. Hek IV. PvP, industry, mining."/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
