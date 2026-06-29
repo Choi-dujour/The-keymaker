@@ -4,628 +4,136 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>The-Keymaker [THE-K] — EVE Online</title>
-<meta name="description" content="The-Keymaker [THE-K] — EVE Online corporation. Hek IV."/>
+<meta name="description" content="The-Keymaker [THE-K] — EVE Online corporation based in Hek IV. PvP, industry, mining."/>
+<meta property="og:title" content="The-Keymaker [THE-K]"/>
+<meta property="og:description" content="EVE Online corporation. Hek IV · Minmatar space. PvP, industry, mining. Real life first."/>
+<meta property="og:image" content="https://images.evetech.net/corporations/98800626/logo?size=256"/>
+<meta property="og:type" content="website"/>
+<meta name="theme-color" content="#39FF14"/>
+<link rel="icon" type="image/png" href="https://images.evetech.net/corporations/98800626/logo?size=64"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#06060e;--s:#0c0c1a;--b:#16162a;
-  --g:#39FF14;--w:#ECEDF5;--m:#5a5a7a;
-}
+:root{--bg:#06060e;--s:#0c0c1a;--b:#16162a;--g:#39FF14;--w:#ECEDF5;--m:#5a5a7a}
 html,body{height:100%;overflow:hidden}
 @media(max-width:600px){html,body{overflow:auto}}
 body{background:var(--bg);color:var(--w);font-family:'Inter',sans-serif}
-
 #c{position:fixed;inset:0;z-index:0;pointer-events:none}
 
-/* SINGLE SCREEN LAYOUT */
 .screen{
-  position:relative;z-index:1;
-  height:100svh;
-  display:grid;
-  grid-template-rows:auto 1fr auto;
+  position:relative;z-index:1;height:100svh;
+  display:grid;grid-template-rows:auto 1fr auto;
   padding:0 clamp(1.5rem,5vw,4rem);
 }
 @media(max-width:600px){.screen{height:auto;min-height:100svh}}
 
-/* TOP BAR */
 .top{
   display:flex;align-items:center;justify-content:space-between;
-  padding:1.5rem 0;
-  border-bottom:1px solid rgba(255,255,255,0.05);
+  padding:1.4rem 0;border-bottom:1px solid rgba(255,255,255,0.05);
+  flex-wrap:wrap;gap:0.75rem;
 }
 .top-left{display:flex;align-items:center;gap:0.75rem}
-.corp-logo{width:32px;height:32px;border-radius:4px;object-fit:cover;opacity:0.9}
-.corp-name{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.04em}
+.corp-logo{width:30px;height:30px;border-radius:4px;object-fit:cover;opacity:0.9}
+.corp-name{font-family:'Syne',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:0.04em}
 .corp-name em{color:var(--g);font-style:normal}
-.ticker{font-size:0.6rem;color:var(--m);letter-spacing:0.1em;margin-left:0.15rem}
-.top-right{display:flex;gap:0.6rem;align-items:center}
+.ticker{font-size:0.58rem;color:var(--m);letter-spacing:0.1em;margin-left:0.15rem}
+.top-right{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap}
 
-/* BUTTONS */
 .btn{
-  font-family:'Syne',sans-serif;font-size:0.65rem;font-weight:700;
+  font-family:'Syne',sans-serif;font-size:0.62rem;font-weight:700;
   letter-spacing:0.12em;text-transform:uppercase;
-  padding:0.5rem 1rem;cursor:pointer;transition:all .18s;
-  text-decoration:none;display:inline-flex;align-items:center;gap:0.35rem;
+  padding:0.45rem 0.9rem;cursor:pointer;transition:all .18s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;
   white-space:nowrap;border:none;
 }
-.btn-outline{background:transparent;border:1px solid var(--b);color:var(--m)}
-.btn-outline:hover{border-color:var(--m);color:var(--w)}
-.btn-green{background:var(--g);color:#000}
-.btn-green:hover{background:#50ff30}
+.btn-o{background:transparent;border:1px solid var(--b);color:var(--m)}
+.btn-o:hover{border-color:var(--m);color:var(--w)}
+.btn-g{background:var(--g);color:#000}
+.btn-g:hover{background:#50ff30}
 #btn-dashboard{display:none}
 
-/* CENTER */
 .center{
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  text-align:center;gap:2rem;
-  padding:3rem 0;
+  text-align:center;gap:1.75rem;padding:3rem 0;
 }
 .corp-logo-big{
-  width:clamp(72px,12vw,100px);
-  height:clamp(72px,12vw,100px);
-  border-radius:clamp(8px,1.5vw,14px);
-  object-fit:cover;
-  border:1px solid var(--b);
-  opacity:0.92;
+  width:clamp(72px,12vw,96px);height:clamp(72px,12vw,96px);
+  border-radius:clamp(8px,1.5vw,12px);object-fit:cover;
+  border:1px solid var(--b);opacity:0.92;
 }
 h1{
   font-family:'Syne',sans-serif;
-  font-size:clamp(2rem,6vw,4.5rem);
-  font-weight:800;
-  letter-spacing:-0.03em;
-  line-height:1;
+  font-size:clamp(2.2rem,6vw,4.5rem);
+  font-weight:800;letter-spacing:-0.03em;line-height:1;
 }
 h1 em{color:var(--g);font-style:normal}
-.sub{
-  font-size:clamp(0.78rem,1.5vw,0.9rem);
-  color:var(--m);
-  letter-spacing:0.06em;
-  text-transform:uppercase;
-}
-.ctas{display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center}
-.ctas .btn{font-size:0.7rem;padding:0.65rem 1.4rem}
+.sub{font-size:clamp(0.7rem,1.5vw,0.82rem);color:var(--m);letter-spacing:0.08em;text-transform:uppercase}
+.ctas{display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:center}
+.ctas .btn{font-size:0.68rem;padding:0.6rem 1.3rem}
 
-/* BOTTOM BAR */
 .bottom{
   display:flex;align-items:center;justify-content:space-between;
-  padding:1.25rem 0;
-  border-top:1px solid rgba(255,255,255,0.05);
+  padding:1.25rem 0;border-top:1px solid rgba(255,255,255,0.05);
   flex-wrap:wrap;gap:0.75rem;
 }
-.bottom-stats{display:flex;gap:2rem;flex-wrap:wrap}
-.stat{display:flex;flex-direction:column;gap:0.15rem}
-.stat-l{font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--m)}
-.stat-v{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700}
+.stats{display:flex;gap:2rem;flex-wrap:wrap}
+.stat-l{font-size:0.52rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--m);margin-bottom:0.15rem}
+.stat-v{font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700}
 .stat-v.g{color:var(--g)}
-.bottom-links{display:flex;gap:1rem;flex-wrap:wrap}
-.ext-link{
-  font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;
-  color:var(--m);text-decoration:none;transition:color .18s;
-}
-.ext-link:hover{color:var(--w)}
+.ext-links{display:flex;gap:1rem;flex-wrap:wrap}
+.ext{font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--m);text-decoration:none;transition:color .18s}
+.ext:hover{color:var(--w)}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-
 <div class="screen">
-
-  <!-- TOP -->
   <div class="top">
     <div class="top-left">
       <img class="corp-logo" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt=""/>
       <div class="corp-name">The-<em>Keymaker</em><span class="ticker">[THE-K]</span></div>
     </div>
     <div class="top-right">
-      <a href="/about.html" class="btn btn-outline">About</a>
-      <a href="/api/login" class="btn btn-outline" id="btn-login">⬡ Login</a>
-      <a href="/dashboard.html" class="btn btn-outline" id="btn-dashboard">Dashboard</a>
-      <a href="https://www.eveonline.com/open-information-window?type=corporation&id=98800626" target="_blank" class="btn btn-green">Apply</a>
+      <a href="/about.html" class="btn btn-o">About</a>
+      <a href="/api/login" class="btn btn-o" id="btn-login">⬡ Login</a>
+      <a href="/dashboard.html" class="btn btn-o" id="btn-dashboard">Dashboard</a>
+      <a href="https://www.eveonline.com/open-information-window?type=corporation&id=98800626" target="_blank" class="btn btn-g">Apply</a>
     </div>
   </div>
 
-  <!-- CENTER -->
   <div class="center">
     <img class="corp-logo-big" src="https://images.evetech.net/corporations/98800626/logo?size=256" alt="The-Keymaker"/>
     <h1>The-<em>Keymaker</em></h1>
     <div class="sub">Hek IV · Krusual Tribe Bureau · Minmatar space</div>
     <div class="ctas">
-      <a href="https://www.eveonline.com/open-information-window?type=corporation&id=98800626" target="_blank" class="btn btn-green">Apply in-game</a>
-      <a href="/about.html" class="btn btn-outline">About the corp</a>
+      <a href="https://www.eveonline.com/open-information-window?type=corporation&id=98800626" target="_blank" class="btn btn-g">Apply in-game</a>
+      <a href="/about.html" class="btn btn-o">About the corp</a>
     </div>
   </div>
 
-  <!-- BOTTOM -->
   <div class="bottom">
-    <div class="bottom-stats">
-      <div class="stat"><div class="stat-l">Members</div><div class="stat-v g" id="stat-members">—</div></div>
-      <div class="stat"><div class="stat-l">Ticker</div><div class="stat-v">THE-K</div></div>
-      <div class="stat"><div class="stat-l">CEO</div><div class="stat-v">Choi du'jour</div></div>
+    <div class="stats">
+      <div><div class="stat-l">Members</div><div class="stat-v g" id="stat-members">—</div></div>
+      <div><div class="stat-l">Ticker</div><div class="stat-v">THE-K</div></div>
+      <div><div class="stat-l">CEO</div><div class="stat-v">Choi du'jour</div></div>
     </div>
-    <div class="bottom-links">
-      <a class="ext-link" href="https://zkillboard.com/corporation/98800626/" target="_blank">zKillboard ↗</a>
-      <a class="ext-link" href="https://evemaps.dotlan.net/corp/The-Keymaker" target="_blank">DOTLAN ↗</a>
-      <a class="ext-link" href="https://evewho.com/corporation/98800626" target="_blank">EveWho ↗</a>
+    <div class="ext-links">
+      <a class="ext" href="https://zkillboard.com/corporation/98800626/" target="_blank">zKillboard ↗</a>
+      <a class="ext" href="https://evemaps.dotlan.net/corp/The-Keymaker" target="_blank">DOTLAN ↗</a>
+      <a class="ext" href="https://evewho.com/corporation/98800626" target="_blank">EveWho ↗</a>
     </div>
   </div>
-
 </div>
 
 <script>
-// STARFIELD
-const cv=document.getElementById('c'),cx=cv.getContext('2d');
-let st=[];
-function rs(){
-  cv.width=innerWidth;cv.height=innerHeight;
-  st=Array.from({length:Math.floor(cv.width*cv.height/6000)},()=>({
-    x:Math.random()*cv.width,y:Math.random()*cv.height,
-    r:Math.random()*0.9+0.15,o:Math.random()*0.35+0.05,
-    f:Math.random()*0.002+0.001,p:Math.random()*Math.PI*2
-  }));
-}
-let fr=0;
-(function draw(){
-  cx.clearRect(0,0,cv.width,cv.height);fr++;
-  st.forEach(s=>{
-    const o=s.o+Math.sin(fr*s.f+s.p)*0.07;
-    cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);
-    cx.fillStyle=`rgba(200,200,255,${Math.max(0,Math.min(0.5,o))})`;cx.fill();
-  });
-  requestAnimationFrame(draw);
-})();
+const cv=document.getElementById('c'),cx=cv.getContext('2d');let st=[];
+function rs(){cv.width=innerWidth;cv.height=innerHeight;st=Array.from({length:Math.floor(cv.width*cv.height/6000)},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*0.9+0.15,o:Math.random()*0.35+0.05,f:Math.random()*0.002+0.001,p:Math.random()*Math.PI*2}))}
+let fr=0;(function draw(){cx.clearRect(0,0,cv.width,cv.height);fr++;st.forEach(s=>{const o=s.o+Math.sin(fr*s.f+s.p)*0.07;cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle=`rgba(200,200,255,${Math.max(0,Math.min(0.5,o))})`;cx.fill()});requestAnimationFrame(draw)})();
 rs();window.addEventListener('resize',rs);
-
-// AUTH STATE
-(async()=>{
-  try{
-    const r=await fetch('/api/me');
-    if(r.ok){const s=await r.json();if(s.authenticated){
-      document.getElementById('btn-login').style.display='none';
-      document.getElementById('btn-dashboard').style.display='inline-flex';
-    }}
-  }catch{}
-})();
-
-// MEMBERS
-fetch('https://esi.evetech.net/latest/corporations/98800626/?datasource=tranquility')
-  .then(r=>r.json()).then(d=>{
-    if(d.member_count)document.getElementById('stat-members').textContent=d.member_count;
-  }).catch(()=>{});
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>The-Keymaker [THE-K]</title>
-<meta name="description" content="EVE Online corporation. Hek IV. PvP, industry, mining."/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
-<style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#06060e;--s:#0c0c1a;--b:#16162a;
-  --g:#39FF14;--g2:#2bcc10;
-  --w:#ECEDF5;--m:#5a5a7a;
-  --r:0.5rem;
-}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--w);font-family:'Inter',sans-serif;overflow-x:hidden;line-height:1.6}
-
-/* CANVAS */
-#c{position:fixed;inset:0;z-index:0;pointer-events:none}
-
-/* NAV */
-nav{
-  position:fixed;top:0;left:0;right:0;z-index:100;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 clamp(1.25rem,4vw,3rem);
-  height:56px;
-  border-bottom:1px solid rgba(255,255,255,0.05);
-  backdrop-filter:blur(20px);
-  background:rgba(6,6,14,0.8);
-}
-.n-left{display:flex;align-items:center;gap:0.75rem}
-.n-logo-img{width:28px;height:28px;border-radius:3px;object-fit:cover;opacity:0.9}
-.n-name{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.05em}
-.n-name em{color:var(--g);font-style:normal}
-.n-ticker{font-size:0.62rem;color:var(--m);letter-spacing:0.1em;margin-left:0.1rem}
-.n-right{display:flex;align-items:center;gap:0.75rem}
-.n-links{display:flex;gap:1.75rem;list-style:none}
-.n-links a{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--m);text-decoration:none;transition:color .2s}
-.n-links a:hover{color:var(--w)}
-@media(max-width:640px){.n-links{display:none}}
-.btn{
-  font-family:'Syne',sans-serif;font-size:0.68rem;font-weight:700;
-  letter-spacing:0.12em;text-transform:uppercase;
-  padding:0.45rem 1rem;cursor:pointer;transition:all .2s;
-  text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;
-  white-space:nowrap;
-}
-.btn-outline{background:transparent;border:1px solid var(--b);color:var(--m)}
-.btn-outline:hover{border-color:var(--m);color:var(--w)}
-.btn-green{background:var(--g);color:#000;border:none}
-.btn-green:hover{background:#50ff30}
-#nav-dashboard{display:none}
-
-/* HERO */
-.hero{
-  position:relative;z-index:1;
-  min-height:100svh;
-  display:flex;flex-direction:column;
-  justify-content:center;
-  padding:0 clamp(1.25rem,6vw,5rem);
-  padding-top:56px;
-}
-.h-eyebrow{
-  font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;
-  color:var(--g);opacity:0.7;margin-bottom:1.75rem;
-  display:flex;align-items:center;gap:0.6rem;
-}
-.h-eyebrow::before{content:'';width:24px;height:1px;background:var(--g);opacity:0.6}
-h1{
-  font-family:'Syne',sans-serif;
-  font-size:clamp(2.8rem,8vw,6rem);
-  font-weight:800;line-height:1;
-  letter-spacing:-0.03em;
-  margin-bottom:1.5rem;
-  max-width:16ch;
-}
-h1 span{color:var(--m);font-weight:700}
-.h-sub{
-  font-size:clamp(0.9rem,2vw,1rem);color:var(--m);
-  max-width:38ch;line-height:1.8;margin-bottom:2.5rem;
-}
-.h-ctas{display:flex;gap:0.75rem;flex-wrap:wrap}
-.h-ctas .btn{font-size:0.75rem;padding:0.7rem 1.5rem}
-
-/* LIVE BAND */
-.band{
-  position:relative;z-index:1;
-  display:grid;grid-template-columns:repeat(4,1fr);
-  border-top:1px solid var(--b);border-bottom:1px solid var(--b);
-}
-@media(max-width:640px){.band{grid-template-columns:repeat(2,1fr)}}
-.band-cell{
-  padding:1.5rem clamp(1rem,3vw,2.5rem);
-  border-right:1px solid var(--b);
-}
-.band-cell:last-child{border-right:none}
-@media(max-width:640px){.band-cell:nth-child(2){border-right:none}.band-cell:nth-child(3){border-right:none}}
-.band-label{font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--m);margin-bottom:0.3rem}
-.band-val{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700}
-.band-val.green{color:var(--g)}
-
-/* POSTS SECTION */
-.posts-section{position:relative;z-index:1;padding:5rem clamp(1.25rem,6vw,5rem)}
-.sec-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2.5rem;flex-wrap:wrap;gap:1rem}
-.sec-eyebrow{font-size:0.62rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--g);opacity:0.7;margin-bottom:0.4rem}
-h2{font-family:'Syne',sans-serif;font-size:clamp(1.4rem,3vw,2rem);font-weight:700;letter-spacing:-0.02em}
-.posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:1px;background:var(--b)}
-.post-card{
-  background:var(--s);padding:1.75rem;
-  display:flex;flex-direction:column;gap:0.75rem;
-  transition:background .2s;cursor:pointer;
-}
-.post-card:hover{background:#0f0f1f}
-.post-tag{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--g);opacity:0.7}
-.post-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;line-height:1.3}
-.post-excerpt{font-size:0.82rem;color:var(--m);line-height:1.65;flex:1}
-.post-meta{font-size:0.65rem;color:var(--m);opacity:0.6;margin-top:0.25rem}
-.posts-empty{padding:3rem;text-align:center;font-size:0.85rem;color:var(--m);background:var(--s)}
-
-/* POST MODAL */
-.modal-overlay{
-  display:none;position:fixed;inset:0;z-index:200;
-  background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);
-  align-items:center;justify-content:center;padding:1rem;
-}
-.modal-overlay.open{display:flex}
-.modal{
-  background:var(--s);border:1px solid var(--b);
-  width:100%;max-width:640px;max-height:90svh;
-  display:flex;flex-direction:column;overflow:hidden;
-}
-.modal-head{
-  padding:1.25rem 1.5rem;border-bottom:1px solid var(--b);
-  display:flex;align-items:center;justify-content:space-between;
-}
-.modal-title-text{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700}
-.modal-close{background:none;border:none;color:var(--m);font-size:1.25rem;cursor:pointer;line-height:1;padding:0.25rem}
-.modal-close:hover{color:var(--w)}
-.modal-body{padding:1.5rem;overflow-y:auto;flex:1}
-.modal-tag{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--g);opacity:0.7;margin-bottom:0.75rem}
-.modal-h{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700;margin-bottom:1rem;line-height:1.25}
-.modal-content{font-size:0.9rem;color:var(--m);line-height:1.8;white-space:pre-wrap}
-.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--b);font-size:0.65rem;color:var(--m);opacity:0.5}
-
-/* ABOUT */
-.about{position:relative;z-index:1;padding:5rem clamp(1.25rem,6vw,5rem);border-top:1px solid var(--b)}
-.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-top:2.5rem}
-@media(max-width:640px){.about-grid{grid-template-columns:1fr;gap:2rem}}
-.about-lead{font-size:0.95rem;color:var(--m);line-height:1.85}
-.meta-list{display:flex;flex-direction:column;gap:1.25rem}
-.meta-row{display:flex;flex-direction:column;gap:0.2rem}
-.meta-k{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--m)}
-.meta-v{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:600}
-.meta-links{display:flex;gap:1rem;flex-wrap:wrap;margin-top:0.3rem}
-.meta-a{font-size:0.75rem;color:var(--g);text-decoration:none;opacity:0.75;transition:opacity .2s}
-.meta-a:hover{opacity:1}
-
-/* OFFER */
-.offer{position:relative;z-index:1;padding:5rem clamp(1.25rem,6vw,5rem);border-top:1px solid var(--b)}
-.offer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:1px;background:var(--b);margin-top:2.5rem}
-.offer-card{background:var(--s);padding:1.75rem 1.5rem;transition:background .2s}
-.offer-card:hover{background:#0f0f1f}
-.offer-icon{font-size:1.1rem;margin-bottom:1rem}
-.offer-t{font-family:'Syne',sans-serif;font-size:0.88rem;font-weight:700;margin-bottom:0.5rem}
-.offer-d{font-size:0.78rem;color:var(--m);line-height:1.65}
-
-/* JOIN */
-.join{position:relative;z-index:1;padding:5rem clamp(1.25rem,6vw,5rem);border-top:1px solid var(--b)}
-.join-inner{
-  border:1px solid var(--b);padding:clamp(2rem,5vw,4rem);
-  display:flex;align-items:center;justify-content:space-between;
-  gap:2rem;flex-wrap:wrap;
-}
-.join-t{font-family:'Syne',sans-serif;font-size:clamp(1.2rem,3vw,1.8rem);font-weight:700;margin-bottom:0.5rem}
-.join-s{font-size:0.85rem;color:var(--m);line-height:1.7}
-.join-acts{display:flex;flex-direction:column;gap:0.6rem;min-width:180px}
-.join-acts .btn{text-align:center;justify-content:center;font-size:0.72rem}
-.join-note{font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--m);opacity:0.4;text-align:center}
-
-/* FOOTER */
-footer{
-  position:relative;z-index:1;
-  border-top:1px solid var(--b);
-  padding:1.5rem clamp(1.25rem,4vw,3rem);
-  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;
-}
-.f-left{display:flex;align-items:center;gap:0.5rem}
-.f-logo{width:20px;height:20px;border-radius:2px;opacity:0.4;object-fit:cover}
-.f-name{font-family:'Syne',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;color:var(--m)}
-.f-name em{color:var(--g);font-style:normal}
-.f-note{font-size:0.65rem;color:var(--m);opacity:0.3}
-
-/* AUTH NOTICE */
-#auth-notice{
-  display:none;position:fixed;bottom:1.5rem;right:1.5rem;z-index:150;
-  background:var(--s);border:1px solid var(--b);border-left:2px solid #ff4444;
-  padding:0.75rem 1.25rem;font-size:0.78rem;color:var(--m);
-  max-width:260px;
-}
-</style>
-</head>
-<body>
-<canvas id="c"></canvas>
-
-<nav>
-  <div class="n-left">
-    <img class="n-logo-img" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt=""/>
-    <div class="n-name">The-<em>Keymaker</em><span class="n-ticker"> [THE-K]</span></div>
-  </div>
-  <ul class="n-links">
-    <li><a href="#about">About</a></li>
-    <li><a href="#offer">Offer</a></li>
-    <li><a href="#join">Join</a></li>
-  </ul>
-  <div class="n-right">
-    <a href="/api/login" class="btn btn-outline" id="nav-login">⬡ Login</a>
-    <a href="/dashboard.html" class="btn btn-green" id="nav-dashboard">Dashboard</a>
-    <a href="#join" class="btn btn-green" id="nav-apply">Apply</a>
-  </div>
-</nav>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="h-eyebrow">Hek IV · Minmatar space · THE-K</div>
-  <h1>Fly together.<br><span>Your pace.</span></h1>
-  <p class="h-sub">PvP roams, mining fleets, PvE missions. No mandatory ops. Real life first, always.</p>
-  <div class="h-ctas">
-    <a href="#join" class="btn btn-green">Apply now</a>
-    <a href="#about" class="btn btn-outline">Learn more</a>
-  </div>
-</section>
-
-<!-- BAND -->
-<div class="band">
-  <div class="band-cell"><div class="band-label">Members</div><div class="band-val green" id="stat-members">—</div></div>
-  <div class="band-cell"><div class="band-label">Ticker</div><div class="band-val">THE-K</div></div>
-  <div class="band-cell"><div class="band-label">Focus</div><div class="band-val" style="font-size:0.85rem;padding-top:0.2rem">PvP · Industry</div></div>
-  <div class="band-cell"><div class="band-label">Ships</div><div class="band-val" style="font-size:0.85rem;padding-top:0.2rem">Free T1</div></div>
-</div>
-
-<!-- POSTS -->
-<section class="posts-section" id="news">
-  <div class="sec-header">
-    <div><div class="sec-eyebrow">Corp news</div><h2>Latest posts</h2></div>
-  </div>
-  <div class="posts-grid" id="posts-grid">
-    <div class="posts-empty">No posts yet.</div>
-  </div>
-</section>
-
-<!-- POST MODAL -->
-<div class="modal-overlay" id="post-modal">
-  <div class="modal">
-    <div class="modal-head">
-      <div class="modal-title-text" id="modal-tag-head">—</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-h" id="modal-title">—</div>
-      <div class="modal-content" id="modal-body">—</div>
-    </div>
-    <div class="modal-footer" id="modal-date">—</div>
-  </div>
-</div>
-
-<!-- ABOUT -->
-<section class="about" id="about">
-  <div class="sec-eyebrow">Who we are</div>
-  <h2>Good people. No pressure.</h2>
-  <div class="about-grid">
-    <p class="about-lead">The-Keymaker is built for pilots who want a real group without politics and mandatory ops. Whether you want to hunt in low-sec or mine in peace — there's a seat for you.</p>
-    <div class="meta-list">
-      <div class="meta-row"><div class="meta-k">CEO</div><div class="meta-v">Choi du'jour</div></div>
-      <div class="meta-row"><div class="meta-k">Diplomacy</div><div class="meta-v">H-ket equal E-Ket</div></div>
-      <div class="meta-row"><div class="meta-k">Home base</div><div class="meta-v">Hek IV — Minmatar</div></div>
-      <div class="meta-row">
-        <div class="meta-k">External</div>
-        <div class="meta-links">
-          <a class="meta-a" href="https://zkillboard.com/corporation/98800626/" target="_blank">zKillboard ↗</a>
-          <a class="meta-a" href="https://evemaps.dotlan.net/corp/The-Keymaker" target="_blank">DOTLAN ↗</a>
-          <a class="meta-a" href="https://evewho.com/corporation/98800626" target="_blank">EveWho ↗</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- OFFER -->
-<section class="offer" id="offer">
-  <div class="sec-eyebrow">What we offer</div>
-  <h2>Everything to enjoy EVE.</h2>
-  <div class="offer-grid">
-    <div class="offer-card"><div class="offer-icon">⚔</div><div class="offer-t">PvP Roams</div><div class="offer-d">Regular low/null roams. FC experience not required.</div></div>
-    <div class="offer-card"><div class="offer-icon">🚀</div><div class="offer-t">PvE & Missions</div><div class="offer-d">Fleets and combat sites. Good ISK, no stress.</div></div>
-    <div class="offer-card"><div class="offer-icon">⛏</div><div class="offer-t">Mining Fleets</div><div class="offer-d">Boosted mining ops with chill atmosphere.</div></div>
-    <div class="offer-card"><div class="offer-icon">🎁</div><div class="offer-t">Free T1 Ships</div><div class="offer-d">Corp provides T1 hulls for activities.</div></div>
-    <div class="offer-card"><div class="offer-icon">📖</div><div class="offer-t">Newbro Support</div><div class="offer-d">Guidance for new and returning pilots.</div></div>
-    <div class="offer-card"><div class="offer-icon">💬</div><div class="offer-t">Discord</div><div class="offer-d">Optional except for PvP ops (listen required).</div></div>
-  </div>
-</section>
-
-<!-- JOIN -->
-<section class="join" id="join">
-  <div class="join-inner">
-    <div>
-      <div class="sec-eyebrow">Ready?</div>
-      <div class="join-t">We'll save you a seat in fleet.</div>
-      <div class="join-s">New and returning pilots always welcome.</div>
-    </div>
-    <div class="join-acts">
-      <a href="#" class="btn btn-green">Apply in EVE Online</a>
-      <a href="#" class="btn btn-outline">Join Discord</a>
-      <div class="join-note">Diplo · H-ket equal E-Ket</div>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="f-left">
-    <img class="f-logo" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt=""/>
-    <div class="f-name">The-<em>Keymaker</em> · [THE-K]</div>
-  </div>
-  <div class="f-note">EVE Online © CCP hf. Independent fan site.</div>
-</footer>
-
-<div id="auth-notice">⛔ Character not authorized.</div>
-
-<script>
-// STARFIELD
-const canvas=document.getElementById('c');
-const ctx=canvas.getContext('2d');
-let stars=[];
-function resize(){
-  canvas.width=innerWidth;
-  canvas.height=Math.max(document.body.scrollHeight,innerHeight);
-  stars=Array.from({length:Math.floor(canvas.width*canvas.height/7000)},()=>({
-    x:Math.random()*canvas.width,y:Math.random()*canvas.height,
-    r:Math.random()*0.9+0.2,o:Math.random()*0.4+0.05,
-    f:Math.random()*0.002+0.001,p:Math.random()*Math.PI*2
-  }));
-}
-let f=0;
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);f++;
-  stars.forEach(s=>{
-    const o=s.o+Math.sin(f*s.f+s.p)*0.08;
-    ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-    ctx.fillStyle=`rgba(200,200,255,${Math.max(0,Math.min(0.55,o))})`;ctx.fill();
-  });
-  requestAnimationFrame(draw);
-}
-resize();draw();
-window.addEventListener('resize',resize);
-
-// AUTH
-(async()=>{
-  try{
-    const r=await fetch('/api/me');
-    if(r.ok){
-      const s=await r.json();
-      if(s.authenticated){
-        document.getElementById('nav-login').style.display='none';
-        document.getElementById('nav-apply').style.display='none';
-        document.getElementById('nav-dashboard').style.display='inline-flex';
-      }
-    }
-    if(new URLSearchParams(location.search).get('auth')==='denied'){
-      const n=document.getElementById('auth-notice');
-      n.style.display='block';
-      setTimeout(()=>n.style.display='none',4000);
-    }
-  }catch{}
-})();
-
-// ESI MEMBERS
-fetch('https://esi.evetech.net/latest/corporations/98800626/?datasource=tranquility')
-  .then(r=>r.json()).then(d=>{
-    if(d.member_count) document.getElementById('stat-members').textContent=d.member_count;
-  }).catch(()=>{});
-
-// POSTS
-const STORAGE_KEY='tkm_posts';
-function getPosts(){
-  try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch{return[]}
-}
-function renderPosts(){
-  const posts=getPosts();
-  const grid=document.getElementById('posts-grid');
-  if(!posts.length){grid.innerHTML='<div class="posts-empty">No posts yet.</div>';return;}
-  grid.innerHTML=posts.slice().reverse().map((p,i)=>`
-    <div class="post-card" onclick="openPost(${posts.length-1-i})">
-      <div class="post-tag">${p.tag||'Announcement'}</div>
-      <div class="post-title">${esc(p.title)}</div>
-      <div class="post-excerpt">${esc(p.body).substring(0,120)}${p.body.length>120?'…':''}</div>
-      <div class="post-meta">${new Date(p.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
-    </div>`).join('');
-}
-function openPost(idx){
-  const posts=getPosts();
-  const p=posts[idx];if(!p)return;
-  document.getElementById('modal-tag-head').textContent=p.tag||'Announcement';
-  document.getElementById('modal-title').textContent=p.title;
-  document.getElementById('modal-body').textContent=p.body;
-  document.getElementById('modal-date').textContent=new Date(p.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('post-modal').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeModal(){
-  document.getElementById('post-modal').classList.remove('open');
-  document.body.style.overflow='';
-}
-document.getElementById('post-modal').addEventListener('click',e=>{
-  if(e.target===e.currentTarget)closeModal();
-});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-renderPosts();
-
-// FADE IN
-const io=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}});
-},{threshold:0.07});
-document.querySelectorAll('.post-card,.offer-card,.band-cell,.about-grid').forEach(el=>{
-  el.style.opacity='0';el.style.transform='translateY(16px)';
-  el.style.transition='opacity 0.5s ease,transform 0.5s ease';
-  io.observe(el);
-});
+(async()=>{try{const r=await fetch('/api/me');if(r.ok){const s=await r.json();if(s.authenticated){document.getElementById('btn-login').style.display='none';document.getElementById('btn-dashboard').style.display='inline-flex'}}}catch{}})();
+fetch('https://esi.evetech.net/latest/corporations/98800626/?datasource=tranquility').then(r=>r.json()).then(d=>{if(d.member_count)document.getElementById('stat-members').textContent=d.member_count}).catch(()=>{});
 </script>
 </body>
 </html>
