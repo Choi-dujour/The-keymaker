@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>About — The-Keymaker [THE-K]</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#06060e;--s:#0c0c1a;--b:#16162a;--g:#39FF14;--w:#ECEDF5;--m:#5a5a7a}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--w);font-family:'Inter',sans-serif;overflow-x:hidden}
+#c{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(1.5rem,5vw,4rem);height:54px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);background:rgba(6,6,14,0.85);
+}
+.n-left{display:flex;align-items:center;gap:0.6rem}
+.n-logo{width:26px;height:26px;border-radius:3px;object-fit:cover;opacity:0.9}
+.n-name{font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em}
+.n-name em{color:var(--g);font-style:normal}
+.n-right{display:flex;gap:0.6rem}
+.btn{
+  font-family:'Syne',sans-serif;font-size:0.62rem;font-weight:700;
+  letter-spacing:0.12em;text-transform:uppercase;
+  padding:0.45rem 0.9rem;cursor:pointer;transition:all .18s;
+  text-decoration:none;display:inline-flex;align-items:center;border:none;
+}
+.btn-o{background:transparent;border:1px solid var(--b);color:var(--m)}
+.btn-o:hover{border-color:var(--m);color:var(--w)}
+.btn-g{background:var(--g);color:#000}
+.btn-g:hover{background:#50ff30}
+
+/* LAYOUT */
+.wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 clamp(1.5rem,5vw,4rem)}
+
+/* HERO */
+.hero{padding-top:calc(54px + 5rem);padding-bottom:4rem;border-bottom:1px solid var(--b)}
+.eye{font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--g);opacity:0.7;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.5rem}
+.eye::before{content:'';width:20px;height:1px;background:var(--g);opacity:0.6}
+h1{font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:800;letter-spacing:-0.03em;line-height:1.05;margin-bottom:1.25rem}
+.hero-lead{font-size:1rem;color:var(--m);max-width:50ch;line-height:1.85}
+
+/* SECTION */
+.sec{padding:4rem 0;border-bottom:1px solid var(--b)}
+.sec-eye{font-size:0.58rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--g);opacity:0.7;margin-bottom:0.75rem}
+h2{font-family:'Syne',sans-serif;font-size:clamp(1.2rem,2.5vw,1.8rem);font-weight:700;letter-spacing:-0.02em;margin-bottom:1.5rem}
+
+/* INFO GRID */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--b)}
+.info-cell{background:var(--s);padding:1.25rem 1.5rem}
+.info-k{font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--m);margin-bottom:0.35rem}
+.info-v{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700}
+
+/* RULES */
+.rules{display:flex;flex-direction:column;border-top:1px solid var(--b)}
+.rule{display:grid;grid-template-columns:2.5rem 1fr;gap:1.5rem;padding:1.25rem 0;border-bottom:1px solid var(--b);align-items:baseline}
+.rule-n{font-size:0.6rem;letter-spacing:0.2em;color:var(--g);opacity:0.5}
+.rule-t{font-size:0.88rem;color:var(--m);line-height:1.7}
+.rule-t strong{color:var(--w);font-weight:500}
+
+/* OFFER */
+.offer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:1px;background:var(--b)}
+.offer-card{background:var(--s);padding:1.5rem;transition:background .18s}
+.offer-card:hover{background:#0f0f1f}
+.offer-icon{font-size:1rem;margin-bottom:0.85rem}
+.offer-t{font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;margin-bottom:0.4rem}
+.offer-d{font-size:0.76rem;color:var(--m);line-height:1.65}
+
+/* POSTS */
+.posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:1px;background:var(--b)}
+.post-card{background:var(--s);padding:1.5rem;cursor:pointer;transition:background .18s;display:flex;flex-direction:column;gap:0.6rem}
+.post-card:hover{background:#0f0f1f}
+.post-tag{font-size:0.55rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--g);opacity:0.7}
+.post-title{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;line-height:1.25}
+.post-excerpt{font-size:0.78rem;color:var(--m);line-height:1.65;flex:1}
+.post-date{font-size:0.6rem;color:var(--m);opacity:0.5}
+.posts-empty{background:var(--s);padding:2.5rem;text-align:center;font-size:0.8rem;color:var(--m)}
+
+/* JOIN */
+.join{display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap;padding:4rem 0}
+.join-t{font-family:'Syne',sans-serif;font-size:clamp(1.1rem,2.5vw,1.6rem);font-weight:700;margin-bottom:0.4rem}
+.join-s{font-size:0.82rem;color:var(--m);line-height:1.7}
+.join-acts{display:flex;flex-direction:column;gap:0.5rem;min-width:170px}
+.join-acts .btn{text-align:center;justify-content:center;font-size:0.65rem;padding:0.65rem 1.2rem}
+.join-note{font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--m);opacity:0.4;text-align:center}
+
+/* FOOTER */
+footer{
+  position:relative;z-index:1;border-top:1px solid var(--b);
+  padding:1.25rem clamp(1.5rem,5vw,4rem);
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;
+}
+.f-name{font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;color:var(--m)}
+.f-name em{color:var(--g);font-style:normal}
+.f-note{font-size:0.62rem;color:var(--m);opacity:0.3}
+
+/* POST MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:var(--s);border:1px solid var(--b);width:100%;max-width:600px;max-height:88svh;display:flex;flex-direction:column}
+.modal-head{padding:1rem 1.25rem;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between}
+.modal-tag{font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--g);opacity:0.7}
+.modal-close{background:none;border:none;color:var(--m);font-size:1.1rem;cursor:pointer;padding:0.2rem}
+.modal-close:hover{color:var(--w)}
+.modal-body{padding:1.5rem;overflow-y:auto;flex:1}
+.modal-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:1rem;line-height:1.2}
+.modal-text{font-size:0.88rem;color:var(--m);line-height:1.85;white-space:pre-wrap}
+.modal-foot{padding:0.85rem 1.25rem;border-top:1px solid var(--b);font-size:0.6rem;color:var(--m);opacity:0.4}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<nav>
+  <div class="n-left">
+    <img class="n-logo" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt=""/>
+    <div class="n-name">The-<em>Keymaker</em></div>
+  </div>
+  <div class="n-right">
+    <a href="/" class="btn btn-o">← Home</a>
+    <a href="https://www.eveonline.com/open-information-window?type=corporation&id=98800626" target="_blank" class="btn btn-g">Apply</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="eye">About the corporation</div>
+    <h1>A corp for pilots<br>who actually play.</h1>
+    <p class="hero-lead">The-Keymaker is built for players who want a real group without politics, drama, or mandatory ops. PvP, mining, PvE — come as you are. Real life always comes first.</p>
+  </div>
+
+  <!-- INFO -->
+  <div class="sec">
+    <div class="sec-eye">Details</div>
+    <h2>Corporation info</h2>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-k">CEO</div><div class="info-v">Choi du'jour</div></div>
+      <div class="info-cell"><div class="info-k">Diplomacy</div><div class="info-v">H-ket equal E-Ket</div></div>
+      <div class="info-cell"><div class="info-k">Home base</div><div class="info-v">Hek IV</div></div>
+      <div class="info-cell"><div class="info-k">Region</div><div class="info-v">Minmatar space</div></div>
+      <div class="info-cell"><div class="info-k">Ticker</div><div class="info-v" style="color:var(--g)">THE-K</div></div>
+      <div class="info-cell"><div class="info-k">Members</div><div class="info-v" id="info-members">—</div></div>
+      <div class="info-cell"><div class="info-k">Focus</div><div class="info-v">PvP · Industry · Mining</div></div>
+      <div class="info-cell">
+        <div class="info-k">Links</div>
+        <div style="display:flex;flex-direction:column;gap:0.3rem;margin-top:0.25rem">
+          <a href="https://zkillboard.com/corporation/98800626/" target="_blank" style="font-size:0.75rem;color:var(--g);text-decoration:none;opacity:0.8">zKillboard ↗</a>
+          <a href="https://evemaps.dotlan.net/corp/The-Keymaker" target="_blank" style="font-size:0.75rem;color:var(--g);text-decoration:none;opacity:0.8">DOTLAN ↗</a>
+          <a href="https://evewho.com/corporation/98800626" target="_blank" style="font-size:0.75rem;color:var(--g);text-decoration:none;opacity:0.8">EveWho ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHAT WE OFFER -->
+  <div class="sec">
+    <div class="sec-eye">What we offer</div>
+    <h2>Everything to enjoy EVE.</h2>
+    <div class="offer-grid">
+      <div class="offer-card"><div class="offer-icon">⚔</div><div class="offer-t">PvP Roams</div><div class="offer-d">Regular low and null roams. FC experience not required — we learn together.</div></div>
+      <div class="offer-card"><div class="offer-icon">🚀</div><div class="offer-t">PvE & Missions</div><div class="offer-d">Mission fleets and combat sites. Good ISK, good company.</div></div>
+      <div class="offer-card"><div class="offer-icon">⛏</div><div class="offer-t">Mining Fleets</div><div class="offer-d">Boosted mining ops with a chill atmosphere.</div></div>
+      <div class="offer-card"><div class="offer-icon">🎁</div><div class="offer-t">Free T1 Ships</div><div class="offer-d">Corp provides T1 hulls for activities. ISK shouldn't be a barrier.</div></div>
+      <div class="offer-card"><div class="offer-icon">📖</div><div class="offer-t">Newbro Support</div><div class="offer-d">Guidance for new and returning pilots. No dumb questions.</div></div>
+      <div class="offer-card"><div class="offer-icon">💬</div><div class="offer-t">Discord</div><div class="offer-d">Optional except for PvP ops, where listening is required.</div></div>
+    </div>
+  </div>
+
+  <!-- RULES -->
+  <div class="sec">
+    <div class="sec-eye">The vibe</div>
+    <h2>Simple rules. Maximum freedom.</h2>
+    <div class="rules">
+      <div class="rule"><div class="rule-n">01</div><div class="rule-t"><strong>Real life comes first.</strong> No attendance requirements, no guilt trips.</div></div>
+      <div class="rule"><div class="rule-n">02</div><div class="rule-t"><strong>No drama.</strong> Respect each other. Keep disagreements civil.</div></div>
+      <div class="rule"><div class="rule-n">03</div><div class="rule-t"><strong>Discord for PvP ops.</strong> You don't need to talk — but you need to listen.</div></div>
+      <div class="rule"><div class="rule-n">04</div><div class="rule-t"><strong>Help when you can.</strong> Be the person who says yes.</div></div>
+      <div class="rule"><div class="rule-n">05</div><div class="rule-t"><strong>No skill requirement.</strong> Just enjoy the game and want to be part of something.</div></div>
+    </div>
+  </div>
+
+  <!-- NEWS -->
+  <div class="sec" id="news">
+    <div class="sec-eye">Corp news</div>
+    <h2>Latest posts</h2>
+    <div class="posts-grid" id="posts-grid">
+      <div class="posts-empty">No posts yet.</div>
+    </div>
+  </div>
+
+  <!-- JOIN -->
+  <div class="join">
+    <div>
+      <div class="sec-eye">Ready?</div>
+      <div class="join-t">We'll save you a seat in fleet.</div>
+      <div class="join-s">New and returning pilots always welcome.</div>
+    </div>
+    <div class="join-acts">
+      <a href="https://www.eveonline.com/open-information-window?type=corporation&id=98800626" target="_blank" class="btn btn-g">Apply in EVE Online</a>
+      <a href="#" class="btn btn-o">Join Discord</a>
+      <div class="join-note">Diplo · H-ket equal E-Ket</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-name">The-<em>Keymaker</em> · [THE-K] · Hek IV</div>
+  <div class="f-note">EVE Online © CCP hf. Independent fan site.</div>
+</footer>
+
+<!-- POST MODAL -->
+<div class="modal-overlay" id="post-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-tag" id="m-tag">—</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-title" id="m-title">—</div>
+      <div class="modal-text" id="m-body">—</div>
+    </div>
+    <div class="modal-foot" id="m-date">—</div>
+  </div>
+</div>
+
+<script>
+// STARFIELD
+const cv=document.getElementById('c'),cx=cv.getContext('2d');
+let st=[];
+function rs(){
+  cv.width=innerWidth;cv.height=Math.max(document.body.scrollHeight,innerHeight);
+  st=Array.from({length:Math.floor(cv.width*cv.height/7000)},()=>({
+    x:Math.random()*cv.width,y:Math.random()*cv.height,
+    r:Math.random()*0.9+0.15,o:Math.random()*0.35+0.05,
+    f:Math.random()*0.002+0.001,p:Math.random()*Math.PI*2
+  }));
+}
+let fr=0;(function draw(){cx.clearRect(0,0,cv.width,cv.height);fr++;
+  st.forEach(s=>{const o=s.o+Math.sin(fr*s.f+s.p)*0.07;
+    cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    cx.fillStyle=`rgba(200,200,255,${Math.max(0,Math.min(0.5,o))})`;cx.fill();
+  });requestAnimationFrame(draw);})();
+rs();window.addEventListener('resize',rs);
+
+// MEMBERS
+fetch('https://esi.evetech.net/latest/corporations/98800626/?datasource=tranquility')
+  .then(r=>r.json()).then(d=>{if(d.member_count)document.getElementById('info-members').textContent=d.member_count}).catch(()=>{});
+
+// POSTS
+const SK='tkm_posts';
+function getPosts(){try{return JSON.parse(localStorage.getItem(SK)||'[]')}catch{return[]}}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function renderPosts(){
+  const posts=getPosts();
+  const grid=document.getElementById('posts-grid');
+  if(!posts.length){grid.innerHTML='<div class="posts-empty">No posts yet.</div>';return}
+  grid.innerHTML=posts.slice().reverse().map((p,ri)=>{
+    const i=posts.length-1-ri;
+    return`<div class="post-card" onclick="openPost(${i})">
+      <div class="post-tag">${esc(p.tag)}</div>
+      <div class="post-title">${esc(p.title)}</div>
+      <div class="post-excerpt">${esc(p.body).substring(0,110)}${p.body.length>110?'…':''}</div>
+      <div class="post-date">${new Date(p.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+    </div>`;
+  }).join('');
+}
+function openPost(i){
+  const p=getPosts()[i];if(!p)return;
+  document.getElementById('m-tag').textContent=p.tag||'Announcement';
+  document.getElementById('m-title').textContent=p.title;
+  document.getElementById('m-body').textContent=p.body;
+  document.getElementById('m-date').textContent=new Date(p.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('post-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){document.getElementById('post-modal').classList.remove('open');document.body.style.overflow=''}
+document.getElementById('post-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+renderPosts();
+
+// FADE IN
+const io=new IntersectionObserver(entries=>entries.forEach(e=>{
+  if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}
+}),{threshold:0.06});
+document.querySelectorAll('.offer-card,.post-card,.info-cell,.rule').forEach(el=>{
+  el.style.opacity='0';el.style.transform='translateY(14px)';
+  el.style.transition='opacity 0.45s ease,transform 0.45s ease';
+  io.observe(el);
+});
+</script>
+</body>
+</html>
