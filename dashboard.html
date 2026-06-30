@@ -157,6 +157,63 @@ tr:hover td{background:rgba(255,255,255,0.015)}
 .spin{width:32px;height:32px;border:2px solid var(--b);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #auth-gate p{font-size:0.7rem;color:var(--m);letter-spacing:0.1em}
+
+/* TRACKER */
+.tracker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:1px;background:var(--b)}
+.tracker-card{background:var(--s);padding:1.25rem;transition:background .15s}
+.tracker-card:hover{background:var(--s2)}
+.tc-head{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.85rem}
+.tc-portrait{width:36px;height:36px;border-radius:50%;border:1px solid var(--b);object-fit:cover;flex-shrink:0}
+.tc-name{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;line-height:1.2}
+.tc-online{display:flex;align-items:center;gap:0.35rem;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;margin-top:0.15rem}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot.on{background:var(--g);box-shadow:0 0 6px var(--g)}
+.dot.off{background:var(--m)}
+.tc-rows{display:flex;flex-direction:column;gap:0.4rem}
+.tc-row{display:flex;justify-content:space-between;align-items:center;gap:0.5rem}
+.tc-label{font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--m)}
+.tc-val{font-size:0.78rem;font-weight:500;text-align:right;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tc-val.g{color:var(--g)}
+.tc-val.y{color:var(--yellow)}
+.tc-val a{color:inherit;text-decoration:none;opacity:0.85;transition:opacity .15s}
+.tc-val a:hover{opacity:1}
+.tracker-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.75rem}
+.tracker-status{font-size:0.65rem;color:var(--m);display:flex;align-items:center;gap:0.5rem}
+.tracker-online-count{font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:var(--g)}
+.refresh-btn{font-family:'Syne',sans-serif;font-size:0.58rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:transparent;border:1px solid var(--b);color:var(--m);padding:0.35rem 0.75rem;cursor:pointer;transition:all .15s}
+.refresh-btn:hover{border-color:var(--m);color:var(--w)}
+.refresh-btn.spinning{opacity:0.5;cursor:not-allowed}
+.tracker-sort{display:flex;gap:0.4rem}
+.sort-btn{font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;background:transparent;border:1px solid var(--b);color:var(--m);padding:0.3rem 0.6rem;cursor:pointer;transition:all .15s;font-family:'Syne',sans-serif}
+.sort-btn.active{border-color:var(--g);color:var(--g)}
+.sort-btn:hover{border-color:var(--m2);color:var(--w)}
+
+/* JOURNAL */
+.journal-filters{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center}
+.jf-select{background:var(--s2);border:1px solid var(--b);color:var(--w);padding:0.4rem 0.75rem;font-family:'Inter',sans-serif;font-size:0.75rem;outline:none;transition:border-color .15s;cursor:pointer}
+.jf-select:focus{border-color:var(--g)}
+.amount-pos{color:var(--g);font-family:var(--mono);font-size:0.78rem}
+.amount-neg{color:var(--red);font-family:var(--mono);font-size:0.78rem}
+.amount-neu{font-family:var(--mono);font-size:0.78rem;color:var(--m2)}
+.journal-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--b);margin-bottom:1.5rem}
+.js-cell{background:var(--s);padding:1rem 1.25rem}
+.js-label{font-size:0.55rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--m);margin-bottom:0.3rem}
+.js-val{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700}
+
+/* MINING */
+.mining-period{display:flex;gap:0.5rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.period-btn{font-family:'Syne',sans-serif;font-size:0.58rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:transparent;border:1px solid var(--b);color:var(--m);padding:0.32rem 0.7rem;cursor:pointer;transition:all .15s}
+.period-btn.active{border-color:var(--g);color:var(--g)}
+.period-btn:hover{border-color:var(--m2);color:var(--w)}
+.mining-bar-wrap{margin-bottom:0.4rem}
+.mining-bar-bg{background:var(--b);height:4px;border-radius:2px;margin-top:0.3rem}
+.mining-bar-fill{background:var(--g);height:4px;border-radius:2px;transition:width 0.4s ease}
+
+/* ASSETS */
+.asset-filters{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center}
+.asset-search{background:var(--s2);border:1px solid var(--b);color:var(--w);padding:0.4rem 0.75rem;font-family:'Inter',sans-serif;font-size:0.75rem;outline:none;transition:border-color .15s;flex:1;min-width:160px}
+.asset-search:focus{border-color:var(--g)}
+.asset-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--b);margin-bottom:1.5rem}
 </style>
 </head>
 <body>
@@ -179,10 +236,14 @@ tr:hover td{background:rgba(255,255,255,0.015)}
     <div class="sb-section">Overview</div>
     <a class="sb-item active" data-page="overview" href="#"><span class="sb-icon">◈</span>Overview</a>
     <a class="sb-item" data-page="members" href="#"><span class="sb-icon">◉</span>Members</a>
+    <a class="sb-item" data-page="tracker" href="#"><span class="sb-icon">◎</span>Tracker</a>
     <a class="sb-item" data-page="killboard" href="#"><span class="sb-icon">⚔</span>Killboard</a>
+    <a class="sb-item" data-page="journal" href="#"><span class="sb-icon">◈</span>Journal</a>
     <div class="sb-section">Corp</div>
     <a class="sb-item" data-page="wallet" href="#"><span class="sb-icon">◎</span>Wallet</a>
     <a class="sb-item" data-page="industry" href="#"><span class="sb-icon">⛏</span>Industry</a>
+    <a class="sb-item" data-page="mining" href="#"><span class="sb-icon">◉</span>Mining</a>
+    <a class="sb-item" data-page="assets" href="#"><span class="sb-icon">◎</span>Assets</a>
     <div class="sb-section" id="ceo-label" style="display:none">CEO</div>
     <a class="sb-item" data-page="access" href="#" id="nav-access" style="display:none"><span class="sb-icon">🔑</span>Access</a>
     <div class="sb-section">Site</div>
@@ -253,6 +314,122 @@ tr:hover td{background:rgba(255,255,255,0.015)}
       </div>
     </div>
   </div>
+
+  <!-- MEMBER TRACKER -->
+  <div class="page" id="page-tracker">
+    <div class="ph">
+      <div class="ph-left"><div class="ph-eye">Live · auto-refresh 60s</div><div class="ph-title">Member Tracker</div></div>
+    </div>
+    <div class="tracker-bar">
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        <div class="tracker-status">
+          <span class="dot on"></span>
+          <span id="trk-online-count" class="tracker-online-count">—</span>
+          <span>online now</span>
+          <span style="margin-left:0.75rem;opacity:0.5">·</span>
+          <span id="trk-total-count" style="margin-left:0.5rem">— total</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+        <div class="tracker-sort">
+          <button class="sort-btn active" onclick="setSort('online')" id="sort-online">Online first</button>
+          <button class="sort-btn" onclick="setSort('name')" id="sort-name">Name</button>
+          <button class="sort-btn" onclick="setSort('login')" id="sort-login">Last seen</button>
+        </div>
+        <button class="refresh-btn" id="trk-refresh-btn" onclick="refreshTracker()">↻ Refresh</button>
+        <div class="tracker-status" id="trk-last-update" style="opacity:0.45">Never updated</div>
+      </div>
+    </div>
+    <div class="tracker-grid" id="tracker-grid">
+      <div style="background:var(--s);padding:2rem;text-align:center;font-size:0.78rem;color:var(--m)">Loading tracker…</div>
+    </div>
+  </div>
+
+
+  <!-- WALLET JOURNAL -->
+  <div class="page" id="page-journal">
+    <div class="ph"><div class="ph-left"><div class="ph-eye">Finance</div><div class="ph-title">Wallet Journal</div></div>
+      <select class="jf-select" id="journal-div" onchange="loadJournal()">
+        <option value="1">Division 1</option><option value="2">Division 2</option>
+        <option value="3">Division 3</option><option value="4">Division 4</option>
+        <option value="5">Division 5</option><option value="6">Division 6</option>
+        <option value="7">Division 7</option>
+      </select>
+    </div>
+    <div class="journal-summary">
+      <div class="js-cell"><div class="js-label">Total In (30d)</div><div class="js-val" id="j-in" style="color:var(--g)">—</div></div>
+      <div class="js-cell"><div class="js-label">Total Out (30d)</div><div class="js-val" id="j-out" style="color:var(--red)">—</div></div>
+      <div class="js-cell"><div class="js-label">Net (30d)</div><div class="js-val" id="j-net">—</div></div>
+      <div class="js-cell"><div class="js-label">Transactions</div><div class="js-val" id="j-count">—</div></div>
+    </div>
+    <div class="journal-filters">
+      <select class="jf-select" id="journal-type" onchange="filterJournal()">
+        <option value="">All types</option>
+        <option value="player_donation">Donations</option>
+        <option value="corporation_account_withdrawal">Withdrawals</option>
+        <option value="market_transaction">Market</option>
+        <option value="bounty_prizes">Bounty</option>
+        <option value="industry_job_tax">Industry tax</option>
+        <option value="office_rental_fee">Office rent</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><div class="tbl-title">Transactions</div></div>
+      <div class="tbl-scroll">
+        <table><thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Balance</th><th>Description</th></tr></thead>
+        <tbody id="journal-tbody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MINING OBSERVERS -->
+  <div class="page" id="page-mining">
+    <div class="ph"><div class="ph-left"><div class="ph-eye">Industry</div><div class="ph-title">Mining Observers</div></div></div>
+    <div class="mining-period">
+      <button class="period-btn active" onclick="setMiningPeriod(0)" id="mp-0">This cycle</button>
+      <button class="period-btn" onclick="setMiningPeriod(1)" id="mp-1">Last cycle</button>
+    </div>
+    <div class="cards" id="mining-summary-cards" style="margin-bottom:1.5rem">
+      <div class="card"><div class="card-l">Total mined</div><div class="card-v" id="m-total">—</div><div class="card-sub">m³ this cycle</div></div>
+      <div class="card"><div class="card-l">Top miner</div><div class="card-v" id="m-top" style="font-size:0.95rem;padding-top:0.2rem">—</div></div>
+      <div class="card"><div class="card-l">Active miners</div><div class="card-v g" id="m-miners">—</div></div>
+      <div class="card"><div class="card-l">Observers</div><div class="card-v" id="m-obs">—</div></div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><div class="tbl-title">Miner leaderboard</div></div>
+      <div class="tbl-scroll">
+        <table><thead><tr><th>Pilot</th><th>Ore type</th><th>Quantity (m³)</th><th>Observer</th><th>Date</th></tr></thead>
+        <tbody id="mining-tbody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- CORP ASSETS -->
+  <div class="page" id="page-assets">
+    <div class="ph"><div class="ph-left"><div class="ph-eye">Corporation</div><div class="ph-title">Corp Assets</div></div></div>
+    <div class="asset-summary">
+      <div class="js-cell"><div class="js-label">Total items</div><div class="js-val" id="a-total">—</div></div>
+      <div class="js-cell"><div class="js-label">Locations</div><div class="js-val" id="a-locs">—</div></div>
+      <div class="js-cell"><div class="js-label">Ship hulls</div><div class="js-val" id="a-ships">—</div></div>
+      <div class="js-cell"><div class="js-label">Modules</div><div class="js-val" id="a-mods">—</div></div>
+    </div>
+    <div class="asset-filters">
+      <input class="asset-search" id="asset-search" type="text" placeholder="Search item name…" oninput="filterAssets()"/>
+      <select class="jf-select" id="asset-loc-filter" onchange="filterAssets()">
+        <option value="">All locations</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><div class="tbl-title">Items</div></div>
+      <div class="tbl-scroll">
+        <table><thead><tr><th>Item</th><th>Category</th><th>Qty</th><th>Location</th><th>Flag</th></tr></thead>
+        <tbody id="assets-tbody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+
   <!-- ACCESS CONTROL (CEO) -->
   <div class="page" id="page-access">
     <div class="ph"><div class="ph-left"><div class="ph-eye">CEO</div><div class="ph-title">Access Control</div></div></div>
@@ -399,6 +576,429 @@ async function loadIndustry(){
   }catch(e){tb.innerHTML=`<tr class="empty-row"><td colspan="4">Error: ${e.message}</td></tr>`}
 }
 
+
+// ── MEMBER TRACKER ──
+let trackerData = [];
+let trackerSort = 'online';
+let trackerInterval = null;
+
+async function loadTracker() {
+  await refreshTracker();
+  // Auto-refresh every 60s when page is visible
+  if (trackerInterval) clearInterval(trackerInterval);
+  trackerInterval = setInterval(() => {
+    if (document.getElementById('page-tracker').classList.contains('active')) {
+      refreshTracker();
+    }
+  }, 60000);
+}
+
+async function refreshTracker() {
+  const btn = document.getElementById('trk-refresh-btn');
+  btn.classList.add('spinning');
+  btn.textContent = '↻ Loading…';
+
+  try {
+    // 1. Get member tracking data (requires Director role in-game)
+    const tracking = await esi(`/corporations/${CORP}/membertracking/`);
+
+    // 2. Collect all IDs to resolve: character names + ship type names + system names
+    const charIds = tracking.map(m => m.character_id);
+    const shipIds = [...new Set(tracking.map(m => m.ship_type_id).filter(Boolean))];
+    const locationIds = [...new Set(tracking.map(m => m.location_id).filter(Boolean))];
+
+    // 3. Resolve names in parallel (batch POST to /universe/names/)
+    const allIds = [...new Set([...charIds, ...shipIds])];
+    const chunks = [];
+    for (let i = 0; i < allIds.length; i += 1000) chunks.push(allIds.slice(i, i + 1000));
+
+    const nameMap = {};
+    await Promise.all(chunks.map(async chunk => {
+      try {
+        const r = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+          method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(chunk)
+        });
+        const data = await r.json();
+        data.forEach(item => { nameMap[item.id] = item.name; });
+      } catch {}
+    }));
+
+    // 4. Resolve system names separately (solar system IDs are different range)
+    const sysChunks = [];
+    for (let i = 0; i < locationIds.length; i += 1000) sysChunks.push(locationIds.slice(i, i + 1000));
+    const sysMap = {};
+    await Promise.all(sysChunks.map(async chunk => {
+      try {
+        const r = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+          method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(chunk)
+        });
+        const data = await r.json();
+        if (Array.isArray(data)) data.forEach(item => { sysMap[item.id] = item.name; });
+      } catch {}
+    }));
+
+    // 5. Build rich member objects
+    trackerData = tracking.map(m => ({
+      id:         m.character_id,
+      name:       nameMap[m.character_id] || `ID:${m.character_id}`,
+      ship:       nameMap[m.ship_type_id] || '—',
+      shipId:     m.ship_type_id,
+      location:   sysMap[m.location_id] || (m.location_id ? `Loc:${m.location_id}` : '—'),
+      locationId: m.location_id,
+      logon:      m.logon_date ? new Date(m.logon_date) : null,
+      logoff:     m.logoff_date ? new Date(m.logoff_date) : null,
+      online:     m.logon_date && m.logoff_date ? new Date(m.logon_date) > new Date(m.logoff_date) : false,
+      startDate:  m.start_date,
+    }));
+
+    renderTracker();
+
+    // Update counts
+    const onlineCount = trackerData.filter(m => m.online).length;
+    document.getElementById('trk-online-count').textContent = onlineCount;
+    document.getElementById('trk-total-count').textContent = `${trackerData.length} total`;
+    document.getElementById('trk-last-update').textContent = `Updated ${new Date().toLocaleTimeString('en-GB')}`;
+
+  } catch(e) {
+    document.getElementById('tracker-grid').innerHTML =
+      `<div style="background:var(--s);padding:2rem;font-size:0.78rem;color:var(--red)">Error: ${e.message}<br><small style="color:var(--m);font-size:0.7rem">Member tracking requires <strong>Director</strong> role in-game on your character.</small></div>`;
+  }
+
+  btn.classList.remove('spinning');
+  btn.textContent = '↻ Refresh';
+}
+
+function setSort(s) {
+  trackerSort = s;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sort-' + s).classList.add('active');
+  renderTracker();
+}
+
+function renderTracker() {
+  if (!trackerData.length) return;
+
+  let sorted = [...trackerData];
+  if (trackerSort === 'online') {
+    sorted.sort((a, b) => {
+      if (a.online !== b.online) return b.online - a.online;
+      return a.name.localeCompare(b.name);
+    });
+  } else if (trackerSort === 'name') {
+    sorted.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (trackerSort === 'login') {
+    sorted.sort((a, b) => {
+      const ta = a.logoff ? a.logoff.getTime() : 0;
+      const tb = b.logoff ? b.logoff.getTime() : 0;
+      return tb - ta;
+    });
+  }
+
+  const dotlanBase = 'https://evemaps.dotlan.net/map/';
+
+  document.getElementById('tracker-grid').innerHTML = sorted.map(m => {
+    const lastSeen = m.online
+      ? '<span style="color:var(--g)">Online now</span>'
+      : m.logoff
+        ? timeAgo(m.logoff)
+        : '—';
+
+    const shipRender = m.ship !== '—'
+      ? `<a href="https://zkillboard.com/ship/${m.shipId}/" target="_blank">${esc(m.ship)}</a>`
+      : '—';
+
+    const locRender = m.location !== '—'
+      ? `<a href="${dotlanBase}${encodeURIComponent(m.location)}/" target="_blank">${esc(m.location)}</a>`
+      : '—';
+
+    const memberSince = m.startDate
+      ? new Date(m.startDate).toLocaleDateString('en-GB', {month:'short',year:'numeric'})
+      : '—';
+
+    return `
+    <div class="tracker-card">
+      <div class="tc-head">
+        <img class="tc-portrait" src="https://images.evetech.net/characters/${m.id}/portrait?size=64" loading="lazy"/>
+        <div>
+          <div class="tc-name">${esc(m.name)}</div>
+          <div class="tc-online">
+            <span class="dot ${m.online ? 'on' : 'off'}"></span>
+            ${m.online ? 'Online' : 'Offline'}
+          </div>
+        </div>
+      </div>
+      <div class="tc-rows">
+        <div class="tc-row"><div class="tc-label">Last seen</div><div class="tc-val ${m.online ? 'g' : ''}">${lastSeen}</div></div>
+        <div class="tc-row"><div class="tc-label">Ship</div><div class="tc-val y">${shipRender}</div></div>
+        <div class="tc-row"><div class="tc-label">Location</div><div class="tc-val">${locRender}</div></div>
+        <div class="tc-row"><div class="tc-label">Member since</div><div class="tc-val">${memberSince}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function timeAgo(date) {
+  const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diff < 60)   return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400)return `${Math.floor(diff/3600)}h ago`;
+  return `${Math.floor(diff/86400)}d ago`;
+}
+
+
+// ── WALLET JOURNAL ──
+let allJournalEntries = [];
+
+async function loadJournal() {
+  const div = document.getElementById('journal-div').value;
+  const tb = document.getElementById('journal-tbody');
+  tb.innerHTML = '<tr class="empty-row"><td colspan="5">Loading…</td></tr>';
+  try {
+    // Fetch up to 2 pages (200 entries)
+    const page1 = await esi(`/corporations/${CORP}/wallets/${div}/journal/?datasource=tranquility&page=1`);
+    let entries = Array.isArray(page1) ? page1 : [];
+    try {
+      const page2 = await esi(`/corporations/${CORP}/wallets/${div}/journal/?datasource=tranquility&page=2`);
+      if (Array.isArray(page2)) entries = [...entries, ...page2];
+    } catch {}
+
+    allJournalEntries = entries.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    // Summary
+    const now = Date.now();
+    const month = 30 * 86400000;
+    const recent = allJournalEntries.filter(e => now - new Date(e.date).getTime() < month);
+    const totalIn  = recent.filter(e => e.amount > 0).reduce((s,e) => s + e.amount, 0);
+    const totalOut = recent.filter(e => e.amount < 0).reduce((s,e) => s + e.amount, 0);
+    const net = totalIn + totalOut;
+    document.getElementById('j-in').textContent    = fisk(totalIn) + ' ISK';
+    document.getElementById('j-out').textContent   = fisk(Math.abs(totalOut)) + ' ISK';
+    document.getElementById('j-net').textContent   = fisk(net) + ' ISK';
+    document.getElementById('j-net').style.color   = net >= 0 ? 'var(--g)' : 'var(--red)';
+    document.getElementById('j-count').textContent = recent.length;
+
+    filterJournal();
+  } catch(e) {
+    tb.innerHTML = `<tr class="empty-row"><td colspan="5">Error: ${e.message}<br><small>Requires Director role in-game.</small></td></tr>`;
+  }
+}
+
+function filterJournal() {
+  const type = document.getElementById('journal-type').value;
+  const tb = document.getElementById('journal-tbody');
+  let entries = allJournalEntries;
+  if (type) entries = entries.filter(e => e.ref_type === type);
+
+  if (!entries.length) {
+    tb.innerHTML = '<tr class="empty-row"><td colspan="5">No entries found.</td></tr>';
+    return;
+  }
+
+  tb.innerHTML = entries.slice(0, 100).map(e => {
+    const amt = e.amount || 0;
+    const cls = amt > 0 ? 'amount-pos' : amt < 0 ? 'amount-neg' : 'amount-neu';
+    const sign = amt > 0 ? '+' : '';
+    const date = new Date(e.date).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const refType = (e.ref_type || '—').replace(/_/g,' ');
+    const desc = e.reason || e.description || '—';
+    const bal = e.balance != null ? `<span style="font-family:var(--mono);font-size:0.75rem">${fisk(e.balance)}</span>` : '—';
+    return `<tr>
+      <td style="font-size:0.72rem;white-space:nowrap">${date}</td>
+      <td style="font-size:0.72rem;text-transform:capitalize">${esc(refType)}</td>
+      <td><span class="${cls}">${sign}${fisk(amt)} ISK</span></td>
+      <td>${bal}</td>
+      <td style="font-size:0.72rem;color:var(--m);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(desc)}">${esc(desc)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── MINING ──
+let miningPeriod = 0;
+let miningRawData = [];
+
+async function loadMining() {
+  try {
+    const observers = await esi(`/corporations/${CORP}/mining/observers/?datasource=tranquility`);
+    document.getElementById('m-obs').textContent = observers.length;
+    miningRawData = [];
+
+    await Promise.all(observers.map(async obs => {
+      try {
+        const records = await esi(`/corporations/${CORP}/mining/observers/${obs.observer_id}/?datasource=tranquility`);
+        records.forEach(r => miningRawData.push({...r, observer_id: obs.observer_id, observer_type: obs.observer_type}));
+      } catch {}
+    }));
+
+    // Resolve character names
+    const charIds = [...new Set(miningRawData.map(r => r.character_id))];
+    const typeIds = [...new Set(miningRawData.map(r => r.type_id))];
+    const allIds = [...new Set([...charIds, ...typeIds])];
+    const nameMap = {};
+    if (allIds.length) {
+      try {
+        const r = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(allIds.slice(0,1000))
+        });
+        const data = await r.json();
+        if (Array.isArray(data)) data.forEach(i => nameMap[i.id] = i.name);
+      } catch {}
+    }
+    miningRawData._nameMap = nameMap;
+    renderMining();
+  } catch(e) {
+    document.getElementById('mining-tbody').innerHTML =
+      `<tr class="empty-row"><td colspan="5">Error: ${e.message}<br><small>Requires Director role in-game.</small></td></tr>`;
+  }
+}
+
+function setMiningPeriod(p) {
+  miningPeriod = p;
+  document.querySelectorAll('.period-btn').forEach((b,i) => b.classList.toggle('active', i===p));
+  renderMining();
+}
+
+function renderMining() {
+  const nameMap = miningRawData._nameMap || {};
+  const now = new Date();
+  const cycleStart = new Date(now.getFullYear(), now.getMonth() - miningPeriod, 1);
+  const cycleEnd   = new Date(now.getFullYear(), now.getMonth() - miningPeriod + 1, 0);
+
+  const filtered = miningRawData.filter(r => {
+    const d = new Date(r.last_updated);
+    return d >= cycleStart && d <= cycleEnd;
+  });
+
+  // Aggregate by character
+  const byChar = {};
+  filtered.forEach(r => {
+    const name = nameMap[r.character_id] || `ID:${r.character_id}`;
+    if (!byChar[name]) byChar[name] = {total:0, entries:[]};
+    byChar[name].total += r.quantity || 0;
+    byChar[name].entries.push(r);
+  });
+
+  const sorted = Object.entries(byChar).sort((a,b) => b[1].total - a[1].total);
+  const maxVol = sorted[0]?.[1]?.total || 1;
+  const totalVol = sorted.reduce((s,[,v]) => s + v.total, 0);
+
+  document.getElementById('m-total').textContent   = totalVol.toLocaleString();
+  document.getElementById('m-top').textContent     = sorted[0]?.[0] || '—';
+  document.getElementById('m-miners').textContent  = sorted.length;
+
+  const tb = document.getElementById('mining-tbody');
+  if (!filtered.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="5">No mining data for this period.</td></tr>'; return; }
+
+  tb.innerHTML = filtered.slice(0,100).map(r => {
+    const pilot = nameMap[r.character_id] || `ID:${r.character_id}`;
+    const ore   = nameMap[r.type_id] || `Type:${r.type_id}`;
+    const date  = r.last_updated ? new Date(r.last_updated).toLocaleDateString('en-GB') : '—';
+    const obs   = r.observer_type || '—';
+    return `<tr>
+      <td><div class="td-port">
+        <img class="td-img" src="https://images.evetech.net/characters/${r.character_id}/portrait?size=32" loading="lazy"/>
+        ${esc(pilot)}
+      </div></td>
+      <td style="font-size:0.78rem">${esc(ore)}</td>
+      <td style="font-family:var(--mono);font-size:0.78rem">${(r.quantity||0).toLocaleString()}</td>
+      <td style="font-size:0.72rem;color:var(--m)">${esc(obs)}</td>
+      <td style="font-size:0.72rem">${date}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── CORP ASSETS ──
+let allAssets = [];
+let assetNameMap = {};
+
+async function loadAssets() {
+  const tb = document.getElementById('assets-tbody');
+  tb.innerHTML = '<tr class="empty-row"><td colspan="5">Loading assets (this may take a moment)…</td></tr>';
+  try {
+    // Fetch all pages
+    let page = 1, items = [];
+    while (true) {
+      const r = await esi(`/corporations/${CORP}/assets/?datasource=tranquility&page=${page}`);
+      if (!Array.isArray(r) || r.length === 0) break;
+      items = [...items, ...r];
+      if (r.length < 1000) break;
+      page++;
+    }
+
+    // Resolve type names
+    const typeIds = [...new Set(items.map(i => i.type_id))].slice(0, 1000);
+    const locationIds = [...new Set(items.map(i => i.location_id))].slice(0, 1000);
+
+    const toResolve = [...new Set([...typeIds, ...locationIds])];
+    const chunks = [];
+    for (let i = 0; i < toResolve.length; i += 1000) chunks.push(toResolve.slice(i, i+1000));
+
+    assetNameMap = {};
+    await Promise.all(chunks.map(async chunk => {
+      try {
+        const r = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(chunk)
+        });
+        const data = await r.json();
+        if (Array.isArray(data)) data.forEach(i => assetNameMap[i.id] = i.name);
+      } catch {}
+    }));
+
+    allAssets = items;
+
+    // Summary
+    const ships = items.filter(i => {
+      const n = (assetNameMap[i.type_id] || '').toLowerCase();
+      return n.includes('ship') || i.location_flag === 'Hangar';
+    });
+    const locs = new Set(items.map(i => i.location_id));
+
+    document.getElementById('a-total').textContent  = items.length.toLocaleString();
+    document.getElementById('a-locs').textContent   = locs.size;
+    document.getElementById('a-ships').textContent  = ships.length;
+    document.getElementById('a-mods').textContent   = items.filter(i => i.location_flag && i.location_flag.startsWith('Hi')||i.location_flag?.startsWith('Med')||i.location_flag?.startsWith('Lo')).length;
+
+    // Populate location filter
+    const locFilter = document.getElementById('asset-loc-filter');
+    locFilter.innerHTML = '<option value="">All locations</option>' +
+      [...locs].map(id => `<option value="${id}">${esc(assetNameMap[id] || `ID:${id}`)}</option>`).join('');
+
+    filterAssets();
+  } catch(e) {
+    tb.innerHTML = `<tr class="empty-row"><td colspan="5">Error: ${e.message}<br><small>Requires Director role in-game.</small></td></tr>`;
+  }
+}
+
+function filterAssets() {
+  const search = (document.getElementById('asset-search')?.value || '').toLowerCase();
+  const loc = document.getElementById('asset-loc-filter')?.value;
+  const tb = document.getElementById('assets-tbody');
+
+  let filtered = allAssets;
+  if (search) filtered = filtered.filter(i => (assetNameMap[i.type_id]||'').toLowerCase().includes(search));
+  if (loc) filtered = filtered.filter(i => String(i.location_id) === loc);
+
+  if (!filtered.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="5">No items found.</td></tr>'; return; }
+
+  tb.innerHTML = filtered.slice(0, 200).map(i => {
+    const name = assetNameMap[i.type_id] || `Type:${i.type_id}`;
+    const loc  = assetNameMap[i.location_id] || `Loc:${i.location_id}`;
+    const flag = (i.location_flag || '—').replace(/([A-Z])/g, ' $1').trim();
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:0.5rem">
+        <img src="https://images.evetech.net/types/${i.type_id}/icon?size=32" style="width:22px;height:22px;object-fit:contain;opacity:0.85" loading="lazy"/>
+        <span style="font-size:0.8rem">${esc(name)}</span>
+      </div></td>
+      <td style="font-size:0.72rem;color:var(--m)">${esc(i.location_flag||'—')}</td>
+      <td style="font-family:var(--mono);font-size:0.78rem">${(i.quantity||1).toLocaleString()}</td>
+      <td style="font-size:0.72rem;color:var(--m2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(loc)}">${esc(loc)}</td>
+      <td style="font-size:0.68rem;color:var(--m)">${esc(flag)}</td>
+    </tr>`;
+  }).join('');
+  if (filtered.length > 200) {
+    tb.innerHTML += `<tr class="empty-row"><td colspan="5" style="text-align:center">Showing 200 of ${filtered.length} items. Use search to narrow down.</td></tr>`;
+  }
+}
+
 // ── WHITELIST ──
 let wlIds=[];
 function initWl(){
@@ -423,7 +1023,7 @@ function addWl(){
 function removeWl(id){wlIds=wlIds.filter(i=>i!==id);renderWl()}
 
 // ── NAV ──
-const loaders={members:loadMembers,killboard:loadKillboard,wallet:loadWallet,industry:loadIndustry};
+const loaders={members:loadMembers,tracker:loadTracker,killboard:loadKillboard,journal:loadJournal,wallet:loadWallet,industry:loadIndustry,mining:loadMining,assets:loadAssets};
 const loaded=new Set(['overview']);
 document.querySelectorAll('.sb-item[data-page]').forEach(a=>{
   a.addEventListener('click',e=>{
