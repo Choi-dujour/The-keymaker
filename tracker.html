@@ -276,8 +276,9 @@ rs();window.addEventListener('resize',rs);
 async function loadMemberTracking() {
   if (!SESSION) return;
   try {
-    const r = await fetch('https://esi.evetech.net/latest/corporations/' + CORP + '/membertracking/', {
-      headers: { 'Authorization': 'Bearer ' + SESSION.accessToken }
+    const r = await fetch('https://esi.evetech.net/latest/corporations/' + CORP + '/membertracking/?_=' + Date.now(), {
+      headers: { 'Authorization': 'Bearer ' + SESSION.accessToken },
+      cache: 'no-store'
     });
     if (!r.ok) return;
     const data = await r.json();
