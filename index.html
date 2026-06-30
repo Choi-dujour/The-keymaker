@@ -134,7 +134,22 @@ function rs(){cv.width=innerWidth;cv.height=innerHeight;st=Array.from({length:Ma
 let fr=0;(function draw(){cx.clearRect(0,0,cv.width,cv.height);fr++;st.forEach(s=>{const o=s.o+Math.sin(fr*s.f+s.p)*0.07;cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle=`rgba(200,200,255,${Math.max(0,Math.min(0.5,o))})`;cx.fill()});requestAnimationFrame(draw)})();
 rs();window.addEventListener('resize',rs);
 (async()=>{try{const r=await fetch('/api/me');if(r.ok){const s=await r.json();if(s.authenticated){document.getElementById('btn-login').style.display='none';document.getElementById('btn-dashboard').style.display='inline-flex'}}}catch{}})();
-fetch('https://esi.evetech.net/latest/corporations/98800626/?datasource=tranquility').then(r=>r.json()).then(d=>{if(d.member_count)document.getElementById('stat-members').textContent=d.member_count}).catch(()=>{});
+function loadMemberCount(retries=2){
+  fetch(`https://esi.evetech.net/latest/corporations/98800626/?datasource=tranquility&_=${Date.now()}`,{cache:'no-store'})
+    .then(r=>{if(!r.ok)throw new Error('ESI '+r.status);return r.json()})
+    .then(d=>{
+      const el=document.getElementById('stat-members');
+      if(d.member_count!=null)el.textContent=d.member_count;
+      else throw new Error('no member_count');
+    })
+    .catch(e=>{
+      console.warn('Member count fetch failed:',e.message);
+      if(retries>0)setTimeout(()=>loadMemberCount(retries-1),1500);
+      else document.getElementById('stat-members').textContent='N/A';
+    });
+}
+loadMemberCount();
+setInterval(loadMemberCount,120000); // refresh every 2 min
 </script>
 </body>
 </html>
