@@ -184,6 +184,8 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:1.1rem 
     <strong>Not logged in.</strong> You can still plan routes and check danger — login with EVE to see corp members online near your route.
   </div>
 
+  <div class="notice" id="db-load-status" style="display:none">Loading system database… 0%</div>
+
   <!-- SEARCH PANEL -->
   <div class="search-panel">
     <div class="search-row">
@@ -304,37 +306,116 @@ async function loadMemberTracking() {
   } catch (e) { console.warn('Member tracking unavailable', e); }
 }
 
-// ── SYSTEM SEARCH (using ESI search endpoint, public) ──
+// ── SYSTEM DATABASE ──
+// Loaded once from ESI itself (100% reliable, official source): full ID list + batch name resolution.
+// ~8000 systems, ~250KB of JSON — loads in a couple seconds, then autocomplete is instant forever after.
+let SYSTEM_LIST = [];      // [{id, name}, ...] — full list, loaded once, no security yet (resolved on demand)
+let systemDbReady = false;
+let systemDbLoading = null;
+let dbLoadProgress = 0;
+
+async function ensureSystemDb() {
+  if (systemDbReady) return;
+  if (systemDbLoading) return systemDbLoading;
+
+  systemDbLoading = (async () => {
+    try {
+      const idsRes = await fetch('https://esi.evetech.net/latest/universe/systems/?datasource=tranquility');
+      const allIds = await idsRes.json();
+      if (!Array.isArray(allIds)) throw new Error('Unexpected response');
+
+      // Resolve names in batches of 1000 (ESI universe/names/ limit)
+      const chunks = [];
+      for (let i = 0; i < allIds.length; i += 1000) chunks.push(allIds.slice(i, i + 1000));
+
+      const results = [];
+      for (const chunk of chunks) {
+        const r = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+          method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(chunk)
+        });
+        if (r.ok) {
+          const data = await r.json();
+          if (Array.isArray(data)) {
+            data.forEach(d => { if (d.category === 'solar_system') results.push({ id: d.id, name: d.name }); });
+          }
+        }
+        dbLoadProgress = Math.round((results.length / allIds.length) * 100);
+        updateDbLoadingUI();
+      }
+
+      SYSTEM_LIST = results;
+    } catch (e) {
+      console.warn('System DB load failed, falling back to live search per-keystroke', e);
+    }
+    systemDbReady = true;
+    updateDbLoadingUI(true);
+  })();
+
+  return systemDbLoading;
+}
+
+function updateDbLoadingUI(done) {
+  const el = document.getElementById('db-load-status');
+  if (!el) return;
+  if (done) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.textContent = `Loading system database… ${dbLoadProgress}%`;
+}
+
+ensureSystemDb();
+
 async function searchSystems(query) {
   if (!query || query.length < 2) return [];
-  try {
-    const r = await fetch(`https://esi.evetech.net/latest/search/?categories=solar_system&datasource=tranquility&language=en&search=${encodeURIComponent(query)}&strict=false`);
-    if (!r.ok) return [];
-    const data = await r.json();
-    const ids = data.solar_system || [];
-    if (!ids.length) return [];
+  const q = query.toLowerCase();
+  await ensureSystemDb();
 
-    const nr = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
-      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(ids.slice(0, 10))
-    });
-    const names = await nr.json();
-    if (!Array.isArray(names)) return [];
+  let matched = [];
 
-    // Resolve security status for each
-    const results = await Promise.all(names.map(async n => {
-      if (systemCache[n.id]) return systemCache[n.id];
-      try {
-        const sr = await fetch(`https://esi.evetech.net/latest/universe/systems/${n.id}/?datasource=tranquility`);
-        const sd = await sr.json();
-        const obj = { id: n.id, name: n.name, security: sd.security_status };
-        systemCache[n.id] = obj;
-        return obj;
-      } catch {
-        return { id: n.id, name: n.name, security: 0 };
+  if (SYSTEM_LIST.length) {
+    matched = SYSTEM_LIST
+      .filter(s => s.name.toLowerCase().includes(q))
+      .sort((a, b) => {
+        const aStarts = a.name.toLowerCase().startsWith(q);
+        const bStarts = b.name.toLowerCase().startsWith(q);
+        if (aStarts !== bStarts) return aStarts ? -1 : 1;
+        return a.name.length - b.name.length;
+      })
+      .slice(0, 12);
+  } else {
+    // Fallback if the bulk load failed for any reason: per-keystroke ESI search
+    try {
+      const r = await fetch(`https://esi.evetech.net/latest/search/?categories=solar_system&datasource=tranquility&language=en&search=${encodeURIComponent(query)}&strict=false`);
+      if (r.ok) {
+        const data = await r.json();
+        const ids = (data.solar_system || []).slice(0, 12);
+        if (ids.length) {
+          const nr = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(ids)
+          });
+          const names = await nr.json();
+          if (Array.isArray(names)) matched = names.map(n => ({ id: n.id, name: n.name }));
+        }
       }
-    }));
-    return results;
-  } catch { return []; }
+    } catch {}
+  }
+
+  if (!matched.length) return [];
+
+  // Resolve security status for the (small) matched set only
+  const results = await Promise.all(matched.map(async s => {
+    if (systemCache[s.id]) return systemCache[s.id];
+    try {
+      const sr = await fetch(`https://esi.evetech.net/latest/universe/systems/${s.id}/?datasource=tranquility`);
+      const sd = await sr.json();
+      const obj = { id: s.id, name: s.name, security: sd.security_status };
+      systemCache[s.id] = obj;
+      return obj;
+    } catch {
+      return { id: s.id, name: s.name, security: 0 };
+    }
+  }));
+
+  return results;
 }
 
 function secClass(sec) {
