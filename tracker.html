@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Route Tracker — The-Keymaker [THE-K]</title>
+<meta name="description" content="EVE Online route planner with live danger check and corp member tracking."/>
+<meta property="og:title" content="Route Tracker — The-Keymaker"/>
+<meta property="og:image" content="https://images.evetech.net/corporations/98800626/logo?size=256"/>
+<meta name="theme-color" content="#39FF14"/>
+<link rel="icon" type="image/png" href="https://images.evetech.net/corporations/98800626/logo?size=64"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060e;--s:#0c0c1a;--s2:#101020;--b:#16162a;--b2:#1e1e36;
+  --g:#39FF14;--w:#ECEDF5;--m:#5a5a7a;--m2:#8080a0;
+  --red:#ff4455;--yellow:#ffcc33;--orange:#ff8833;
+  --mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--w);font-family:'Inter',sans-serif;overflow-x:hidden;font-size:14px}
+#c{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(1.25rem,4vw,3rem);height:52px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);background:rgba(6,6,14,0.85);
+}
+.n-left{display:flex;align-items:center;gap:0.6rem}
+.n-logo{width:24px;height:24px;border-radius:3px;object-fit:cover;opacity:0.9}
+.n-name{font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.04em}
+.n-name em{color:var(--g);font-style:normal}
+.n-right{display:flex;gap:0.5rem}
+.btn{font-family:'Syne',sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.85rem;cursor:pointer;transition:all .18s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;border:none;white-space:nowrap}
+.btn-o{background:transparent;border:1px solid var(--b);color:var(--m)}
+.btn-o:hover{border-color:var(--m);color:var(--w)}
+.btn-g{background:var(--g);color:#000}
+.btn-g:hover{background:#50ff30}
+
+/* MAIN */
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:calc(52px + 2rem) clamp(1.25rem,4vw,3rem) 3rem}
+
+.head{margin-bottom:2rem}
+.eye{font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--g);opacity:0.7;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem}
+.eye::before{content:'';width:20px;height:1px;background:var(--g);opacity:0.6}
+h1{font-family:'Syne',sans-serif;font-size:clamp(1.5rem,4vw,2.3rem);font-weight:800;letter-spacing:-0.02em;margin-bottom:0.5rem}
+.head-sub{font-size:0.85rem;color:var(--m);max-width:50ch;line-height:1.7}
+
+/* SEARCH FORM */
+.search-panel{background:var(--s);border:1px solid var(--b);padding:1.5rem;margin-bottom:2rem}
+.search-row{display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:end;margin-bottom:1.25rem}
+@media(max-width:640px){.search-row{grid-template-columns:1fr}}
+.swap-btn{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--s2);border:1px solid var(--b);color:var(--m);
+  cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;align-self:center;margin-bottom:0.1rem;
+}
+.swap-btn:hover{border-color:var(--g);color:var(--g);transform:rotate(180deg)}
+@media(max-width:640px){.swap-btn{margin:0 auto;transform:rotate(90deg)}.swap-btn:hover{transform:rotate(270deg)}}
+.field{position:relative}
+.field label{display:block;font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.4rem}
+.field input{
+  width:100%;background:var(--s2);border:1px solid var(--b);
+  color:var(--w);padding:0.7rem 0.9rem;font-family:'Inter',sans-serif;
+  font-size:0.88rem;outline:none;transition:border-color .2s;
+}
+.field input:focus{border-color:var(--g)}
+.autocomplete{
+  position:absolute;top:100%;left:0;right:0;z-index:50;
+  background:var(--s2);border:1px solid var(--b2);border-top:none;
+  max-height:220px;overflow-y:auto;display:none;
+}
+.autocomplete.open{display:block}
+.ac-item{padding:0.6rem 0.9rem;font-size:0.8rem;cursor:pointer;transition:background .12s;display:flex;justify-content:space-between;align-items:center}
+.ac-item:hover,.ac-item.hl{background:rgba(57,255,20,0.08)}
+.ac-sec{font-family:var(--mono);font-size:0.7rem;padding:0.1rem 0.4rem;border-radius:2px}
+.ac-sec.hi{color:var(--g);background:rgba(57,255,20,0.1)}
+.ac-sec.lo{color:var(--orange);background:rgba(255,136,51,0.1)}
+.ac-sec.null{color:var(--red);background:rgba(255,68,85,0.1)}
+
+.opts-row{display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-end;justify-content:space-between}
+.flag-group{display:flex;gap:0.4rem}
+.flag-btn{font-family:'Syne',sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:transparent;border:1px solid var(--b);color:var(--m);padding:0.4rem 0.85rem;cursor:pointer;transition:all .15s}
+.flag-btn.active{border-color:var(--g);color:var(--g);background:rgba(57,255,20,0.06)}
+.flag-btn:hover{border-color:var(--m2);color:var(--w)}
+.go-btn{font-family:'Syne',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;background:var(--g);color:#000;padding:0.65rem 1.75rem;border:none;cursor:pointer;transition:background .2s}
+.go-btn:hover{background:#50ff30}
+.go-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+/* RESULTS */
+#results{display:none}
+#results.show{display:block}
+
+.route-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--b);margin-bottom:1.5rem}
+.rs-cell{background:var(--s);padding:1.1rem 1.25rem}
+.rs-label{font-size:0.55rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--m);margin-bottom:0.3rem}
+.rs-val{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700}
+.rs-val.danger{color:var(--red)}
+.rs-val.safe{color:var(--g)}
+.rs-val.warn{color:var(--yellow)}
+
+/* ROUTE LIST */
+.route-list{background:var(--s);border:1px solid var(--b);margin-bottom:1.5rem}
+.route-list-head{padding:0.9rem 1.25rem;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem}
+.route-list-title{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700}
+.legend{display:flex;gap:1rem;font-size:0.62rem;color:var(--m);flex-wrap:wrap}
+.legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:0.3rem;vertical-align:middle}
+
+.hop{
+  display:grid;grid-template-columns:2.5rem 1fr auto auto;gap:1rem;align-items:center;
+  padding:0.85rem 1.25rem;border-bottom:1px solid rgba(22,22,42,0.6);
+  transition:background .15s;
+}
+.hop:last-child{border-bottom:none}
+.hop:hover{background:rgba(255,255,255,0.015)}
+.hop-n{font-family:var(--mono);font-size:0.7rem;color:var(--m);text-align:center}
+.hop-info{min-width:0}
+.hop-name{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;display:flex;align-items:center;gap:0.5rem}
+.hop-meta{font-size:0.65rem;color:var(--m);margin-top:0.15rem;display:flex;gap:0.6rem;flex-wrap:wrap}
+.sec-badge{font-family:var(--mono);font-size:0.68rem;padding:0.12rem 0.45rem;border-radius:2px;font-weight:500}
+.sec-badge.hi{color:var(--g);background:rgba(57,255,20,0.1)}
+.sec-badge.lo{color:var(--orange);background:rgba(255,136,51,0.1)}
+.sec-badge.null{color:var(--red);background:rgba(255,68,85,0.1)}
+.kill-flag{
+  display:flex;align-items:center;gap:0.3rem;font-size:0.65rem;
+  padding:0.25rem 0.6rem;border-radius:2px;white-space:nowrap;
+}
+.kill-flag.danger{background:rgba(255,68,85,0.12);color:var(--red)}
+.kill-flag.warn{background:rgba(255,204,51,0.1);color:var(--yellow)}
+.kill-flag.clear{background:rgba(57,255,20,0.06);color:var(--g);opacity:0.6}
+.member-flag{
+  display:flex;align-items:center;gap:0.35rem;font-size:0.65rem;color:var(--g);
+}
+.member-flag img{width:18px;height:18px;border-radius:50%;border:1px solid var(--b)}
+
+.checking{font-size:0.65rem;color:var(--m);font-style:italic}
+
+/* EMPTY / LOADING */
+.empty-state{background:var(--s);border:1px dashed var(--b);padding:3rem 2rem;text-align:center;color:var(--m);font-size:0.85rem}
+.spin-sm{display:inline-block;width:12px;height:12px;border:2px solid var(--b);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite;margin-right:0.5rem;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* NOTICE */
+.notice{border-left:2px solid var(--g);background:rgba(57,255,20,0.04);padding:0.8rem 1.1rem;font-size:0.78rem;color:var(--m);margin-bottom:1.5rem;line-height:1.6}
+.notice strong{color:var(--w)}
+.notice.login{border-left-color:var(--m2)}
+
+footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:1.1rem clamp(1.25rem,4vw,3rem);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.6rem}
+.f-name{font-family:'Syne',sans-serif;font-size:0.7rem;font-weight:700;color:var(--m)}
+.f-name em{color:var(--g);font-style:normal}
+.f-note{font-size:0.6rem;color:var(--m);opacity:0.3}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<nav>
+  <div class="n-left">
+    <img class="n-logo" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt=""/>
+    <div class="n-name">The-<em>Keymaker</em></div>
+  </div>
+  <div class="n-right">
+    <a href="/" class="btn btn-o">← Home</a>
+    <a href="/about.html" class="btn btn-o">About</a>
+    <a href="/api/login" class="btn btn-o" id="nav-login">⬡ Login</a>
+    <a href="/dashboard.html" class="btn btn-o" id="nav-dashboard" style="display:none">Dashboard</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="head">
+    <div class="eye">Navigation tool</div>
+    <h1>Route Tracker</h1>
+    <p class="head-sub">Plan your route, check recent kills at every gate, and see corp members online near your path.</p>
+  </div>
+
+  <div class="notice login" id="login-notice">
+    <strong>Not logged in.</strong> You can still plan routes and check danger — login with EVE to see corp members online near your route.
+  </div>
+
+  <!-- SEARCH PANEL -->
+  <div class="search-panel">
+    <div class="search-row">
+      <div class="field">
+        <label>Origin system</label>
+        <input type="text" id="origin-input" placeholder="e.g. Hek" autocomplete="off"/>
+        <div class="autocomplete" id="origin-ac"></div>
+      </div>
+      <button class="swap-btn" onclick="swapSystems()" title="Swap">⇄</button>
+      <div class="field">
+        <label>Destination system</label>
+        <input type="text" id="dest-input" placeholder="e.g. Jita" autocomplete="off"/>
+        <div class="autocomplete" id="dest-ac"></div>
+      </div>
+    </div>
+    <div class="opts-row">
+      <div>
+        <label style="display:block;font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.5rem">Route preference</label>
+        <div class="flag-group">
+          <button class="flag-btn active" data-flag="shortest" onclick="setFlag('shortest')">Shortest</button>
+          <button class="flag-btn" data-flag="secure" onclick="setFlag('secure')">Safest</button>
+          <button class="flag-btn" data-flag="insecure" onclick="setFlag('insecure')">Avoid highsec</button>
+        </div>
+      </div>
+      <button class="go-btn" id="go-btn" onclick="planRoute()" disabled>Plan route</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="route-summary" id="route-summary"></div>
+    <div class="route-list">
+      <div class="route-list-head">
+        <div class="route-list-title" id="route-title">Route</div>
+        <div class="legend">
+          <span><span class="legend-dot" style="background:var(--g)"></span>High-sec</span>
+          <span><span class="legend-dot" style="background:var(--orange)"></span>Low-sec</span>
+          <span><span class="legend-dot" style="background:var(--red)"></span>Null-sec</span>
+        </div>
+      </div>
+      <div id="hops-list"></div>
+    </div>
+  </div>
+
+  <div class="empty-state" id="empty-state">
+    Search an origin and destination system to plan your route.
+  </div>
+</div>
+
+<footer>
+  <div class="f-name">The-<em>Keymaker</em> · [THE-K] · Hek IV</div>
+  <div class="f-note">EVE Online © CCP hf. Independent fan site.</div>
+</footer>
+
+<script>
+const CORP = 98800626;
+let SESSION = null;
+let selectedFlag = 'shortest';
+let originSystem = null;
+let destSystem = null;
+let systemCache = {}; // name -> {id, name, security}
+let trackerMembers = []; // online member tracking data, if authenticated
+
+// ── STARFIELD ──
+const cv=document.getElementById('c'),cx=cv.getContext('2d');let st=[];
+function rs(){cv.width=innerWidth;cv.height=Math.max(document.body.scrollHeight,innerHeight);st=Array.from({length:Math.floor(cv.width*cv.height/8000)},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*0.8+0.15,o:Math.random()*0.3+0.05,f:Math.random()*0.002+0.001,p:Math.random()*Math.PI*2}))}
+let fr=0;(function draw(){cx.clearRect(0,0,cv.width,cv.height);fr++;st.forEach(s=>{const o=s.o+Math.sin(fr*s.f+s.p)*0.06;cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle=`rgba(200,200,255,${Math.max(0,Math.min(0.45,o))})`;cx.fill()});requestAnimationFrame(draw)})();
+rs();window.addEventListener('resize',rs);
+
+// ── AUTH CHECK ──
+(async () => {
+  try {
+    const r = await fetch('/api/me');
+    if (r.ok) {
+      const s = await r.json();
+      if (s.authenticated) {
+        SESSION = s;
+        document.getElementById('nav-login').style.display = 'none';
+        document.getElementById('nav-dashboard').style.display = 'inline-flex';
+        document.getElementById('login-notice').innerHTML =
+          '<strong>Logged in as ' + esc(s.characterName) + '.</strong> Corp members online near your route will be highlighted automatically.';
+        loadMemberTracking();
+      }
+    }
+  } catch {}
+})();
+
+async function loadMemberTracking() {
+  if (!SESSION) return;
+  try {
+    const r = await fetch('https://esi.evetech.net/latest/corporations/' + CORP + '/membertracking/', {
+      headers: { 'Authorization': 'Bearer ' + SESSION.accessToken }
+    });
+    if (!r.ok) return;
+    const data = await r.json();
+
+    const online = data.filter(m => {
+      if (!m.logon_date) return false;
+      if (!m.logoff_date) return true;
+      return new Date(m.logon_date) > new Date(m.logoff_date);
+    });
+
+    const charIds = online.map(m => m.character_id);
+    if (!charIds.length) { trackerMembers = []; return; }
+
+    const nr = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(charIds)
+    });
+    const names = await nr.json();
+    const nameMap = {};
+    if (Array.isArray(names)) names.forEach(n => nameMap[n.id] = n.name);
+
+    trackerMembers = online.map(m => ({
+      id: m.character_id,
+      name: nameMap[m.character_id] || ('ID:' + m.character_id),
+      location_id: m.location_id
+    }));
+  } catch (e) { console.warn('Member tracking unavailable', e); }
+}
+
+// ── SYSTEM SEARCH (using ESI search endpoint, public) ──
+async function searchSystems(query) {
+  if (!query || query.length < 2) return [];
+  try {
+    const r = await fetch(`https://esi.evetech.net/latest/search/?categories=solar_system&datasource=tranquility&language=en&search=${encodeURIComponent(query)}&strict=false`);
+    if (!r.ok) return [];
+    const data = await r.json();
+    const ids = data.solar_system || [];
+    if (!ids.length) return [];
+
+    const nr = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(ids.slice(0, 10))
+    });
+    const names = await nr.json();
+    if (!Array.isArray(names)) return [];
+
+    // Resolve security status for each
+    const results = await Promise.all(names.map(async n => {
+      if (systemCache[n.id]) return systemCache[n.id];
+      try {
+        const sr = await fetch(`https://esi.evetech.net/latest/universe/systems/${n.id}/?datasource=tranquility`);
+        const sd = await sr.json();
+        const obj = { id: n.id, name: n.name, security: sd.security_status };
+        systemCache[n.id] = obj;
+        return obj;
+      } catch {
+        return { id: n.id, name: n.name, security: 0 };
+      }
+    }));
+    return results;
+  } catch { return []; }
+}
+
+function secClass(sec) {
+  if (sec >= 0.45) return 'hi';
+  if (sec > 0) return 'lo';
+  return 'null';
+}
+function secLabel(sec) {
+  return sec.toFixed(1);
+}
+
+// ── AUTOCOMPLETE WIRING ──
+function wireAutocomplete(inputId, acId, onSelect) {
+  const input = document.getElementById(inputId);
+  const ac = document.getElementById(acId);
+  let debounce, items = [], hlIdx = -1;
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounce);
+    const q = input.value.trim();
+    if (q.length < 2) { ac.classList.remove('open'); return; }
+    debounce = setTimeout(async () => {
+      items = await searchSystems(q);
+      hlIdx = -1;
+      if (!items.length) { ac.classList.remove('open'); return; }
+      ac.innerHTML = items.map((s, i) => `
+        <div class="ac-item" data-idx="${i}">
+          <span>${esc(s.name)}</span>
+          <span class="ac-sec ${secClass(s.security)}">${secLabel(s.security)}</span>
+        </div>`).join('');
+      ac.classList.add('open');
+      ac.querySelectorAll('.ac-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const sys = items[parseInt(el.dataset.idx)];
+          input.value = sys.name;
+          ac.classList.remove('open');
+          onSelect(sys);
+        });
+      });
+    }, 250);
+  });
+
+  input.addEventListener('keydown', e => {
+    const els = ac.querySelectorAll('.ac-item');
+    if (e.key === 'ArrowDown') { e.preventDefault(); hlIdx = Math.min(hlIdx+1, els.length-1); updateHl(els, hlIdx); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); hlIdx = Math.max(hlIdx-1, 0); updateHl(els, hlIdx); }
+    else if (e.key === 'Enter' && hlIdx >= 0 && items[hlIdx]) {
+      input.value = items[hlIdx].name; ac.classList.remove('open'); onSelect(items[hlIdx]);
+    }
+    else if (e.key === 'Escape') ac.classList.remove('open');
+  });
+
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !ac.contains(e.target)) ac.classList.remove('open');
+  });
+
+  function updateHl(els, idx) {
+    els.forEach((el,i) => el.classList.toggle('hl', i===idx));
+  }
+}
+
+wireAutocomplete('origin-input', 'origin-ac', sys => { originSystem = sys; checkReady(); });
+wireAutocomplete('dest-input', 'dest-ac', sys => { destSystem = sys; checkReady(); });
+
+function checkReady() {
+  document.getElementById('go-btn').disabled = !(originSystem && destSystem);
+}
+
+function swapSystems() {
+  const tmp = originSystem; originSystem = destSystem; destSystem = tmp;
+  document.getElementById('origin-input').value = originSystem ? originSystem.name : '';
+  document.getElementById('dest-input').value = destSystem ? destSystem.name : '';
+}
+
+function setFlag(f) {
+  selectedFlag = f;
+  document.querySelectorAll('.flag-btn').forEach(b => b.classList.toggle('active', b.dataset.flag === f));
+}
+
+// ── ROUTE PLANNING ──
+async function planRoute() {
+  if (!originSystem || !destSystem) return;
+  const btn = document.getElementById('go-btn');
+  btn.disabled = true;
+  btn.textContent = 'Calculating…';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('results').classList.remove('show');
+
+  try {
+    const url = `https://esi.evetech.net/latest/route/${originSystem.id}/${destSystem.id}/?datasource=tranquility&flag=${selectedFlag}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('No route found (systems may be unconnected, e.g. wormhole space).');
+    const systemIds = await r.json();
+
+    // Resolve all system names + security
+    const nr = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(systemIds)
+    });
+    const names = await nr.json();
+    const nameMap = {};
+    if (Array.isArray(names)) names.forEach(n => nameMap[n.id] = n.name);
+
+    const hops = await Promise.all(systemIds.map(async id => {
+      if (systemCache[id]) return { id, name: systemCache[id].name, security: systemCache[id].security };
+      try {
+        const sr = await fetch(`https://esi.evetech.net/latest/universe/systems/${id}/?datasource=tranquility`);
+        const sd = await sr.json();
+        const obj = { id, name: nameMap[id] || sd.name, security: sd.security_status };
+        systemCache[id] = obj;
+        return obj;
+      } catch {
+        return { id, name: nameMap[id] || `ID:${id}`, security: 0 };
+      }
+    }));
+
+    renderResults(hops);
+
+  } catch (e) {
+    document.getElementById('empty-state').style.display = 'block';
+    document.getElementById('empty-state').textContent = 'Error: ' + e.message;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Plan route';
+}
+
+function renderResults(hops) {
+  const jumps = hops.length - 1;
+  const lowsecCount = hops.filter(h => h.security > 0 && h.security < 0.45).length;
+  const nullsecCount = hops.filter(h => h.security <= 0).length;
+  const dangerLevel = nullsecCount > 0 ? 'High' : lowsecCount > 0 ? 'Medium' : 'Low';
+  const dangerClass = nullsecCount > 0 ? 'danger' : lowsecCount > 0 ? 'warn' : 'safe';
+
+  document.getElementById('route-summary').innerHTML = `
+    <div class="rs-cell"><div class="rs-label">Jumps</div><div class="rs-val">${jumps}</div></div>
+    <div class="rs-cell"><div class="rs-label">Low-sec systems</div><div class="rs-val ${lowsecCount?'warn':''}">${lowsecCount}</div></div>
+    <div class="rs-cell"><div class="rs-label">Null-sec systems</div><div class="rs-val ${nullsecCount?'danger':''}">${nullsecCount}</div></div>
+    <div class="rs-cell"><div class="rs-label">Risk level</div><div class="rs-val ${dangerClass}">${dangerLevel}</div></div>
+  `;
+
+  document.getElementById('route-title').textContent = `${hops[0].name} → ${hops[hops.length-1].name}`;
+
+  const list = document.getElementById('hops-list');
+  list.innerHTML = hops.map((h, i) => `
+    <div class="hop" id="hop-${h.id}-${i}">
+      <div class="hop-n">${i === 0 ? 'A' : i === hops.length-1 ? 'B' : i}</div>
+      <div class="hop-info">
+        <div class="hop-name">
+          ${esc(h.name)}
+          <span class="sec-badge ${secClass(h.security)}">${secLabel(h.security)}</span>
+        </div>
+        <div class="hop-meta">
+          <a href="https://evemaps.dotlan.net/system/${encodeURIComponent(h.name)}" target="_blank" style="color:var(--m);text-decoration:none;opacity:0.7">DOTLAN ↗</a>
+          <a href="https://zkillboard.com/system/${h.id}/" target="_blank" style="color:var(--m);text-decoration:none;opacity:0.7">zKillboard ↗</a>
+        </div>
+      </div>
+      <div class="checking" id="kf-${h.id}-${i}"><span class="spin-sm"></span>checking…</div>
+      <div id="mf-${h.id}-${i}"></div>
+    </div>
+  `).join('');
+
+  document.getElementById('results').classList.add('show');
+
+  // Check kills + member overlay async per hop
+  hops.forEach((h, i) => checkSystemActivity(h, i));
+}
+
+async function checkSystemActivity(h, idx) {
+  const kfEl = document.getElementById(`kf-${h.id}-${idx}`);
+  const mfEl = document.getElementById(`mf-${h.id}-${idx}`);
+
+  // zKillboard recent kills check (last hour)
+  try {
+    const r = await fetch(`https://zkillboard.com/api/systemID/${h.id}/pastSeconds/3600/`);
+    const kills = await r.json();
+    const count = Array.isArray(kills) ? kills.length : 0;
+    if (count === 0) {
+      kfEl.innerHTML = `<div class="kill-flag clear">✓ Clear (1h)</div>`;
+    } else if (count <= 3) {
+      kfEl.innerHTML = `<div class="kill-flag warn">⚠ ${count} kill${count>1?'s':''} (1h)</div>`;
+    } else {
+      kfEl.innerHTML = `<div class="kill-flag danger">☠ ${count} kills (1h) — active hotspot</div>`;
+    }
+  } catch {
+    kfEl.innerHTML = `<div class="checking" style="opacity:0.5">no data</div>`;
+  }
+
+  // Member overlay
+  if (trackerMembers.length) {
+    const here = trackerMembers.filter(m => m.location_id === h.id);
+    if (here.length) {
+      mfEl.innerHTML = here.map(m => `
+        <div class="member-flag" title="${esc(m.name)} is here">
+          <img src="https://images.evetech.net/characters/${m.id}/portrait?size=32"/>
+          ${esc(m.name)}
+        </div>`).join('');
+    }
+  }
+}
+
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+</body>
+</html>
