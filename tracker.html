@@ -151,6 +151,15 @@ h1{font-family:'Syne',sans-serif;font-size:clamp(1.5rem,4vw,2.3rem);font-weight:
 .notice strong{color:var(--w)}
 .notice.login{border-left-color:var(--m2)}
 
+/* ROUTE MAP */
+.map-panel{background:var(--s);border:1px solid var(--b);margin-bottom:1.5rem;overflow:hidden}
+.map-panel-head{padding:0.9rem 1.25rem;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem}
+.map-hint{font-size:0.62rem;color:var(--m);display:flex;align-items:center}
+.live-pulse{width:8px;height:8px;border-radius:50%;background:var(--g);display:inline-block;margin-right:0.4rem;animation:mappulse 2s ease-in-out infinite}
+@keyframes mappulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
+#route-map{width:100%;height:360px;display:block;cursor:grab;background:var(--s2)}
+#route-map:active{cursor:grabbing}
+
 footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:1.1rem clamp(1.25rem,4vw,3rem);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.6rem}
 .f-name{font-family:'Syne',sans-serif;font-size:0.7rem;font-weight:700;color:var(--m)}
 .f-name em{color:var(--g);font-style:normal}
@@ -218,6 +227,14 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:1.1rem 
   <!-- RESULTS -->
   <div id="results">
     <div class="route-summary" id="route-summary"></div>
+    <div class="map-panel">
+      <div class="map-panel-head">
+        <div class="route-list-title">Route Map</div>
+        <div class="map-hint" id="map-live-hint" style="display:none"><span class="live-pulse"></span>Live member tracking</div>
+        <div class="map-hint">Drag to pan · Scroll to zoom</div>
+      </div>
+      <canvas id="route-map"></canvas>
+    </div>
     <div class="route-list">
       <div class="route-list-head">
         <div class="route-list-title" id="route-title">Route</div>
@@ -247,8 +264,15 @@ let SESSION = null;
 let selectedFlag = 'shortest';
 let originSystem = null;
 let destSystem = null;
-let systemCache = {}; // name -> {id, name, security}
+let systemCache = {}; // name -> {id, name, security, position}
 let trackerMembers = []; // online member tracking data, if authenticated
+let memberTrackInterval = null;
+
+// ── ROUTE MAP STATE ──
+let routeHops = []; // current route hops, with position
+let mapProjected = []; // hops projected to canvas coords (before pan/zoom)
+let memberMarkers = []; // {id, name, px, py} for members currently on the route
+let mapState = { scale: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 };
 
 // ── STARFIELD ──
 const cv=document.getElementById('c'),cx=cv.getContext('2d');let st=[];
@@ -269,6 +293,7 @@ rs();window.addEventListener('resize',rs);
         document.getElementById('nav-arbitrage').style.display = 'inline-flex';
         document.getElementById('login-notice').innerHTML =
           '<strong>Logged in as ' + esc(s.characterName) + '.</strong> Corp members online near your route will be highlighted automatically.';
+        document.getElementById('map-live-hint').style.display = 'flex';
         loadMemberTracking();
       }
     }
@@ -307,6 +332,12 @@ async function loadMemberTracking() {
       location_id: m.location_id
     }));
   } catch (e) { console.warn('Member tracking unavailable', e); }
+
+  applyMemberOverlays();
+
+  if (!memberTrackInterval) {
+    memberTrackInterval = setInterval(loadMemberTracking, 30000);
+  }
 }
 
 // ── SYSTEM DATABASE ──
@@ -410,7 +441,7 @@ async function searchSystems(query) {
     try {
       const sr = await fetch(`https://esi.evetech.net/latest/universe/systems/${s.id}/?datasource=tranquility`);
       const sd = await sr.json();
-      const obj = { id: s.id, name: s.name, security: sd.security_status };
+      const obj = { id: s.id, name: s.name, security: sd.security_status, position: sd.position || null };
       systemCache[s.id] = obj;
       return obj;
     } catch {
@@ -522,15 +553,16 @@ async function planRoute() {
     if (Array.isArray(names)) names.forEach(n => nameMap[n.id] = n.name);
 
     const hops = await Promise.all(systemIds.map(async id => {
-      if (systemCache[id]) return { id, name: systemCache[id].name, security: systemCache[id].security };
+      const cached = systemCache[id];
+      if (cached && cached.position !== undefined && cached.position !== null) return cached;
       try {
         const sr = await fetch(`https://esi.evetech.net/latest/universe/systems/${id}/?datasource=tranquility`);
         const sd = await sr.json();
-        const obj = { id, name: nameMap[id] || sd.name, security: sd.security_status };
+        const obj = { id, name: nameMap[id] || sd.name, security: sd.security_status, position: sd.position || null };
         systemCache[id] = obj;
         return obj;
       } catch {
-        return { id, name: nameMap[id] || `ID:${id}`, security: 0 };
+        return { id, name: nameMap[id] || `ID:${id}`, security: cached ? cached.security : 0, position: null };
       }
     }));
 
@@ -582,13 +614,19 @@ function renderResults(hops) {
 
   document.getElementById('results').classList.add('show');
 
-  // Check kills + member overlay async per hop
+  routeHops = hops;
+  resizeMapCanvas();
+  mapState = { scale: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 };
+  setupMapProjection(hops);
+  applyMemberOverlays();
+  initMapInteraction();
+
+  // Check kills async per hop
   hops.forEach((h, i) => checkSystemActivity(h, i));
 }
 
 async function checkSystemActivity(h, idx) {
   const kfEl = document.getElementById(`kf-${h.id}-${idx}`);
-  const mfEl = document.getElementById(`mf-${h.id}-${idx}`);
 
   // zKillboard recent kills check (last hour)
   try {
@@ -605,18 +643,159 @@ async function checkSystemActivity(h, idx) {
   } catch {
     kfEl.innerHTML = `<div class="checking" style="opacity:0.5">no data</div>`;
   }
+}
 
-  // Member overlay
-  if (trackerMembers.length) {
+// ── MEMBER OVERLAYS (text list + map markers) ──
+function applyMemberOverlays() {
+  routeHops.forEach((h, i) => {
+    const mfEl = document.getElementById(`mf-${h.id}-${i}`);
+    if (!mfEl) return;
     const here = trackerMembers.filter(m => m.location_id === h.id);
-    if (here.length) {
-      mfEl.innerHTML = here.map(m => `
+    mfEl.innerHTML = here.length ? here.map(m => `
         <div class="member-flag" title="${esc(m.name)} is here">
           <img src="https://images.evetech.net/characters/${m.id}/portrait?size=32"/>
           ${esc(m.name)}
-        </div>`).join('');
+        </div>`).join('') : '';
+  });
+  updateMemberMarkers();
+}
+
+function updateMemberMarkers() {
+  memberMarkers = trackerMembers
+    .map(m => {
+      const node = mapProjected.find(p => p.id === m.location_id);
+      if (!node) return null;
+      return { id: m.id, name: m.name, px: node.px, py: node.py };
+    })
+    .filter(Boolean);
+  drawRouteMap();
+}
+
+// ── ROUTE MAP RENDERING ──
+function secColor(sec) {
+  if (sec >= 0.45) return '#39FF14';
+  if (sec > 0) return '#ff8833';
+  return '#ff4455';
+}
+
+function resizeMapCanvas() {
+  const canvas = document.getElementById('route-map');
+  if (!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+}
+
+function setupMapProjection(hops) {
+  const canvas = document.getElementById('route-map');
+  const pts = hops.filter(h => h.position);
+  if (!canvas || !pts.length) { mapProjected = []; return; }
+
+  const xs = pts.map(h => h.position.x);
+  const zs = pts.map(h => h.position.z);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minZ = Math.min(...zs), maxZ = Math.max(...zs);
+  const spanX = (maxX - minX) || 1, spanZ = (maxZ - minZ) || 1;
+
+  const w = canvas.width, h = canvas.height;
+  const pad = 40;
+  const s = Math.min((w - pad * 2) / spanX, (h - pad * 2) / spanZ);
+
+  mapProjected = hops.filter(hh => hh.position).map(hh => ({
+    id: hh.id,
+    name: hh.name,
+    security: hh.security,
+    px: pad + (hh.position.x - minX) * s + ((w - pad * 2) - spanX * s) / 2,
+    py: pad + (hh.position.z - minZ) * s + ((h - pad * 2) - spanZ * s) / 2,
+  }));
+}
+
+function drawRouteMap() {
+  const canvas = document.getElementById('route-map');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!mapProjected.length) return;
+
+  ctx.save();
+  ctx.translate(mapState.offsetX, mapState.offsetY);
+  ctx.scale(mapState.scale, mapState.scale);
+
+  // route path
+  ctx.strokeStyle = 'rgba(57,255,20,0.4)';
+  ctx.lineWidth = 2 / mapState.scale;
+  ctx.beginPath();
+  mapProjected.forEach((p, i) => { if (i === 0) ctx.moveTo(p.px, p.py); else ctx.lineTo(p.px, p.py); });
+  ctx.stroke();
+
+  // system nodes
+  mapProjected.forEach((p, i) => {
+    const isEndpoint = i === 0 || i === mapProjected.length - 1;
+    const r = (isEndpoint ? 7 : 4.5) / mapState.scale;
+    ctx.beginPath();
+    ctx.arc(p.px, p.py, r, 0, Math.PI * 2);
+    ctx.fillStyle = secColor(p.security);
+    ctx.fill();
+    if (isEndpoint) {
+      ctx.lineWidth = 2 / mapState.scale;
+      ctx.strokeStyle = '#ECEDF5';
+      ctx.stroke();
     }
-  }
+    ctx.font = `${11 / mapState.scale}px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = 'rgba(236,237,245,0.85)';
+    ctx.fillText(p.name, p.px + (8 / mapState.scale), p.py + (4 / mapState.scale));
+  });
+
+  // live member markers
+  memberMarkers.forEach(m => {
+    const my = m.py - (12 / mapState.scale);
+    ctx.beginPath();
+    ctx.arc(m.px, my, 5 / mapState.scale, 0, Math.PI * 2);
+    ctx.fillStyle = '#39FF14';
+    ctx.fill();
+    ctx.font = `${10 / mapState.scale}px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = '#39FF14';
+    ctx.fillText(m.name, m.px + (8 / mapState.scale), my + (3 / mapState.scale));
+  });
+
+  ctx.restore();
+}
+
+function initMapInteraction() {
+  const canvas = document.getElementById('route-map');
+  if (!canvas || canvas.dataset.wired) return;
+  canvas.dataset.wired = '1';
+
+  canvas.addEventListener('mousedown', e => {
+    mapState.dragging = true; mapState.lastX = e.clientX; mapState.lastY = e.clientY;
+  });
+  window.addEventListener('mouseup', () => { mapState.dragging = false; });
+  window.addEventListener('mousemove', e => {
+    if (!mapState.dragging) return;
+    mapState.offsetX += e.clientX - mapState.lastX;
+    mapState.offsetY += e.clientY - mapState.lastY;
+    mapState.lastX = e.clientX; mapState.lastY = e.clientY;
+    drawRouteMap();
+  });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const delta = e.deltaY < 0 ? 1.1 : 0.9;
+    const newScale = Math.min(8, Math.max(0.3, mapState.scale * delta));
+    mapState.offsetX = mx - (mx - mapState.offsetX) * (newScale / mapState.scale);
+    mapState.offsetY = my - (my - mapState.offsetY) * (newScale / mapState.scale);
+    mapState.scale = newScale;
+    drawRouteMap();
+  }, { passive: false });
+
+  window.addEventListener('resize', () => {
+    if (!document.getElementById('results').classList.contains('show')) return;
+    resizeMapCanvas();
+    setupMapProjection(routeHops);
+    updateMemberMarkers();
+  });
 }
 
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
