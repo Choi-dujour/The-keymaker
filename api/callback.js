@@ -71,19 +71,6 @@ export default async function handler(req, res) {
       return res.redirect(302, '/?auth=denied&name=' + encodeURIComponent(characterName));
     }
 
-    // 3b. Ruolo Director (il CEO ha sempre pieni poteri, per gli altri chiedi a ESI)
-    let isDirector = isCeo;
-    if (!isDirector) {
-      try {
-        const rolesRes = await fetch(`https://esi.evetech.net/latest/characters/${characterId}/roles/?datasource=tranquility`, {
-          headers: { 'Authorization': `Bearer ${accessToken}` },
-        }).then(r => r.json());
-        isDirector = Array.isArray(rolesRes.roles) && rolesRes.roles.includes('Director');
-      } catch (e) {
-        console.warn('ESI roles check failed:', e.message);
-      }
-    }
-
     // 4. Sessione leggera — NO access_token nel cookie (troppo grande)
     // Salviamo solo l'essenziale, il refresh token ci basta per rigenerare
     const sessionData = JSON.stringify({
@@ -92,7 +79,6 @@ export default async function handler(req, res) {
       accessToken,   // ~500 chars, ok
       refreshToken,
       isCeo,
-      isDirector,
       expires: Date.now() + (expiresIn * 1000),
     });
 
@@ -101,7 +87,7 @@ export default async function handler(req, res) {
     // Controlla dimensione cookie (max ~4000 bytes sicuri)
     if (encoded.length > 3800) {
       // Sessione troppo grande: salva senza accessToken (verrà refreshato da me.js)
-      const slim = JSON.stringify({ characterId, characterName, refreshToken, isCeo, isDirector, expires: 0 });
+      const slim = JSON.stringify({ characterId, characterName, refreshToken, isCeo, expires: 0 });
       const slimEncoded = Buffer.from(slim).toString('base64');
       res.setHeader('Set-Cookie', `eve_session=${slimEncoded}; HttpOnly; Secure; SameSite=Lax; Max-Age=3600; Path=/`);
     } else {

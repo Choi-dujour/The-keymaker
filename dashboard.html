@@ -237,14 +237,13 @@ tr:hover td{background:rgba(255,255,255,0.015)}
     <a class="sb-item active" data-page="overview" href="#"><span class="sb-icon">◈</span>Overview</a>
     <a class="sb-item" data-page="members" href="#"><span class="sb-icon">◉</span>Members</a>
     <a class="sb-item" data-page="killboard" href="#"><span class="sb-icon">⚔</span>Killboard</a>
-    <div class="sb-section nav-director" id="leadership-label" style="display:none">Leadership</div>
-    <a class="sb-item nav-director" data-page="tracker" href="#" style="display:none"><span class="sb-icon">◎</span>Tracker</a>
-    <a class="sb-item nav-director" data-page="journal" href="#" style="display:none"><span class="sb-icon">◈</span>Journal</a>
-    <a class="sb-item nav-director" data-page="wallet" href="#" style="display:none"><span class="sb-icon">◎</span>Wallet</a>
-    <a class="sb-item nav-director" data-page="industry" href="#" style="display:none"><span class="sb-icon">⛏</span>Industry</a>
-    <a class="sb-item nav-director" data-page="mining" href="#" style="display:none"><span class="sb-icon">◉</span>Mining</a>
-    <a class="sb-item nav-director" data-page="assets" href="#" style="display:none"><span class="sb-icon">◎</span>Assets</a>
     <div class="sb-section" id="ceo-label" style="display:none">CEO</div>
+    <a class="sb-item nav-ceo" data-page="tracker" href="#" style="display:none"><span class="sb-icon">◎</span>Tracker</a>
+    <a class="sb-item nav-ceo" data-page="journal" href="#" style="display:none"><span class="sb-icon">◈</span>Journal</a>
+    <a class="sb-item nav-ceo" data-page="wallet" href="#" style="display:none"><span class="sb-icon">◎</span>Wallet</a>
+    <a class="sb-item nav-ceo" data-page="industry" href="#" style="display:none"><span class="sb-icon">⛏</span>Industry</a>
+    <a class="sb-item nav-ceo" data-page="mining" href="#" style="display:none"><span class="sb-icon">◉</span>Mining</a>
+    <a class="sb-item nav-ceo" data-page="assets" href="#" style="display:none"><span class="sb-icon">◎</span>Assets</a>
     <a class="sb-item" data-page="access" href="#" id="nav-access" style="display:none"><span class="sb-icon">🔑</span>Access</a>
     <div class="sb-section">Site</div>
     <a class="sb-item" href="/tracker.html" style="border-left:none"><span class="sb-icon">◎</span>Route Tracker</a>
@@ -268,7 +267,7 @@ tr:hover td{background:rgba(255,255,255,0.015)}
     </div>
     <div class="cards">
       <div class="card"><div class="card-l">Members</div><div class="card-v g" id="ov-members">—</div></div>
-      <div class="card"><div class="card-l">Wallet</div><div class="card-v" id="ov-wallet" style="font-size:1rem;padding-top:0.3rem">—</div></div>
+      <div class="card"><div class="card-l" id="ov-wallet-label">Wallet</div><div class="card-v" id="ov-wallet" style="font-size:1rem;padding-top:0.3rem">—</div></div>
       <div class="card"><div class="card-l">Kills (30d)</div><div class="card-v" id="ov-kills">—</div></div>
       <div class="card"><div class="card-l">Industry</div><div class="card-v" id="ov-jobs">—</div><div class="card-sub">Active jobs</div></div>
     </div>
@@ -502,14 +501,11 @@ async function init(){
   document.getElementById('sb-name').textContent=SESSION.characterName;
   document.getElementById('sb-portrait').src=`https://images.evetech.net/characters/${SESSION.characterId}/portrait?size=64`;
 
-  if(SESSION.isDirector){
-    document.getElementById('sb-role').textContent=SESSION.isCeo?'CEO':'Director';
-    document.getElementById('leadership-label').style.display='block';
-    document.querySelectorAll('.sb-item.nav-director').forEach(el=>el.style.display='flex');
-  }
   if(SESSION.isCeo){
+    document.getElementById('sb-role').textContent='CEO';
     document.getElementById('ceo-label').style.display='block';
     document.getElementById('nav-access').style.display='flex';
+    document.querySelectorAll('.sb-item.nav-ceo').forEach(el=>el.style.display='flex');
   }
   loadOverview();
 }
@@ -538,10 +534,17 @@ async function loadOverview(){
       document.getElementById('ov-members').textContent=d.member_count??'—';
     }).catch(()=>{document.getElementById('ov-members').textContent='N/A'}),
 
-    esi(`/corporations/${CORP}/wallets/`, true).then(ws=>{
-      const t=ws.reduce((s,w)=>s+(w.balance||0),0);
-      document.getElementById('ov-wallet').textContent=fisk(t)+' ISK';
-    }).catch(()=>{document.getElementById('ov-wallet').textContent='N/A'}),
+    (SESSION.isCeo
+      ? esi(`/corporations/${CORP}/wallets/`, true).then(ws=>{
+          const t=ws.reduce((s,w)=>s+(w.balance||0),0);
+          document.getElementById('ov-wallet-label').textContent='Corp Wallet';
+          document.getElementById('ov-wallet').textContent=fisk(t)+' ISK';
+        })
+      : esi(`/characters/${SESSION.characterId}/wallet/`, true).then(bal=>{
+          document.getElementById('ov-wallet-label').textContent='Your ISK';
+          document.getElementById('ov-wallet').textContent=fisk(bal)+' ISK';
+        })
+    ).catch(()=>{document.getElementById('ov-wallet').textContent='N/A'}),
 
     fetch(`https://zkillboard.com/api/kills/corporationID/${CORP}/pastSeconds/2592000/?_=${Date.now()}`,{cache:'no-store'})
       .then(r=>r.json()).then(d=>{

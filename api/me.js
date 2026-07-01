@@ -41,7 +41,6 @@ export default async function handler(req, res) {
     characterId:   session.characterId,
     characterName: session.characterName,
     isCeo:         session.isCeo,
-    isDirector:    session.isDirector,
     accessToken:   session.accessToken,
   });
 }
