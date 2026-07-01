@@ -1,5 +1,7 @@
 // api/callback.js
 
+const CORP_ID = 98800626;
+
 export default async function handler(req, res) {
   const { code, state } = req.query;
 
@@ -51,8 +53,18 @@ export default async function handler(req, res) {
     const characterId   = String(jwtPayload.sub).split(':').pop();
     const characterName = jwtPayload.name || 'Unknown';
 
-    // 3. Controlla whitelist
-    const isAllowed = whitelist.includes(characterId);
+    // 3. Controlla whitelist oppure membership corp attuale (via ESI, dato pubblico)
+    const isWhitelisted = whitelist.includes(characterId);
+    let isCorpMember = false;
+    try {
+      const charInfo = await fetch(`https://esi.evetech.net/latest/characters/${characterId}/?datasource=tranquility`)
+        .then(r => r.json());
+      isCorpMember = charInfo.corporation_id === CORP_ID;
+    } catch (e) {
+      console.warn('ESI corp membership check failed:', e.message);
+    }
+
+    const isAllowed = isWhitelisted || isCorpMember;
     const isCeo     = characterId === String(ceoId);
 
     if (!isAllowed) {
