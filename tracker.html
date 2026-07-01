@@ -168,6 +168,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:1.1rem 
   <div class="n-right">
     <a href="/" class="btn btn-o">← Home</a>
     <a href="/about.html" class="btn btn-o">About</a>
+    <a href="/arbitrage.html" class="btn btn-o" id="nav-arbitrage" style="display:none">Arbitrage</a>
     <a href="/api/login" class="btn btn-o" id="nav-login">⬡ Login</a>
     <a href="/dashboard.html" class="btn btn-o" id="nav-dashboard" style="display:none">Dashboard</a>
   </div>
@@ -265,6 +266,7 @@ rs();window.addEventListener('resize',rs);
         SESSION = s;
         document.getElementById('nav-login').style.display = 'none';
         document.getElementById('nav-dashboard').style.display = 'inline-flex';
+        document.getElementById('nav-arbitrage').style.display = 'inline-flex';
         document.getElementById('login-notice').innerHTML =
           '<strong>Logged in as ' + esc(s.characterName) + '.</strong> Corp members online near your route will be highlighted automatically.';
         loadMemberTracking();
