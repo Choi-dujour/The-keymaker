@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Market Arbitrage — The-Keymaker [THE-K]</title>
+<meta name="theme-color" content="#39FF14"/>
+<meta name="robots" content="noindex, nofollow"/>
+<link rel="icon" type="image/png" href="https://images.evetech.net/corporations/98800626/logo?size=64"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060e;--s:#0c0c1a;--s2:#101020;--b:#16162a;--b2:#1e1e36;
+  --g:#39FF14;--w:#ECEDF5;--m:#5a5a7a;--m2:#8080a0;
+  --red:#ff4455;--yellow:#ffcc33;--orange:#ff8833;
+  --mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--w);font-family:'Inter',sans-serif;overflow-x:hidden;font-size:14px}
+#c{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+#auth-gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:0.75rem}
+#auth-gate .spin{width:28px;height:28px;border:3px solid var(--b);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite}
+#auth-gate p{font-size:0.7rem;color:var(--m);letter-spacing:0.1em;text-transform:uppercase}
+#auth-gate .denied{color:var(--red)}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(1.25rem,4vw,3rem);height:52px;border-bottom:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(20px);background:rgba(6,6,14,0.85)}
+.n-left{display:flex;align-items:center;gap:0.6rem}
+.n-logo{width:24px;height:24px;border-radius:3px;object-fit:cover;opacity:0.9}
+.n-name{font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.04em}
+.n-name em{color:var(--g);font-style:normal}
+.n-right{display:flex;gap:0.5rem;align-items:center}
+.n-char{font-family:var(--mono);font-size:0.68rem;color:var(--m2);padding:0 0.4rem;white-space:nowrap}
+.btn{font-family:'Syne',sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.85rem;cursor:pointer;transition:all .18s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;border:none;white-space:nowrap}
+.btn-o{background:transparent;border:1px solid var(--b);color:var(--m)}
+.btn-o:hover{border-color:var(--m);color:var(--w)}
+.btn-o.logout:hover{border-color:var(--red);color:var(--red)}
+.btn-g{background:var(--g);color:#000}
+.btn-g:hover{background:#50ff30}
+.wrap{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:calc(52px + 2rem) clamp(1.25rem,4vw,3rem) 3rem}
+.head{margin-bottom:2rem}
+.eye{font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--g);opacity:0.7;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem}
+.eye::before{content:'';width:20px;height:1px;background:var(--g);opacity:0.6}
+h1{font-family:'Syne',sans-serif;font-size:clamp(1.5rem,4vw,2.3rem);font-weight:800;letter-spacing:-0.02em;margin-bottom:0.5rem}
+.head-sub{font-size:0.85rem;color:var(--m);max-width:65ch;line-height:1.7}
+.notice{background:var(--s);border:1px solid var(--b);border-left:3px solid var(--m2);padding:0.85rem 1.1rem;font-size:0.78rem;color:var(--m2);margin-bottom:1.5rem;line-height:1.6}
+.notice strong{color:var(--w)}
+.notice.ok{border-left-color:var(--g)}
+.notice.warn{border-left-color:var(--yellow);color:var(--yellow)}
+.skill-panel{background:var(--s);border:1px solid var(--b);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;flex-wrap:wrap;gap:1.75rem;align-items:center}
+.sk-label{font-size:0.55rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.3rem}
+.sk-val{font-family:var(--mono);font-size:0.95rem;color:var(--g)}
+.search-panel{background:var(--s);border:1px solid var(--b);padding:1.5rem;margin-bottom:1.5rem}
+.filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.25rem}
+.field label{display:block;font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.4rem}
+.field select,.field input[type=number],.field input[type=text]{width:100%;background:var(--s2);border:1px solid var(--b);color:var(--w);padding:0.6rem 0.8rem;font-family:var(--mono);font-size:0.82rem;outline:none;transition:border-color .2s}
+.field select:focus,.field input:focus{border-color:var(--g)}
+.check-row{display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--w);padding-top:1.6rem}
+.check-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--g)}
+.region-field{grid-column:1/-1}
+.region-grid{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.6rem}
+.region-chip{display:flex;align-items:center;gap:0.45rem;background:var(--s2);border:1px solid var(--b);padding:0.45rem 0.75rem;font-size:0.72rem;cursor:pointer;user-select:none;transition:border-color .15s,color .15s;color:var(--m2)}
+.region-chip:hover{border-color:var(--m2)}
+.region-chip input{accent-color:var(--g);width:13px;height:13px}
+.region-chip.checked{border-color:var(--g);color:var(--g)}
+.region-actions{display:flex;gap:0.5rem}
+.mini-btn{background:transparent;border:1px solid var(--b);color:var(--m);font-family:var(--mono);font-size:0.65rem;padding:0.35rem 0.7rem;cursor:pointer;transition:all .15s}
+.mini-btn:hover{border-color:var(--g);color:var(--g)}
+.opts-row{display:flex;gap:1rem;align-items:center;justify-content:flex-end}
+.go-btn{font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--g);color:#000;border:none;padding:0.7rem 1.6rem;cursor:pointer;transition:all .2s}
+.go-btn:hover{background:#50ff30}
+.go-btn:disabled{background:var(--b2);color:var(--m);cursor:not-allowed}
+.status-bar{display:flex;align-items:center;gap:0.7rem;font-family:var(--mono);font-size:0.72rem;color:var(--m);margin-bottom:1.5rem;min-height:20px}
+.spinner{width:12px;height:12px;border:2px solid var(--b);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite;display:none;flex-shrink:0}
+.spinner.active{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress-wrap{background:var(--s2);height:4px;width:200px;display:none;border:1px solid var(--b)}
+.progress-wrap.active{display:block}
+.progress-bar{height:100%;background:var(--g);width:0%;transition:width .25s}
+.status-bar.err .status-text{color:var(--red)}
+.status-bar.warn .status-text{color:var(--yellow)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--b);margin-bottom:1.5rem}
+.card{background:var(--s);padding:1.1rem 1.25rem}
+.card-l{font-size:0.55rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.4rem}
+.card-v{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700}
+.card-v.g{color:var(--g)}
+.card-v.y{color:var(--yellow)}
+.tbl-wrap{background:var(--s);border:1px solid var(--b);overflow:hidden}
+.tbl-head{padding:0.9rem 1.25rem;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap}
+.tbl-title{font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700}
+.tbl-controls{display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap}
+.count-badge{background:var(--s2);border:1px solid var(--b);color:var(--m);font-family:var(--mono);font-size:0.68rem;padding:0.2rem 0.6rem}
+.tbl-search{background:var(--s2);border:1px solid var(--b);color:var(--w);font-family:var(--mono);font-size:0.78rem;padding:0.4rem 0.7rem;outline:none;min-width:200px;transition:border-color .2s}
+.tbl-search:focus{border-color:var(--g)}
+.tbl-sort{background:var(--s2);border:1px solid var(--b);color:var(--w);font-family:var(--mono);font-size:0.75rem;padding:0.4rem 0.6rem;outline:none;cursor:pointer}
+.tbl-sort:focus{border-color:var(--g)}
+.tbl-scroll{overflow-x:auto;max-height:70vh;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:0.78rem}
+thead th{position:sticky;top:0;background:var(--s2);padding:0.6rem 0.75rem;text-align:left;font-family:var(--mono);font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--m);cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--b2);z-index:5}
+thead th:hover{color:var(--g)}
+thead th.sorted{color:var(--g)}
+thead th.sorted::after{content:' ▾'}
+thead th.sorted.asc::after{content:' ▴'}
+tbody tr{border-bottom:1px solid var(--b);cursor:pointer;transition:background .12s}
+tbody tr:hover{background:rgba(255,255,255,0.02)}
+tbody tr.expanded{background:rgba(57,255,20,0.04)}
+td{padding:0.6rem 0.75rem;font-family:var(--mono);white-space:nowrap;vertical-align:top}
+td.item-name{font-family:'Inter',sans-serif;font-weight:500;color:var(--w);max-width:220px;overflow:hidden;text-overflow:ellipsis}
+td.station-cell{font-size:0.7rem;color:var(--m2);max-width:190px;overflow:hidden;text-overflow:ellipsis}
+.region-sub{font-size:0.6rem;color:var(--m);margin-top:2px;letter-spacing:0.02em}
+.sec-tag{display:inline-block;min-width:26px;text-align:center;border-radius:2px;font-size:0.62rem;padding:1px 3px;margin-left:4px}
+.sec-hi{color:var(--g);background:rgba(57,255,20,0.1)}
+.sec-lo{color:var(--orange);background:rgba(255,136,51,0.1)}
+.sec-null{color:var(--red);background:rgba(255,68,85,0.1)}
+.profit-cell{font-weight:700}
+.profit-cell.pos{color:var(--g)}
+.profit-cell.neg{color:var(--red)}
+.margin-cell{color:var(--yellow)}
+.vol-cell{color:var(--m2)}
+.jumps-cell{color:var(--w);font-weight:600}
+.jumps-cell.na{color:var(--m);font-style:italic;font-weight:400}
+.score-cell{font-weight:700;color:var(--g)}
+.detail-row td{background:var(--s2);padding:0}
+.detail-content{padding:1.25rem 1.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1.25rem}
+.dt-label{font-size:0.55rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.4rem}
+.dt-val{font-family:var(--mono);font-size:1rem;color:var(--w)}
+.dt-sub{font-size:0.7rem;color:var(--m);margin-top:0.25rem;line-height:1.5}
+.route-line{font-family:var(--mono);font-size:0.78rem;color:var(--w);line-height:1.8}
+.route-line .arr{color:var(--g);margin:0 0.4rem}
+.wp-btn{background:transparent;border:1px solid var(--b);color:var(--g);font-family:var(--mono);font-size:0.65rem;padding:0.3rem 0.6rem;cursor:pointer;margin-top:0.4rem;margin-right:0.4rem;transition:all .15s}
+.wp-btn:hover{background:var(--g);color:#000}
+.wp-btn:disabled{opacity:0.4;cursor:not-allowed}
+.empty-state{text-align:center;padding:4rem 1.5rem;color:var(--m);font-size:0.85rem;line-height:1.8}
+.empty-state .big{font-size:1.8rem;display:block;margin-bottom:0.8rem;opacity:0.3}
+footer{position:relative;z-index:1;text-align:center;padding:2rem;border-top:1px solid var(--b);font-size:0.7rem;color:var(--m)}
+.f-name{font-family:'Syne',sans-serif;font-weight:700;margin-bottom:0.3rem}
+.f-name em{color:var(--g);font-style:normal}
+.pilot-panel{background:var(--s);border:1px solid var(--b);border-left:3px solid var(--g);padding:1.25rem 1.5rem;margin-bottom:1.5rem}
+.pilot-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem}
+.pilot-avatar{width:44px;height:44px;border-radius:3px;border:1px solid var(--b);object-fit:cover}
+.pilot-name{font-family:"Syne",sans-serif;font-size:1rem;font-weight:700;color:var(--g)}
+.pilot-sub{font-size:0.72rem;color:var(--m);margin-top:0.2rem;font-family:var(--mono)}
+.pilot-pulse{width:10px;height:10px;border-radius:50%;background:var(--g);margin-left:auto;animation:pulse 2s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
+.pilot-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--b)}
+.pstat{background:var(--s2);padding:0.9rem 1.1rem}
+.pstat-label{font-size:0.55rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.35rem}
+.pstat-val{font-family:"Syne",sans-serif;font-size:1.2rem;font-weight:700;color:var(--w)}
+.pstat-val.g{color:var(--g)}
+.pstat-val.y{color:var(--yellow)}
+.pstat-sub{font-size:0.68rem;color:var(--m);margin-top:0.2rem;font-family:var(--mono)}
+.feasible-badge{display:inline-block;font-size:0.6rem;padding:1px 5px;border-radius:2px;margin-left:4px;vertical-align:middle}
+.fb-yes{background:rgba(57,255,20,0.12);color:var(--g)}
+.fb-no{background:rgba(255,68,85,0.1);color:var(--red)}
+.fb-cargo{background:rgba(255,204,51,0.1);color:var(--yellow)}
+.tr-blocked{opacity:0.35}
+::selection{background:var(--g);color:#000}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:4px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="auth-gate"><div class="spin"></div><p>Verifying membership...</p></div>
+
+<div id="app" style="display:none">
+<nav>
+  <div class="n-left">
+    <img class="n-logo" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt=""/>
+    <div class="n-name">The-<em>Keymaker</em></div>
+  </div>
+  <div class="n-right">
+    <a href="/" class="btn btn-o">&#8592; Home</a>
+    <a href="/tracker.html" class="btn btn-o">Route Tracker</a>
+    <a href="/dashboard.html" class="btn btn-o">Dashboard</a>
+    <span class="n-char" id="nav-char-name"></span>
+    <a href="/api/logout" class="btn btn-o logout">Logout</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="head">
+    <div class="eye">Members-only trading tool</div>
+    <h1>Market Arbitrage</h1>
+    <p class="head-sub">Scans every station across one or more regions, compares buy and sell prices — including across region borders — and ranks opportunities by margin and tradeable volume combined, not just raw profit per unit.</p>
+  </div>
+
+  <div class="notice ok" id="member-notice">
+    <strong>Members-only tool.</strong> Tax rates below are calculated from your real Broker Relations and Accounting skill levels via ESI.
+  </div>
+
+  <div class="skill-panel" id="skill-panel" style="display:none">
+    <div><div class="sk-label">Broker Relations</div><div class="sk-val" id="sk-broker">-- / 5</div></div>
+    <div><div class="sk-label">Accounting</div><div class="sk-val" id="sk-accounting">-- / 5</div></div>
+    <div><div class="sk-label">Effective Buy Fee</div><div class="sk-val" id="sk-buy-tax">--</div></div>
+    <div><div class="sk-label">Effective Sell Fee</div><div class="sk-val" id="sk-sell-tax">--</div></div>
+    <div><div class="sk-label">Character</div><div class="sk-val" id="sk-char" style="color:var(--w)">--</div></div>
+  </div>
+
+  <!-- PILOT CONTEXT PANEL -->
+  <div class="pilot-panel" id="pilot-panel" style="display:none">
+    <div class="pilot-header">
+      <img id="pilot-avatar" src="" alt="" class="pilot-avatar"/>
+      <div>
+        <div class="pilot-name" id="pilot-name">--</div>
+        <div class="pilot-sub" id="pilot-location">Locating...</div>
+      </div>
+      <div class="pilot-pulse" id="pilot-pulse" title="Live tracking active"></div>
+    </div>
+    <div class="pilot-stats">
+      <div class="pstat">
+        <div class="pstat-label">Current Ship</div>
+        <div class="pstat-val" id="pilot-ship">--</div>
+        <div class="pstat-sub" id="pilot-ship-type">--</div>
+      </div>
+      <div class="pstat">
+        <div class="pstat-label">Cargo Capacity</div>
+        <div class="pstat-val g" id="pilot-cargo">-- m³</div>
+        <div class="pstat-sub" id="pilot-cargo-note">base hull value</div>
+      </div>
+      <div class="pstat">
+        <div class="pstat-label">ISK Wallet</div>
+        <div class="pstat-val y" id="pilot-wallet">--</div>
+        <div class="pstat-sub">available to spend</div>
+      </div>
+      <div class="pstat">
+        <div class="pstat-label">Max Trade Run</div>
+        <div class="pstat-val g" id="pilot-max-units">--</div>
+        <div class="pstat-sub" id="pilot-max-note">units x budget</div>
+      </div>
+      <div class="pstat">
+        <div class="pstat-label">Auto-filter Results</div>
+        <div class="pstat-sub" style="margin-top:0.5rem">
+          <label class="check-row" style="padding-top:0">
+            <input type="checkbox" id="filter-by-pilot" checked onchange="applyPilotFilter()"/>
+            <span>Only show trades I can do now</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-panel">
+    <div class="filter-grid">
+      <div class="field region-field">
+        <label>Regions to scan (cross-region arbitrage included)</label>
+        <div class="region-grid" id="region-grid"></div>
+        <div class="region-actions">
+          <button type="button" class="mini-btn" onclick="selectAllRegions(true)">Select all</button>
+          <button type="button" class="mini-btn" onclick="selectAllRegions(false)">Clear</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Min item value (ISK)</label>
+        <input type="number" id="min-value" value="1000000" step="500000" min="0"/>
+      </div>
+      <div class="field">
+        <label>Max item value (ISK)</label>
+        <input type="number" id="max-value" value="50000000" step="1000000" min="0"/>
+      </div>
+      <div class="field">
+        <label>Min net profit (ISK)</label>
+        <input type="number" id="min-profit" value="300000" step="100000" min="0"/>
+      </div>
+      <div class="field">
+        <label>Min margin (%)</label>
+        <input type="number" id="min-margin" value="5" step="1" min="0" max="100"/>
+      </div>
+      <div class="field">
+        <label>Max jumps</label>
+        <input type="number" id="max-jumps" value="15" step="1" min="1" max="60"/>
+      </div>
+      <div class="field">
+        <label>Min order volume (units)</label>
+        <input type="number" id="min-vol" value="1" step="1" min="1"/>
+      </div>
+      <div class="field">
+        <label>Results to keep</label>
+        <select id="result-limit">
+          <option value="50">Top 50</option>
+          <option value="100" selected>Top 100</option>
+          <option value="200">Top 200</option>
+          <option value="400">Top 400</option>
+        </select>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="resolve-jumps" checked/>
+        <label style="font-size:0.78rem;color:var(--w)">Resolve real jump routes</label>
+      </div>
+    </div>
+    <div class="opts-row">
+      <button class="go-btn" id="scan-btn" onclick="startScan()">Scan regions</button>
+    </div>
+  </div>
+
+  <div class="status-bar" id="status-bar">
+    <div class="spinner" id="spinner"></div>
+    <span class="status-text" id="status-text">Ready. Pick one or more regions and scan — every station inside them gets analyzed, including cross-region routes.</span>
+    <div class="progress-wrap" id="prog-wrap"><div class="progress-bar" id="prog-bar"></div></div>
+  </div>
+
+  <div class="cards" id="summary-bar" style="display:none">
+    <div class="card"><div class="card-l">Regions Scanned</div><div class="card-v" id="sum-regions">0</div></div>
+    <div class="card"><div class="card-l">Stations Scanned</div><div class="card-v" id="sum-stations">0</div></div>
+    <div class="card"><div class="card-l">Active Orders</div><div class="card-v" id="sum-orders">0</div></div>
+    <div class="card"><div class="card-l">Unique Items</div><div class="card-v" id="sum-items">0</div></div>
+    <div class="card"><div class="card-l">Opportunities</div><div class="card-v g" id="sum-opps">0</div></div>
+    <div class="card"><div class="card-l">Best Margin</div><div class="card-v y" id="sum-margin">0%</div></div>
+    <div class="card"><div class="card-l">Top Score</div><div class="card-v g" id="sum-top-score">0</div></div>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-head">
+      <div class="tbl-title">Arbitrage opportunities &mdash; click a row for full detail</div>
+      <div class="tbl-controls">
+        <input type="text" id="filter-box" class="tbl-search" list="item-suggestions" placeholder="Search item or station..."/>
+        <datalist id="item-suggestions"></datalist>
+        <select id="sort-preset" class="tbl-sort">
+          <option value="score" selected>Sort: Best Overall (Score)</option>
+          <option value="profit">Sort: Profit / Unit</option>
+          <option value="margin">Sort: Margin %</option>
+          <option value="totalProfitPotential">Sort: Total Potential</option>
+          <option value="maxTradeable">Sort: Tradeable Qty</option>
+        </select>
+        <button type="button" class="mini-btn" id="export-btn" onclick="exportCSV()">&#11015; Export CSV</button>
+        <div class="count-badge" id="count-badge">0 results</div>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <div id="results-container">
+        <div class="empty-state">
+          <span class="big">&#11200;</span>
+          Pick one or more regions and click <strong>Scan regions</strong>.<br>
+          Every station in every selected region is analyzed, including opportunities that cross region borders.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="f-name">The-<em>Keymaker</em> &middot; [THE-K] &middot; Hek IV</div>
+  <div>EVE Online &copy; CCP hf. Independent fan site.</div>
+</footer>
+</div>
+
+<script>
+// STARFIELD
+const cv=document.getElementById('c'),cx=cv.getContext('2d');let st=[];
+function rs(){cv.width=innerWidth;cv.height=Math.max(document.body.scrollHeight,innerHeight);st=Array.from({length:Math.floor(cv.width*cv.height/8000)},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*0.8+0.15,o:Math.random()*0.3+0.05,f:Math.random()*0.002+0.001,p:Math.random()*Math.PI*2}))}
+let fr=0;(function draw(){cx.clearRect(0,0,cv.width,cv.height);fr++;st.forEach(s=>{const o=s.o+Math.sin(fr*s.f+s.p)*0.06;cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle='rgba(200,200,255,'+Math.max(0,Math.min(0.45,o))+')';cx.fill()});requestAnimationFrame(draw)})();
+rs();window.addEventListener('resize',rs);
+
+// CONFIG
+const REGION_NAMES={
+  '10000002':'The Forge','10000043':'Domain','10000032':'Sinq Laison',
+  '10000042':'Metropolis','10000030':'Heimatar','10000033':'The Citadel',
+  '10000020':'Tash-Murkon','10000016':'Lonetrek','10000064':'Essence','10000049':'Placid'
+};
+const SKILL_BROKER=3446,SKILL_ACCOUNTING=16622;
+const LS_KEY='keymaker_arbitrage_filters_v2';
+// Post-Viridian (2023) rebalance: broker fee floors at 1%, sales tax is multiplicative with Accounting.
+function calcBrokerFee(lv,st){return Math.max(1.0,3.0-(lv*0.3)-((st||0)*0.03))}
+function calcSalesTax(lv){return Math.max(3.375,7.5*(1-0.11*lv))}
+
+// STATE
+let SESSION=null;
+let PILOT={wallet:null,cargoM3:null,shipName:null,shipTypeId:null,locationSystemId:null,locationSystemName:null,volumePerUnit:{},trackInterval:null};
+let state={
+  skills:{broker:0,accounting:0},standing:0,
+  results:[],filteredResults:[],
+  sortCol:'score',sortAsc:false,expandedIdx:null,
+  stationNameCache:{},systemNameCache:{},systemSecCache:{},
+  stationSystemCache:{},routeCache:{}
+};
+let esiErrorRemain=100,esiErrorResetAt=0;
+
+// AUTH — hard gate, members only (whitelist enforced server-side at /api/callback)
+(async()=>{
+  try{
+    const r=await fetch('/api/me');
+    const s=r.ok?await r.json():{authenticated:false};
+    if(!s.authenticated){location.href='/';return}
+    SESSION=s;
+    document.getElementById('auth-gate').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('nav-char-name').textContent=s.characterName;
+    buildRegionGrid();
+    loadFilters();
+    if(!getSelectedRegions().length)setRegionChecked('10000002',true);
+    await loadSkills();
+    await loadPilotContext();
+    startLocationTracking();
+  }catch(e){console.warn('auth check failed',e);location.href='/'}
+})();
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+async function loadSkills(){
+  if(!SESSION||!SESSION.accessToken)return;
+  try{
+    const r=await esiGet('/characters/'+SESSION.characterId+'/skills/');
+    const skills=r.skills||[];
+    const broker=skills.find(s=>s.skill_id===SKILL_BROKER);
+    const acct=skills.find(s=>s.skill_id===SKILL_ACCOUNTING);
+    state.skills.broker=broker?broker.active_skill_level:0;
+    state.skills.accounting=acct?acct.active_skill_level:0;
+    document.getElementById('skill-panel').style.display='flex';
+    document.getElementById('sk-broker').textContent=state.skills.broker+' / 5';
+    document.getElementById('sk-accounting').textContent=state.skills.accounting+' / 5';
+    document.getElementById('sk-buy-tax').textContent=calcBrokerFee(state.skills.broker,state.standing).toFixed(2)+'%';
+    document.getElementById('sk-sell-tax').textContent=(calcBrokerFee(state.skills.broker,state.standing)+calcSalesTax(state.skills.accounting)).toFixed(2)+'%';
+    document.getElementById('sk-char').textContent=SESSION.characterName;
+  }catch(e){console.warn('skill load failed, using base rates',e)}
+}
+
+// PILOT CONTEXT: ship, cargo, wallet, location
+async function loadPilotContext(){
+  if(!SESSION||!SESSION.accessToken)return;
+  const cid=SESSION.characterId;
+  document.getElementById('pilot-panel').style.display='block';
+  document.getElementById('pilot-name').textContent=SESSION.characterName;
+  document.getElementById('pilot-avatar').src='https://images.evetech.net/characters/'+cid+'/portrait?size=64';
+  try{
+    const[walletRes,shipRes]=await Promise.all([
+      esiGet('/characters/'+cid+'/wallet/'),
+      esiGet('/characters/'+cid+'/ship/')
+    ]);
+    if(typeof walletRes==='number'||typeof walletRes==='string'){
+      PILOT.wallet=parseFloat(walletRes);
+      document.getElementById('pilot-wallet').textContent=fmtIsk(PILOT.wallet)+' ISK';
+    }
+    if(shipRes&&shipRes.ship_type_id){
+      PILOT.shipTypeId=shipRes.ship_type_id;
+      PILOT.shipName=shipRes.ship_name||'Unknown';
+      document.getElementById('pilot-ship').textContent=PILOT.shipName;
+      const typeInfo=await esiGet('/universe/types/'+PILOT.shipTypeId+'/');
+      const baseCargo=typeInfo&&typeInfo.capacity?typeInfo.capacity:0;
+      PILOT.cargoM3=baseCargo;
+      const shipTypeName=typeInfo&&typeInfo.name?typeInfo.name:('Type #'+PILOT.shipTypeId);
+      document.getElementById('pilot-ship-type').textContent=shipTypeName;
+      document.getElementById('pilot-cargo').textContent=baseCargo.toLocaleString()+' m³';
+      document.getElementById('pilot-cargo-note').textContent='base hull (no rigs/modules)';
+      if(baseCargo===0){
+        document.getElementById('pilot-cargo').textContent='no cargo';
+        document.getElementById('pilot-cargo-note').textContent='ship type has no cargo hold';
+      }
+    }
+  }catch(e){console.warn('pilot context load failed',e)}
+  updateMaxTradeRun();
+}
+
+function updateMaxTradeRun(){
+  document.getElementById('pilot-max-units').textContent='--';
+  document.getElementById('pilot-max-note').textContent='scan to see opportunities';
+}
+
+function updateMaxRunForBest(results){
+  if(!results||!results.length)return;
+  const best=results[0];
+  if(!best)return;
+  const isk=PILOT.wallet||0;
+  const m3=PILOT.cargoM3||Infinity;
+  const byIsk=isk>0?Math.floor(isk/best.buyCost):Infinity;
+  const byM3=m3>0?Math.floor(m3/(PILOT.volumePerUnit[best.typeId]||1)):Infinity;
+  const bySup=best.maxTradeable;
+  const maxUnits=Math.min(byIsk,byM3,bySup);
+  const totalProfit=maxUnits>0?best.profit*maxUnits:0;
+  document.getElementById('pilot-max-units').textContent=maxUnits>0?maxUnits.toLocaleString()+' units':'0';
+  document.getElementById('pilot-max-note').textContent=maxUnits>0?'best deal: +'+fmtIsk(totalProfit)+' ISK total':'insufficient ISK or cargo';
+}
+
+// LOCATION TRACKING
+async function pollLocation(){
+  if(!SESSION||!SESSION.accessToken)return;
+  try{
+    const loc=await esiGet('/characters/'+SESSION.characterId+'/location/');
+    if(loc&&loc.solar_system_id){
+      const prevId=PILOT.locationSystemId;
+      PILOT.locationSystemId=loc.solar_system_id;
+      if(!PILOT.locationSystemName||prevId!==loc.solar_system_id){
+        try{
+          const sysInfo=await esiGet('/universe/systems/'+loc.solar_system_id+'/');
+          PILOT.locationSystemName=sysInfo.name;
+          document.getElementById('pilot-location').textContent='📍 '+sysInfo.name+' ('+sysInfo.security_status.toFixed(1)+')';
+        }catch(e){document.getElementById('pilot-location').textContent='System #'+loc.solar_system_id}
+      }
+    }
+  }catch(e){console.warn('location poll failed',e)}
+}
+
+function startLocationTracking(){
+  if(PILOT.trackInterval)clearInterval(PILOT.trackInterval);
+  pollLocation();
+  PILOT.trackInterval=setInterval(pollLocation,30000);
+}
+
+// FEASIBILITY FILTER
+async function loadItemVolume(typeId){
+  if(PILOT.volumePerUnit[typeId])return PILOT.volumePerUnit[typeId];
+  try{
+    const t=await esiGet('/universe/types/'+typeId+'/');
+    const v=t&&t.volume?t.volume:1;
+    PILOT.volumePerUnit[typeId]=v;
+    return v;
+  }catch(e){return 1}
+}
+
+function isFeasible(o){
+  if(!PILOT.wallet&&!PILOT.cargoM3)return true;
+  const byIsk=PILOT.wallet!=null?PILOT.wallet>=o.buyCost:true;
+  const vol=PILOT.volumePerUnit[o.typeId]||1;
+  const byCargo=PILOT.cargoM3!=null&&PILOT.cargoM3>0?PILOT.cargoM3>=vol:true;
+  return byIsk&&byCargo;
+}
+
+function applyPilotFilter(){
+  const active=document.getElementById('filter-by-pilot').checked;
+  state.expandedIdx=null;
+  const base=state.results;
+  if(!active||(!PILOT.wallet&&!PILOT.cargoM3)){
+    state.filteredResults=base;
+  }else{
+    state.filteredResults=base.filter(o=>isFeasible(o));
+  }
+  document.getElementById('count-badge').textContent=state.filteredResults.length+' results';
+  renderTable(state.filteredResults);
+}
+
+// REGION PICKER
+function buildRegionGrid(){
+  const grid=document.getElementById('region-grid');
+  grid.innerHTML=Object.entries(REGION_NAMES).map(([id,name])=>
+    '<label class="region-chip" data-id="'+id+'"><input type="checkbox" value="'+id+'" onchange="onRegionToggle(this)"/>'+esc(name)+'</label>'
+  ).join('');
+}
+function onRegionToggle(cb){cb.closest('.region-chip').classList.toggle('checked',cb.checked);saveFilters()}
+function setRegionChecked(id,val){
+  const cb=document.querySelector('#region-grid input[value="'+id+'"]');
+  if(!cb)return;
+  cb.checked=val;cb.closest('.region-chip').classList.toggle('checked',val);
+}
+function selectAllRegions(v){
+  document.querySelectorAll('#region-grid input').forEach(cb=>{cb.checked=v;cb.closest('.region-chip').classList.toggle('checked',v)});
+  saveFilters();
+}
+function getSelectedRegions(){
+  return[...document.querySelectorAll('#region-grid input:checked')].map(cb=>cb.value);
+}
+
+// FILTER PERSISTENCE
+function saveFilters(){
+  try{
+    localStorage.setItem(LS_KEY,JSON.stringify({
+      regions:getSelectedRegions(),
+      minValue:document.getElementById('min-value').value,
+      maxValue:document.getElementById('max-value').value,
+      minProfit:document.getElementById('min-profit').value,
+      minMargin:document.getElementById('min-margin').value,
+      maxJumps:document.getElementById('max-jumps').value,
+      minVol:document.getElementById('min-vol').value,
+      limit:document.getElementById('result-limit').value,
+      resolveJumps:document.getElementById('resolve-jumps').checked,
+      filterByPilot:document.getElementById('filter-by-pilot').checked
+    }));
+  }catch(e){}
+}
+function loadFilters(){
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(!raw)return;
+    const f=JSON.parse(raw);
+    if(f.minValue!=null)document.getElementById('min-value').value=f.minValue;
+    if(f.maxValue!=null)document.getElementById('max-value').value=f.maxValue;
+    if(f.minProfit!=null)document.getElementById('min-profit').value=f.minProfit;
+    if(f.minMargin!=null)document.getElementById('min-margin').value=f.minMargin;
+    if(f.maxJumps!=null)document.getElementById('max-jumps').value=f.maxJumps;
+    if(f.minVol!=null)document.getElementById('min-vol').value=f.minVol;
+    if(f.limit!=null)document.getElementById('result-limit').value=f.limit;
+    if(f.resolveJumps!=null)document.getElementById('resolve-jumps').checked=f.resolveJumps;
+    if(f.filterByPilot!=null)document.getElementById('filter-by-pilot').checked=f.filterByPilot;
+    if(Array.isArray(f.regions)&&f.regions.length){
+      f.regions.forEach(id=>setRegionChecked(id,true));
+    }
+  }catch(e){}
+}
+
+// ESI — with error-limit-aware backoff and retry
+async function esiFetchRaw(url,opts,retries){
+  if(retries===undefined)retries=1;
+  if(esiErrorRemain<=2&&Date.now()<esiErrorResetAt){
+    await new Promise(res=>setTimeout(res,esiErrorResetAt-Date.now()));
+  }
+  const r=await fetch(url,opts);
+  const remain=r.headers.get('x-esi-error-limit-remain');
+  const reset=r.headers.get('x-esi-error-limit-reset');
+  if(remain!==null)esiErrorRemain=parseInt(remain,10);
+  if(reset!==null)esiErrorResetAt=Date.now()+parseInt(reset,10)*1000;
+  if(r.status===420){
+    throw new Error('ESI error limit reached — wait '+(reset||'60')+'s and try again');
+  }
+  if(r.status>=500&&retries>0){
+    await new Promise(res=>setTimeout(res,600));
+    return esiFetchRaw(url,opts,retries-1);
+  }
+  return r;
+}
+
+function authH(){const h={'Accept':'application/json'};if(SESSION&&SESSION.accessToken)h['Authorization']='Bearer '+SESSION.accessToken;return h}
+
+async function esiGet(path,params){
+  const url=new URL('https://esi.evetech.net/latest'+path);
+  if(params)Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
+  const r=await esiFetchRaw(url.toString(),{headers:authH()});
+  if(!r.ok)throw new Error('ESI '+r.status+': '+path);
+  return r.json();
+}
+
+async function esiPost(path,params){
+  const url=new URL('https://esi.evetech.net/latest'+path);
+  if(params)Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,String(v)));
+  const r=await esiFetchRaw(url.toString(),{method:'POST',headers:authH()});
+  if(!r.ok)throw new Error('ESI '+r.status);
+  return true;
+}
+
+async function esiPages(path,params,onPage){
+  const url=new URL('https://esi.evetech.net/latest'+path);
+  if(params)Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
+  const h=authH();
+  const r1=await esiFetchRaw(url.toString(),{headers:h});
+  if(!r1.ok)throw new Error('ESI '+r1.status+': '+path);
+  const pages=parseInt(r1.headers.get('x-pages')||'1');
+  let data=await r1.json();
+  if(onPage)onPage(1,pages);
+  for(let p=2;p<=pages;p++){
+    const u2=new URL(url.toString());u2.searchParams.set('page',p);
+    const rp=await esiFetchRaw(u2.toString(),{headers:h});
+    if(!rp.ok)throw new Error('ESI '+rp.status+': '+path+' page '+p);
+    data=data.concat(await rp.json());
+    if(onPage)onPage(p,pages);
+  }
+  return data;
+}
+
+async function mapLimit(items,limit,fn){
+  const ret=new Array(items.length);
+  let i=0;
+  const workers=Array.from({length:Math.min(limit,items.length)},async()=>{
+    while(i<items.length){
+      const idx=i++;
+      try{ret[idx]=await fn(items[idx],idx)}catch(e){ret[idx]=null}
+    }
+  });
+  await Promise.all(workers);
+  return ret;
+}
+
+async function resolveNames(ids){
+  const out={};
+  const toFetch=[...new Set(ids)].filter(id=>!state.stationNameCache[id]&&!state.systemNameCache[id]);
+  for(let i=0;i<toFetch.length;i+=1000){
+    const batch=toFetch.slice(i,i+1000);
+    try{
+      const r=await esiFetchRaw('https://esi.evetech.net/latest/universe/names/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(batch)});
+      const names=await r.json();
+      if(Array.isArray(names))names.forEach(n=>{out[n.id]=n.name;if(n.category==='station')state.stationNameCache[n.id]=n.name;if(n.category==='solar_system')state.systemNameCache[n.id]=n.name});
+    }catch(e){console.warn('name resolve fail',e)}
+  }
+  return out;
+}
+
+async function getStationSystem(sid){
+  if(state.stationSystemCache[sid])return state.stationSystemCache[sid];
+  try{
+    const info=await esiGet(sid>1000000000000?'/universe/structures/'+sid+'/':'/universe/stations/'+sid+'/');
+    state.stationSystemCache[sid]=info.system_id;
+    state.stationNameCache[sid]=info.name;
+    return info.system_id;
+  }catch(e){return null}
+}
+
+async function getSystemSec(sysId){
+  if(state.systemSecCache[sysId]!==undefined)return state.systemSecCache[sysId];
+  try{
+    const info=await esiGet('/universe/systems/'+sysId+'/');
+    state.systemSecCache[sysId]=info.security_status;
+    state.systemNameCache[sysId]=info.name;
+    return info.security_status;
+  }catch(e){return null}
+}
+
+async function getJumps(from,to){
+  const key=from+'-'+to;
+  if(state.routeCache[key]!==undefined)return state.routeCache[key];
+  try{
+    const r=await esiGet('/route/'+from+'/'+to+'/',{flag:'shortest'});
+    const j=Array.isArray(r)?r.length-1:null;
+    state.routeCache[key]=j;return j;
+  }catch(e){state.routeCache[key]=null;return null}
+}
+
+async function setWaypoint(destinationId,clearOthers){
+  if(!SESSION||!SESSION.accessToken)return;
+  try{
+    await esiPost('/ui/autopilot/waypoint/',{add_to_beginning:false,clear_other_waypoints:clearOthers,destination_id:destinationId});
+    setStatus('Waypoint set — check your in-game autopilot.');
+  }catch(e){setStatus('Failed to set waypoint: '+e.message,true)}
+}
+
+// SCAN
+async function startScan(){
+  const btn=document.getElementById('scan-btn');
+  const regionIds=getSelectedRegions();
+  if(!regionIds.length){setStatus('Select at least one region to scan.',true);return}
+  btn.disabled=true;
+  saveFilters();
+  document.getElementById('summary-bar').style.display='none';
+  document.getElementById('results-container').innerHTML='';
+  setStatus('',false,true);setProgress(0);
+
+  const minValue=parseFloat(document.getElementById('min-value').value)||0;
+  const maxValue=parseFloat(document.getElementById('max-value').value)||Infinity;
+  const minProfit=parseFloat(document.getElementById('min-profit').value)||0;
+  const minMargin=parseFloat(document.getElementById('min-margin').value)||0;
+  const maxJumps=parseInt(document.getElementById('max-jumps').value)||999;
+  const minVol=parseInt(document.getElementById('min-vol').value)||1;
+  const limit=parseInt(document.getElementById('result-limit').value)||100;
+  const resolveJumps=document.getElementById('resolve-jumps').checked;
+
+  const brokerPct=calcBrokerFee(state.skills.broker,state.standing);
+  const taxPct=calcSalesTax(state.skills.accounting);
+  const bf=brokerPct/100,st=taxPct/100;
+
+  try{
+    let orders=[];
+    for(let ri=0;ri<regionIds.length;ri++){
+      const regionId=regionIds[ri];
+      const chunk=await esiPages('/markets/'+regionId+'/orders/',{order_type:'all'},(page,total)=>{
+        const overall=((ri+(page/total))/regionIds.length)*40;
+        setProgress(Math.min(40,overall));
+        setStatus('Fetching '+REGION_NAMES[regionId]+' — page '+page+'/'+total+' ('+(ri+1)+'/'+regionIds.length+' regions)...');
+      });
+      chunk.forEach(o=>{o._regionId=regionId});
+      orders=orders.concat(chunk);
+    }
+
+    setStatus('Indexing '+orders.length.toLocaleString()+' orders across '+regionIds.length+' region(s)...');setProgress(42);
+
+    const typeMap={};const stationsUsed=new Set();const stationRegion={};
+    for(const o of orders){
+      const tid=o.type_id,sid=o.location_id;stationsUsed.add(sid);
+      if(!stationRegion[sid])stationRegion[sid]=o._regionId;
+      if(!typeMap[tid])typeMap[tid]={};
+      if(!typeMap[tid][sid])typeMap[tid][sid]={minSell:Infinity,maxBuy:0,sellVol:0,buyVol:0,sellOrders:0,buyOrders:0};
+      const e=typeMap[tid][sid];
+      if(o.is_buy_order){if(o.price>e.maxBuy)e.maxBuy=o.price;e.buyVol+=o.volume_remain;e.buyOrders++}
+      else{if(o.price<e.minSell)e.minSell=o.price;e.sellVol+=o.volume_remain;e.sellOrders++}
+    }
+
+    setStatus('Comparing prices across '+stationsUsed.size+' stations for '+Object.keys(typeMap).length.toLocaleString()+' items...');setProgress(50);
+
+    const opps=[];
+    for(const[tid,stData]of Object.entries(typeMap)){
+      const sids=Object.keys(stData);if(sids.length<2)continue;
+      for(const bSid of sids){
+        const bd=stData[bSid];
+        if(bd.minSell===Infinity)continue;
+        const bp=bd.minSell;
+        if(bp<minValue||bp>maxValue)continue;
+        if(bd.sellVol<minVol)continue;
+        for(const sSid of sids){
+          if(bSid===sSid)continue;
+          const sd=stData[sSid];
+          if(sd.maxBuy===0)continue;if(sd.buyVol<minVol)continue;
+          const sp=sd.maxBuy;
+          const buyCost=bp*(1+bf),sellNet=sp*(1-bf-st);
+          const profit=sellNet-buyCost,margin=(profit/buyCost)*100;
+          if(profit<minProfit)continue;if(margin<minMargin)continue;
+          const maxT=Math.min(bd.sellVol,sd.buyVol);
+          opps.push({
+            typeId:parseInt(tid),typeName:null,
+            buyStationId:parseInt(bSid),sellStationId:parseInt(sSid),
+            buyStationName:null,sellStationName:null,
+            buyRegionName:REGION_NAMES[stationRegion[bSid]]||'?',
+            sellRegionName:REGION_NAMES[stationRegion[sSid]]||'?',
+            buyPrice:bp,sellPrice:sp,buyCost,sellNet,profit,margin,
+            buyVol:bd.sellVol,sellVol:sd.buyVol,
+            buyOrderCount:bd.sellOrders,sellOrderCount:sd.buyOrders,
+            maxTradeable:maxT,totalProfitPotential:profit*maxT,
+            jumps:null,buySystemSec:null,sellSystemSec:null,
+            buySystemName:'--',sellSystemName:'--'
+          });
+        }
+      }
+    }
+
+    setProgress(60);
+    opps.forEach(o=>{o.score=o.margin*Math.log10(Math.max(2,o.maxTradeable))});
+    opps.sort((a,b)=>b.score-a.score);
+    const top=opps.slice(0,limit);
+
+    setStatus('Resolving names for '+top.length+' opportunities...');setProgress(65);
+
+    const typeIds=[...new Set(top.map(o=>o.typeId))];
+    const stnIds=[...new Set([...top.map(o=>o.buyStationId),...top.map(o=>o.sellStationId)])];
+    const itemNames=await resolveNames(typeIds);
+    const stnNames=await resolveNames(stnIds);
+    top.forEach(o=>{
+      o.typeName=itemNames[o.typeId]||'Type #'+o.typeId;
+      o.buyStationName=stnNames[o.buyStationId]||state.stationNameCache[o.buyStationId]||'Station #'+o.buyStationId;
+      o.sellStationName=stnNames[o.sellStationId]||state.stationNameCache[o.sellStationId]||'Station #'+o.sellStationId;
+    });
+
+    setProgress(75);setStatus('Resolving system security ('+top.length+' stations, parallelized)...');
+    const allStnIds=[...new Set([...top.map(o=>o.buyStationId),...top.map(o=>o.sellStationId)])];
+    let res=0;
+    await mapLimit(allStnIds,8,async sid=>{
+      const sysId=await getStationSystem(sid);
+      if(sysId)await getSystemSec(sysId);
+      res++;setProgress(75+(res/allStnIds.length)*10);
+    });
+    top.forEach(o=>{
+      const bSys=state.stationSystemCache[o.buyStationId];
+      const sSys=state.stationSystemCache[o.sellStationId];
+      o.buySystemId=bSys;o.sellSystemId=sSys;
+      o.buySystemName=bSys?state.systemNameCache[bSys]:'--';
+      o.sellSystemName=sSys?state.systemNameCache[sSys]:'--';
+      o.buySystemSec=bSys!==undefined&&state.systemSecCache[bSys]!==undefined?state.systemSecCache[bSys]:null;
+      o.sellSystemSec=sSys!==undefined&&state.systemSecCache[sSys]!==undefined?state.systemSecCache[sSys]:null;
+    });
+
+    setProgress(85);
+    if(resolveJumps){
+      setStatus('Calculating real jump routes for '+top.length+' opportunities (parallelized)...');
+      let rt=0;
+      await mapLimit(top,8,async o=>{
+        if(o.buySystemId&&o.sellSystemId)o.jumps=await getJumps(o.buySystemId,o.sellSystemId);
+        rt++;setProgress(85+(rt/top.length)*13);
+      });
+    }
+
+    let final=top;
+    if(resolveJumps)final=top.filter(o=>o.jumps===null||o.jumps<=maxJumps);
+
+    setProgress(100);
+    state.results=final;state.filteredResults=final;
+    renderSummary(final,orders.length,stationsUsed.size,Object.keys(typeMap).length,regionIds.length);
+    updateSuggestions(final);
+    const topTypes=[...new Set(final.slice(0,20).map(o=>o.typeId))];
+    Promise.all(topTypes.map(id=>loadItemVolume(id))).then(()=>{
+      if(document.getElementById('filter-by-pilot').checked)applyPilotFilter();
+      else renderTable(final);
+      updateMaxRunForBest(final);
+    });
+    renderTable(final);
+    const regionLabel=regionIds.length>1?regionIds.length+' regions':REGION_NAMES[regionIds[0]];
+    setStatus('Scan complete — '+final.length+' opportunities across '+regionLabel+'. Buy fee: '+brokerPct.toFixed(2)+'% · Sell fee: '+(brokerPct+taxPct).toFixed(2)+'% (broker '+state.skills.broker+'/5, accounting '+state.skills.accounting+'/5)');
+
+  }catch(e){setStatus('Error: '+e.message,true);console.error(e)}
+  finally{btn.disabled=false;document.getElementById('spinner').classList.remove('active');document.getElementById('prog-wrap').classList.remove('active')}
+}
+
+function renderSummary(results,orderCount,stationCount,itemCount,regionCount){
+  document.getElementById('summary-bar').style.display='grid';
+  document.getElementById('sum-regions').textContent=regionCount;
+  document.getElementById('sum-stations').textContent=stationCount.toLocaleString();
+  document.getElementById('sum-orders').textContent=orderCount.toLocaleString();
+  document.getElementById('sum-items').textContent=itemCount.toLocaleString();
+  document.getElementById('sum-opps').textContent=results.length.toLocaleString();
+  const bestMargin=results.length?Math.max(...results.map(r=>r.margin)):0;
+  const topScore=results.length?Math.max(...results.map(r=>r.score)):0;
+  document.getElementById('sum-margin').textContent=bestMargin.toFixed(1)+'%';
+  document.getElementById('sum-top-score').textContent=topScore.toFixed(0);
+}
+
+function fmtIsk(n){const s=n<0?'-':'';n=Math.abs(n);if(n>=1e9)return s+(n/1e9).toFixed(2)+'B';if(n>=1e6)return s+(n/1e6).toFixed(2)+'M';if(n>=1e3)return s+(n/1e3).toFixed(1)+'K';return s+n.toFixed(0)}
+function secCls(s){if(s===null||s===undefined)return '';if(s>=0.45)return 'sec-hi';if(s>0)return 'sec-lo';return 'sec-null'}
+function secLbl(s){return(s===null||s===undefined)?'?':s.toFixed(1)}
+
+function renderTable(data){
+  const c=document.getElementById('results-container');
+  document.getElementById('count-badge').textContent=data.length+' results';
+  if(!data.length){c.innerHTML='<div class="empty-state"><span class="big">&#11200;</span>No opportunities found. Try lowering Min Profit, Min Margin, or raising Max Jumps.</div>';return}
+  const sc=col=>state.sortCol===col?'sorted '+(state.sortAsc?'asc':''):'';
+  let h='<table><thead><tr>'+
+    '<th onclick="sortBy(\'typeName\')" class="'+sc('typeName')+'">Item</th>'+
+    '<th onclick="sortBy(\'buyStationName\')" class="'+sc('buyStationName')+'">Buy Station</th>'+
+    '<th onclick="sortBy(\'buyPrice\')" class="'+sc('buyPrice')+'">Buy Price</th>'+
+    '<th onclick="sortBy(\'sellStationName\')" class="'+sc('sellStationName')+'">Sell Station</th>'+
+    '<th onclick="sortBy(\'sellPrice\')" class="'+sc('sellPrice')+'">Sell Price</th>'+
+    '<th onclick="sortBy(\'profit\')" class="'+sc('profit')+'">Net Profit/Unit</th>'+
+    '<th onclick="sortBy(\'margin\')" class="'+sc('margin')+'">Margin</th>'+
+    '<th onclick="sortBy(\'maxTradeable\')" class="'+sc('maxTradeable')+'">Tradeable Qty</th>'+
+    '<th onclick="sortBy(\'totalProfitPotential\')" class="'+sc('totalProfitPotential')+'">Total Potential</th>'+
+    '<th onclick="sortBy(\'jumps\')" class="'+sc('jumps')+'">Jumps</th>'+
+    '<th onclick="sortBy(\'score\')" class="'+sc('score')+'">Score</th>'+
+    '</tr></thead><tbody>';
+
+  data.forEach((o,idx)=>{
+    const pc=o.profit>=0?'pos':'neg';
+    const hasPilot=PILOT.wallet!=null||PILOT.cargoM3!=null;
+    const vol=PILOT.volumePerUnit[o.typeId]||null;
+    let fbHtml='';
+    if(hasPilot){
+      const canAfford=PILOT.wallet!=null?PILOT.wallet>=o.buyCost:true;
+      const fitsInCargo=(PILOT.cargoM3!=null&&vol!=null&&PILOT.cargoM3>0)?PILOT.cargoM3>=vol:true;
+      if(!canAfford)fbHtml='<span class="feasible-badge fb-no">no ISK</span>';
+      else if(!fitsInCargo)fbHtml='<span class="feasible-badge fb-cargo">no cargo</span>';
+      else fbHtml='<span class="feasible-badge fb-yes">can do</span>';
+    }
+    const rowCls=(state.expandedIdx===idx?'expanded ':'')+(!hasPilot||isFeasible(o)?'':'tr-blocked');
+    const jh=o.jumps===null?'<span class="jumps-cell na">n/a</span>':'<span class="jumps-cell">'+o.jumps+'</span>';
+    h+='<tr onclick="toggleDetail('+idx+')" class="'+rowCls+'">'
+      +'<td class="item-name" title="'+esc(o.typeName)+'">'+esc(o.typeName)+fbHtml+'</td>'
+      +'<td class="station-cell" title="'+esc(o.buyStationName)+'"><div>'+esc(o.buyStationName)+' <span class="sec-tag '+secCls(o.buySystemSec)+'">'+secLbl(o.buySystemSec)+'</span></div><div class="region-sub">'+esc(o.buyRegionName)+'</div></td>'
+      +'<td>'+fmtIsk(o.buyPrice)+'</td>'
+      +'<td class="station-cell" title="'+esc(o.sellStationName)+'"><div>'+esc(o.sellStationName)+' <span class="sec-tag '+secCls(o.sellSystemSec)+'">'+secLbl(o.sellSystemSec)+'</span></div><div class="region-sub">'+esc(o.sellRegionName)+'</div></td>'
+      +'<td>'+fmtIsk(o.sellPrice)+'</td>'
+      +'<td class="profit-cell '+pc+'">'+(o.profit>=0?'+':'')+fmtIsk(o.profit)+'</td>'
+      +'<td class="margin-cell">'+o.margin.toFixed(1)+'%</td>'
+      +'<td class="vol-cell">'+o.maxTradeable.toLocaleString()+'</td>'
+      +'<td class="profit-cell '+pc+'">'+fmtIsk(o.totalProfitPotential)+'</td>'
+      +'<td>'+jh+'</td>'
+      +'<td class="score-cell">'+o.score.toFixed(0)+'</td>'
+      +'</tr>';
+    if(state.expandedIdx===idx)h+=renderDetailRow(o);
+  });
+  h+='</tbody></table>';c.innerHTML=h;
+}
+
+function renderDetailRow(o){
+  return '<tr class="detail-row"><td colspan="11"><div class="detail-content">'
+    +'<div><div class="dt-label">Route</div><div class="route-line">'+esc(o.buyStationName)+'<br><span style="color:var(--m)">'+esc(o.buySystemName)+' ('+secLbl(o.buySystemSec)+') &middot; '+esc(o.buyRegionName)+'</span><span class="arr">&#8594; '+(o.jumps!==null?o.jumps+' jumps':'?')+' &#8594;</span><br>'+esc(o.sellStationName)+'<br><span style="color:var(--m)">'+esc(o.sellSystemName)+' ('+secLbl(o.sellSystemSec)+') &middot; '+esc(o.sellRegionName)+'</span></div>'
+    +'<div style="margin-top:0.6rem">'
+    +'<button class="wp-btn" onclick="event.stopPropagation();setWaypoint('+o.buyStationId+',true)">&#8853; Set course to buy</button>'
+    +'<button class="wp-btn" onclick="event.stopPropagation();setWaypoint('+o.sellStationId+',false)">+ Add sell as waypoint</button>'
+    +'</div></div>'
+    +'<div><div class="dt-label">Buy Side</div><div class="dt-val">'+fmtIsk(o.buyPrice)+' ISK / unit</div><div class="dt-sub">'+o.buyOrderCount+' sell order(s) &middot; '+o.buyVol.toLocaleString()+' units available</div><div class="dt-sub">Cost with broker fee: '+fmtIsk(o.buyCost)+' ISK</div></div>'
+    +'<div><div class="dt-label">Sell Side</div><div class="dt-val">'+fmtIsk(o.sellPrice)+' ISK / unit</div><div class="dt-sub">'+o.sellOrderCount+' buy order(s) &middot; '+o.sellVol.toLocaleString()+' units demanded</div><div class="dt-sub">Net after broker + tax: '+fmtIsk(o.sellNet)+' ISK</div></div>'
+    +'<div><div class="dt-label">Profitability</div><div class="dt-val" style="color:'+(o.profit>=0?'var(--g)':'var(--red)')+'">'+(o.profit>=0?'+':'')+fmtIsk(o.profit)+' / unit</div><div class="dt-sub">Margin: '+o.margin.toFixed(2)+'% &middot; Score: '+o.score.toFixed(1)+'</div><div class="dt-sub">Max tradeable now: '+o.maxTradeable.toLocaleString()+' units</div></div>'
+    +'<div><div class="dt-label">Total Potential (full volume)</div><div class="dt-val" style="color:var(--yellow)">'+fmtIsk(o.totalProfitPotential)+' ISK</div><div class="dt-sub">If you buy out and sell out both sides completely</div><div class="dt-sub">Type ID: '+o.typeId+' &middot; Buy stn: '+o.buyStationId+' &middot; Sell stn: '+o.sellStationId+'</div></div>'
+    +'<div>'
+    +'<div class="dt-label">Your Trade Run</div>'
+    +(function(){
+      var hasPilot=PILOT.wallet!=null||PILOT.cargoM3!=null;
+      if(!hasPilot)return '<div class="dt-val" style="color:var(--m)">--</div><div class="dt-sub">Pilot data unavailable</div>';
+      var vol=PILOT.volumePerUnit[o.typeId]||1;
+      var byIsk=PILOT.wallet!=null?Math.floor(PILOT.wallet/o.buyCost):99999999;
+      var byCargo=PILOT.cargoM3!=null&&PILOT.cargoM3>0?Math.floor(PILOT.cargoM3/vol):99999999;
+      var bySup=o.maxTradeable;
+      var maxU=Math.min(byIsk,byCargo,bySup);
+      var tot=maxU>0?o.profit*maxU:0;
+      var limit=byIsk<=byCargo&&byIsk<=bySup?'ISK-limited':byCargo<=byIsk&&byCargo<=bySup?'cargo-limited':'supply-limited';
+      var html='<div class="dt-val" style="color:'+(maxU>0?'var(--g)':'var(--red)')+'">'+(maxU>0?maxU.toLocaleString()+' units':'cannot trade')+'</div>';
+      html+='<div class="dt-sub">';
+      if(PILOT.wallet!=null)html+='ISK: '+fmtIsk(PILOT.wallet)+' &rarr; can buy '+Math.min(byIsk,bySup).toLocaleString()+' units<br>';
+      if(PILOT.cargoM3!=null&&PILOT.cargoM3>0)html+='Cargo: '+PILOT.cargoM3.toLocaleString()+' m&#179; &rarr; fits '+byCargo.toLocaleString()+' units ('+vol+' m&#179;/unit)<br>';
+      html+=maxU>0?'Max profit this run: +'+fmtIsk(tot)+' ISK ('+limit+')':'not feasible with current ship/wallet';
+      html+='</div>';
+      return html;
+    }())
+    +'<div class="dt-sub" style="margin-top:0.5rem">'
+    +'<a href="https://zkillboard.com/item/'+o.typeId+'/" target="_blank" style="color:var(--g);font-size:0.7rem">zKillboard kills &rarr;</a>'
+    +' &nbsp; '
+    +(o.buySystemId?'<a href="https://zkillboard.com/system/'+o.buySystemId+'/" target="_blank" style="color:var(--g);font-size:0.7rem">'+esc(o.buySystemName)+' on zKill &rarr;</a>':'')
+    +'</div>'
+    +'</div>'
+    +'</div></td></tr>';
+}
+
+function toggleDetail(idx){state.expandedIdx=state.expandedIdx===idx?null:idx;renderTable(state.filteredResults)}
+
+function sortBy(col){
+  if(state.sortCol===col)state.sortAsc=!state.sortAsc;else{state.sortCol=col;state.sortAsc=false}
+  state.expandedIdx=null;
+  const sorted=[...state.filteredResults].sort((a,b)=>{
+    let av=a[col],bv=b[col];
+    if(av===null)av=state.sortAsc?Infinity:-Infinity;
+    if(bv===null)bv=state.sortAsc?Infinity:-Infinity;
+    if(typeof av==='string')return state.sortAsc?av.localeCompare(bv):bv.localeCompare(av);
+    return state.sortAsc?av-bv:bv-av;
+  });
+  state.filteredResults=sorted;renderTable(sorted);
+}
+
+document.getElementById('filter-box').addEventListener('input',e=>{
+  const q=e.target.value.toLowerCase().trim();state.expandedIdx=null;
+  state.filteredResults=!q?state.results:state.results.filter(o=>
+    o.typeName.toLowerCase().includes(q)||
+    o.buyStationName.toLowerCase().includes(q)||
+    o.sellStationName.toLowerCase().includes(q)||
+    o.buyRegionName.toLowerCase().includes(q)||
+    o.sellRegionName.toLowerCase().includes(q)
+  );
+  renderTable(state.filteredResults);
+});
+
+document.getElementById('sort-preset').addEventListener('change',e=>{
+  state.sortCol=e.target.value;state.sortAsc=false;state.expandedIdx=null;
+  const sorted=[...state.filteredResults].sort((a,b)=>(b[state.sortCol]??-Infinity)-(a[state.sortCol]??-Infinity));
+  state.filteredResults=sorted;renderTable(sorted);
+});
+
+function updateSuggestions(results){
+  const dl=document.getElementById('item-suggestions');
+  const names=[...new Set(results.map(o=>o.typeName))].sort();
+  dl.innerHTML=names.map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'">').join('');
+}
+
+function csvEsc(v){return '"'+String(v??'').replace(/"/g,'""')+'"'}
+function exportCSV(){
+  const rows=state.filteredResults;
+  if(!rows.length){setStatus('Nothing to export yet — run a scan first.',true);return}
+  const headers=['Item','Buy Region','Buy Station','Buy Price','Sell Region','Sell Station','Sell Price','Net Profit/Unit','Margin %','Tradeable Qty','Total Potential','Jumps','Score'];
+  const lines=[headers.map(csvEsc).join(',')];
+  rows.forEach(o=>{
+    lines.push([o.typeName,o.buyRegionName,o.buyStationName,o.buyPrice,o.sellRegionName,o.sellStationName,o.sellPrice,o.profit.toFixed(2),o.margin.toFixed(2),o.maxTradeable,o.totalProfitPotential.toFixed(2),o.jumps??'',o.score.toFixed(1)].map(csvEsc).join(','));
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='arbitrage-'+Date.now()+'.csv';
+  document.body.appendChild(a);a.click();a.remove();
+  URL.revokeObjectURL(a.href);
+}
+
+function setStatus(msg,isErr,loading){
+  document.getElementById('status-text').textContent=msg;
+  document.getElementById('status-bar').classList.toggle('err',!!isErr);
+  document.getElementById('spinner').classList.toggle('active',!!loading);
+  document.getElementById('prog-wrap').classList.toggle('active',!!loading);
+}
+function setProgress(pct){document.getElementById('prog-bar').style.width=pct+'%'}
+</script>
+</body>
+</html>

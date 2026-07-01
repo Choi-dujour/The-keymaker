@@ -51,7 +51,7 @@ body{background:var(--bg);color:var(--w);font-family:'Inter',sans-serif}
 .btn-o:hover{border-color:var(--m);color:var(--w)}
 .btn-g{background:var(--g);color:#000}
 .btn-g:hover{background:#50ff30}
-#btn-dashboard{display:none}
+#btn-dashboard,#btn-arbitrage{display:none}
 
 .center{
   display:flex;flex-direction:column;
@@ -98,6 +98,7 @@ h1 em{color:var(--g);font-style:normal}
     <div class="top-right">
       <a href="/about.html" class="btn btn-o">About</a>
       <a href="/tracker.html" class="btn btn-o">Tracker</a>
+      <a href="/arbitrage.html" class="btn btn-o" id="btn-arbitrage">Arbitrage</a>
       <a href="/api/login" class="btn btn-o" id="btn-login">⬡ Login</a>
       <a href="/dashboard.html" class="btn btn-o" id="btn-dashboard">Dashboard</a>
       <a href="https://www.eveonline.com/open-information-window?type=corporation&id=98800626" target="_blank" class="btn btn-g">Apply</a>
@@ -133,7 +134,7 @@ const cv=document.getElementById('c'),cx=cv.getContext('2d');let st=[];
 function rs(){cv.width=innerWidth;cv.height=innerHeight;st=Array.from({length:Math.floor(cv.width*cv.height/6000)},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*0.9+0.15,o:Math.random()*0.35+0.05,f:Math.random()*0.002+0.001,p:Math.random()*Math.PI*2}))}
 let fr=0;(function draw(){cx.clearRect(0,0,cv.width,cv.height);fr++;st.forEach(s=>{const o=s.o+Math.sin(fr*s.f+s.p)*0.07;cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle=`rgba(200,200,255,${Math.max(0,Math.min(0.5,o))})`;cx.fill()});requestAnimationFrame(draw)})();
 rs();window.addEventListener('resize',rs);
-(async()=>{try{const r=await fetch('/api/me');if(r.ok){const s=await r.json();if(s.authenticated){document.getElementById('btn-login').style.display='none';document.getElementById('btn-dashboard').style.display='inline-flex'}}}catch{}})();
+(async()=>{try{const r=await fetch('/api/me');if(r.ok){const s=await r.json();if(s.authenticated){document.getElementById('btn-login').style.display='none';document.getElementById('btn-dashboard').style.display='inline-flex';document.getElementById('btn-arbitrage').style.display='inline-flex'}}}catch{}})();
 function loadMemberCount(retries=2){
   fetch(`https://esi.evetech.net/latest/corporations/98800626/?datasource=tranquility&_=${Date.now()}`,{cache:'no-store'})
     .then(r=>{if(!r.ok)throw new Error('ESI '+r.status);return r.json()})
