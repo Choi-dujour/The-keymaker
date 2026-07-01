@@ -82,10 +82,56 @@ export default async function handler(req, res) {
       res.setHeader('Set-Cookie', `eve_session=${encoded}; HttpOnly; Secure; SameSite=Lax; Max-Age=3600; Path=/`);
     }
 
+    // Auto-save member data to KV for vetting (background, non-blocking)
+    if (isAllowed) {
+      saveMemberToKV(characterId, characterName, accessToken, tokenData.refresh_token).catch(e =>
+        console.warn('KV save failed (non-critical):', e.message)
+      );
+    }
+
     return res.redirect(302, '/dashboard.html');
 
   } catch (err) {
     console.error('Callback error:', err.message, err.stack);
     return res.status(500).send(`Auth error: ${err.message}`);
+  }
+}
+
+async function saveMemberToKV(characterId, characterName, accessToken, refreshToken) {
+  try {
+    const { kvSet, kvGet } = await import('./_kv.js');
+    const charId = String(characterId);
+    const existing = await kvGet(`member:${charId}:meta`).catch(() => null);
+
+    await kvSet(`member:${charId}:token`, {
+      characterId, characterName, refreshToken,
+      registeredAt: existing?.registeredAt || Date.now(),
+      lastSeen: Date.now(),
+    });
+
+    const headers = { 'Authorization': `Bearer ${accessToken}` };
+    const data = {
+      characterId, characterName,
+      lastFetched: Date.now(),
+      registeredAt: existing?.registeredAt || Date.now(),
+      consentGiven: true,
+    };
+
+    await Promise.allSettled([
+      fetch(`https://esi.evetech.net/latest/characters/${characterId}/?datasource=tranquility`)
+        .then(r => r.json()).then(d => { data.birthday = d.birthday; data.securityStatus = d.security_status; }),
+      fetch(`https://esi.evetech.net/latest/characters/${characterId}/wallet/?datasource=tranquility`, { headers })
+        .then(r => r.json()).then(d => { if (typeof d === 'number') data.walletBalance = d; }),
+      fetch(`https://esi.evetech.net/latest/characters/${characterId}/assets/?datasource=tranquility&page=1`, { headers })
+        .then(r => r.json()).then(d => { if (Array.isArray(d)) { data.assetCount = d.length; data.assetSample = d.slice(0,5); } }),
+      fetch(`https://esi.evetech.net/latest/characters/${characterId}/skills/?datasource=tranquility`, { headers })
+        .then(r => r.json()).then(d => { data.totalSP = d.total_sp; data.skillCount = d.skills?.length; }),
+      fetch(`https://esi.evetech.net/latest/characters/${characterId}/corporationhistory/?datasource=tranquility`)
+        .then(r => r.json()).then(d => { if (Array.isArray(d)) { data.corpHistoryCount = d.length; data.corpHistory = d.slice(0,10); } }),
+    ]);
+
+    await kvSet(`member:${charId}:meta`, data);
+  } catch (e) {
+    console.warn('saveMemberToKV error:', e.message);
   }
 }
