@@ -236,14 +236,14 @@ tr:hover td{background:rgba(255,255,255,0.015)}
     <div class="sb-section">Overview</div>
     <a class="sb-item active" data-page="overview" href="#"><span class="sb-icon">◈</span>Overview</a>
     <a class="sb-item" data-page="members" href="#"><span class="sb-icon">◉</span>Members</a>
-    <a class="sb-item" data-page="tracker" href="#"><span class="sb-icon">◎</span>Tracker</a>
     <a class="sb-item" data-page="killboard" href="#"><span class="sb-icon">⚔</span>Killboard</a>
-    <a class="sb-item" data-page="journal" href="#"><span class="sb-icon">◈</span>Journal</a>
-    <div class="sb-section">Corp</div>
-    <a class="sb-item" data-page="wallet" href="#"><span class="sb-icon">◎</span>Wallet</a>
-    <a class="sb-item" data-page="industry" href="#"><span class="sb-icon">⛏</span>Industry</a>
-    <a class="sb-item" data-page="mining" href="#"><span class="sb-icon">◉</span>Mining</a>
-    <a class="sb-item" data-page="assets" href="#"><span class="sb-icon">◎</span>Assets</a>
+    <div class="sb-section nav-director" id="leadership-label" style="display:none">Leadership</div>
+    <a class="sb-item nav-director" data-page="tracker" href="#" style="display:none"><span class="sb-icon">◎</span>Tracker</a>
+    <a class="sb-item nav-director" data-page="journal" href="#" style="display:none"><span class="sb-icon">◈</span>Journal</a>
+    <a class="sb-item nav-director" data-page="wallet" href="#" style="display:none"><span class="sb-icon">◎</span>Wallet</a>
+    <a class="sb-item nav-director" data-page="industry" href="#" style="display:none"><span class="sb-icon">⛏</span>Industry</a>
+    <a class="sb-item nav-director" data-page="mining" href="#" style="display:none"><span class="sb-icon">◉</span>Mining</a>
+    <a class="sb-item nav-director" data-page="assets" href="#" style="display:none"><span class="sb-icon">◎</span>Assets</a>
     <div class="sb-section" id="ceo-label" style="display:none">CEO</div>
     <a class="sb-item" data-page="access" href="#" id="nav-access" style="display:none"><span class="sb-icon">🔑</span>Access</a>
     <div class="sb-section">Site</div>
@@ -502,8 +502,12 @@ async function init(){
   document.getElementById('sb-name').textContent=SESSION.characterName;
   document.getElementById('sb-portrait').src=`https://images.evetech.net/characters/${SESSION.characterId}/portrait?size=64`;
 
+  if(SESSION.isDirector){
+    document.getElementById('sb-role').textContent=SESSION.isCeo?'CEO':'Director';
+    document.getElementById('leadership-label').style.display='block';
+    document.querySelectorAll('.sb-item.nav-director').forEach(el=>el.style.display='flex');
+  }
   if(SESSION.isCeo){
-    document.getElementById('sb-role').textContent='CEO';
     document.getElementById('ceo-label').style.display='block';
     document.getElementById('nav-access').style.display='flex';
   }
