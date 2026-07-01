@@ -444,6 +444,13 @@ tr:hover td{background:rgba(255,255,255,0.015)}
     <div class="notice">
       Add <strong>Character IDs</strong> of pilots you want to grant dashboard access. Find IDs on <a href="https://evewho.com" target="_blank" style="color:var(--g)">evewho.com</a>. After updating, copy the string below to <strong>WHITELIST_CHARACTER_IDS</strong> on Vercel.
     </div>
+    <div class="wl-wrap" style="margin-bottom:1.5rem">
+      <div class="wl-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Database Status (KV)</span>
+        <button class="btn btn-o btn-sm" onclick="checkKvHealth()">Recheck</button>
+      </div>
+      <div id="kv-status" style="font-family:var(--mono);font-size:0.8rem;color:var(--m)">Checking...</div>
+    </div>
     <div class="wl-wrap">
       <div class="wl-title">Whitelist</div>
       <div class="wl-row">
@@ -1052,6 +1059,25 @@ function addWl(){
 }
 function removeWl(id){wlIds=wlIds.filter(i=>i!==id);renderWl()}
 
+// ── KV HEALTH ──
+async function checkKvHealth(){
+  const el=document.getElementById('kv-status');
+  el.innerHTML='Checking...';
+  try{
+    const r=await fetch('/api/kv-health');
+    const d=await r.json();
+    if(!d.configured){
+      el.innerHTML=`<span style="color:var(--red)">Not configured</span> — ${esc(d.error||'missing KV env vars')}`;
+    }else if(d.ok){
+      el.innerHTML=`<span style="color:var(--g)">Connected</span> — round-trip ${d.latencyMs}ms · ${d.memberCount} member record(s) stored`;
+    }else{
+      el.innerHTML=`<span style="color:var(--red)">Connection failed</span> — ${esc(d.error||'unknown error')}`;
+    }
+  }catch(e){
+    el.innerHTML=`<span style="color:var(--red)">Request failed</span> — ${esc(e.message)}`;
+  }
+}
+
 // ── NAV ──
 const loaders={members:loadMembers,tracker:loadTracker,killboard:loadKillboard,journal:loadJournal,wallet:loadWallet,industry:loadIndustry,mining:loadMining,assets:loadAssets};
 const loaded=new Set(['overview']);
@@ -1067,7 +1093,7 @@ document.querySelectorAll('.sb-item[data-page]').forEach(a=>{
       loaded.add(pg);
       if(loaders[pg])loaders[pg]();
       
-      if(pg==='access')initWl();
+      if(pg==='access'){initWl();checkKvHealth()}
     }
   });
 });
