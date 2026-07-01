@@ -1,5 +1,7 @@
 // api/callback.js
 
+const CORP_ID = 98800626;
+
 export default async function handler(req, res) {
   const { code, state } = req.query;
 
@@ -51,12 +53,35 @@ export default async function handler(req, res) {
     const characterId   = String(jwtPayload.sub).split(':').pop();
     const characterName = jwtPayload.name || 'Unknown';
 
-    // 3. Controlla whitelist
-    const isAllowed = whitelist.includes(characterId);
+    // 3. Controlla whitelist oppure membership corp attuale (via ESI, dato pubblico)
+    const isWhitelisted = whitelist.includes(characterId);
+    let isCorpMember = false;
+    try {
+      const charInfo = await fetch(`https://esi.evetech.net/latest/characters/${characterId}/?datasource=tranquility`)
+        .then(r => r.json());
+      isCorpMember = charInfo.corporation_id === CORP_ID;
+    } catch (e) {
+      console.warn('ESI corp membership check failed:', e.message);
+    }
+
+    const isAllowed = isWhitelisted || isCorpMember;
     const isCeo     = characterId === String(ceoId);
 
     if (!isAllowed) {
       return res.redirect(302, '/?auth=denied&name=' + encodeURIComponent(characterName));
+    }
+
+    // 3b. Ruolo Director (il CEO ha sempre pieni poteri, per gli altri chiedi a ESI)
+    let isDirector = isCeo;
+    if (!isDirector) {
+      try {
+        const rolesRes = await fetch(`https://esi.evetech.net/latest/characters/${characterId}/roles/?datasource=tranquility`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+        }).then(r => r.json());
+        isDirector = Array.isArray(rolesRes.roles) && rolesRes.roles.includes('Director');
+      } catch (e) {
+        console.warn('ESI roles check failed:', e.message);
+      }
     }
 
     // 4. Sessione leggera — NO access_token nel cookie (troppo grande)
@@ -67,6 +92,7 @@ export default async function handler(req, res) {
       accessToken,   // ~500 chars, ok
       refreshToken,
       isCeo,
+      isDirector,
       expires: Date.now() + (expiresIn * 1000),
     });
 
@@ -75,7 +101,7 @@ export default async function handler(req, res) {
     // Controlla dimensione cookie (max ~4000 bytes sicuri)
     if (encoded.length > 3800) {
       // Sessione troppo grande: salva senza accessToken (verrà refreshato da me.js)
-      const slim = JSON.stringify({ characterId, characterName, refreshToken, isCeo, expires: 0 });
+      const slim = JSON.stringify({ characterId, characterName, refreshToken, isCeo, isDirector, expires: 0 });
       const slimEncoded = Buffer.from(slim).toString('base64');
       res.setHeader('Set-Cookie', `eve_session=${slimEncoded}; HttpOnly; Secure; SameSite=Lax; Max-Age=3600; Path=/`);
     } else {

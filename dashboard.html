@@ -236,14 +236,14 @@ tr:hover td{background:rgba(255,255,255,0.015)}
     <div class="sb-section">Overview</div>
     <a class="sb-item active" data-page="overview" href="#"><span class="sb-icon">◈</span>Overview</a>
     <a class="sb-item" data-page="members" href="#"><span class="sb-icon">◉</span>Members</a>
-    <a class="sb-item" data-page="tracker" href="#"><span class="sb-icon">◎</span>Tracker</a>
     <a class="sb-item" data-page="killboard" href="#"><span class="sb-icon">⚔</span>Killboard</a>
-    <a class="sb-item" data-page="journal" href="#"><span class="sb-icon">◈</span>Journal</a>
-    <div class="sb-section">Corp</div>
-    <a class="sb-item" data-page="wallet" href="#"><span class="sb-icon">◎</span>Wallet</a>
-    <a class="sb-item" data-page="industry" href="#"><span class="sb-icon">⛏</span>Industry</a>
-    <a class="sb-item" data-page="mining" href="#"><span class="sb-icon">◉</span>Mining</a>
-    <a class="sb-item" data-page="assets" href="#"><span class="sb-icon">◎</span>Assets</a>
+    <div class="sb-section nav-director" id="leadership-label" style="display:none">Leadership</div>
+    <a class="sb-item nav-director" data-page="tracker" href="#" style="display:none"><span class="sb-icon">◎</span>Tracker</a>
+    <a class="sb-item nav-director" data-page="journal" href="#" style="display:none"><span class="sb-icon">◈</span>Journal</a>
+    <a class="sb-item nav-director" data-page="wallet" href="#" style="display:none"><span class="sb-icon">◎</span>Wallet</a>
+    <a class="sb-item nav-director" data-page="industry" href="#" style="display:none"><span class="sb-icon">⛏</span>Industry</a>
+    <a class="sb-item nav-director" data-page="mining" href="#" style="display:none"><span class="sb-icon">◉</span>Mining</a>
+    <a class="sb-item nav-director" data-page="assets" href="#" style="display:none"><span class="sb-icon">◎</span>Assets</a>
     <div class="sb-section" id="ceo-label" style="display:none">CEO</div>
     <a class="sb-item" data-page="access" href="#" id="nav-access" style="display:none"><span class="sb-icon">🔑</span>Access</a>
     <div class="sb-section">Site</div>
@@ -463,6 +463,20 @@ tr:hover td{background:rgba(255,255,255,0.015)}
         <div class="wl-env-val" id="wl-env-val">—</div>
       </div>
     </div>
+
+    <div class="tbl-wrap" style="margin-top:1.5rem">
+      <div class="tbl-head">
+        <div class="tbl-title">Member Vetting (KV data)</div>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-o btn-sm" onclick="exportMemberData()">Export JSON</button>
+          <button class="btn btn-r btn-sm" onclick="purgeOrphaned()">Purge Orphaned</button>
+        </div>
+      </div>
+      <div class="tbl-scroll">
+        <table><thead><tr><th>Character</th><th>Wallet</th><th>Total SP</th><th>Assets</th><th>Corp switches</th><th>Risk</th><th>Last Fetched</th><th></th></tr></thead>
+        <tbody id="vetting-tbody"><tr class="empty-row"><td colspan="8">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
   </div>
 
 </main>
@@ -488,8 +502,12 @@ async function init(){
   document.getElementById('sb-name').textContent=SESSION.characterName;
   document.getElementById('sb-portrait').src=`https://images.evetech.net/characters/${SESSION.characterId}/portrait?size=64`;
 
+  if(SESSION.isDirector){
+    document.getElementById('sb-role').textContent=SESSION.isCeo?'CEO':'Director';
+    document.getElementById('leadership-label').style.display='block';
+    document.querySelectorAll('.sb-item.nav-director').forEach(el=>el.style.display='flex');
+  }
   if(SESSION.isCeo){
-    document.getElementById('sb-role').textContent='CEO';
     document.getElementById('ceo-label').style.display='block';
     document.getElementById('nav-access').style.display='flex';
   }
@@ -1078,6 +1096,76 @@ async function checkKvHealth(){
   }
 }
 
+// ── MEMBER VETTING ──
+let vettingData=[];
+function riskColor(score){
+  if(score>=15)return 'var(--red)';
+  if(score>=5)return 'var(--yellow)';
+  return 'var(--g)';
+}
+async function loadMemberVetting(){
+  const tb=document.getElementById('vetting-tbody');
+  tb.innerHTML='<tr class="empty-row"><td colspan="8">Loading...</td></tr>';
+  try{
+    const r=await fetch('/api/members-data');
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){
+      tb.innerHTML=`<tr class="empty-row"><td colspan="8">${esc(d.error||'Failed to load ('+r.status+')')}</td></tr>`;
+      return;
+    }
+    vettingData=d.members||[];
+    renderVetting();
+  }catch(e){
+    tb.innerHTML=`<tr class="empty-row"><td colspan="8">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+function renderVetting(){
+  const tb=document.getElementById('vetting-tbody');
+  if(!vettingData.length){tb.innerHTML='<tr class="empty-row"><td colspan="8">No member data stored yet.</td></tr>';return}
+  tb.innerHTML=vettingData.map(m=>`
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:0.5rem">
+        <img src="https://images.evetech.net/characters/${m.characterId}/portrait?size=32" style="width:24px;height:24px;border-radius:50%" loading="lazy"/>
+        <span style="font-size:0.8rem">${esc(m.characterName||'ID '+m.characterId)}</span>
+      </div></td>
+      <td style="font-family:var(--mono);font-size:0.78rem">${m.walletBalance!=null?fisk(m.walletBalance)+' ISK':'—'}</td>
+      <td style="font-family:var(--mono);font-size:0.78rem">${m.totalSP?m.totalSP.toLocaleString():'—'}</td>
+      <td style="font-family:var(--mono);font-size:0.78rem">${m.assetCount??'—'}</td>
+      <td style="font-family:var(--mono);font-size:0.78rem">${m.corpHistoryCount??'—'}</td>
+      <td style="font-family:var(--mono);font-size:0.78rem;color:${riskColor(m.riskScore||0)};font-weight:700">${m.riskScore||0}</td>
+      <td style="font-size:0.7rem;color:var(--m)">${m.lastFetched?new Date(m.lastFetched).toLocaleDateString():'—'}</td>
+      <td><button class="btn btn-r btn-sm" onclick="removeMember('${m.characterId}')">Remove</button></td>
+    </tr>
+  `).join('');
+}
+async function removeMember(id){
+  if(!confirm('Remove stored data for character '+id+'? This deletes their KV token + vetting record.'))return;
+  try{
+    const r=await fetch('/api/member-delete?characterId='+encodeURIComponent(id),{method:'POST'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    await loadMemberVetting();
+  }catch(e){alert('Failed to remove: '+e.message)}
+}
+async function purgeOrphaned(){
+  if(!confirm('Delete KV records for any member no longer in WHITELIST_CHARACTER_IDS? This cannot be undone.'))return;
+  try{
+    const r=await fetch('/api/member-purge',{method:'POST'});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||('HTTP '+r.status));
+    alert(d.purgedCount+' orphaned record(s) removed.');
+    await loadMemberVetting();
+  }catch(e){alert('Purge failed: '+e.message)}
+}
+function exportMemberData(){
+  if(!vettingData.length){alert('Nothing to export yet.');return}
+  const blob=new Blob([JSON.stringify(vettingData,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='member-vetting-'+Date.now()+'.json';
+  document.body.appendChild(a);a.click();a.remove();
+  URL.revokeObjectURL(a.href);
+}
+
 // ── NAV ──
 const loaders={members:loadMembers,tracker:loadTracker,killboard:loadKillboard,journal:loadJournal,wallet:loadWallet,industry:loadIndustry,mining:loadMining,assets:loadAssets};
 const loaded=new Set(['overview']);
@@ -1093,7 +1181,7 @@ document.querySelectorAll('.sb-item[data-page]').forEach(a=>{
       loaded.add(pg);
       if(loaders[pg])loaders[pg]();
       
-      if(pg==='access'){initWl();checkKvHealth()}
+      if(pg==='access'){initWl();checkKvHealth();loadMemberVetting()}
     }
   });
 });
