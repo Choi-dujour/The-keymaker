@@ -23,8 +23,8 @@ export default async function handler(req, res) {
   const values = await kvMGet(metaKeys).catch(() => []);
   const members = values.filter(Boolean);
 
-  // Sort by risk flags then by name
-  members.sort((a, b) => riskScore(b) - riskScore(a));
+  members.forEach(m => { m.riskScore = riskScore(m); });
+  members.sort((a, b) => b.riskScore - a.riskScore);
 
   return res.status(200).json({ members, total: members.length });
 }
