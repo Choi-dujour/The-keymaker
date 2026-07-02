@@ -150,6 +150,11 @@ footer{position:relative;z-index:1;text-align:center;padding:2rem;border-top:1px
 .pstat-val{font-family:"Syne",sans-serif;font-size:1.2rem;font-weight:700;color:var(--w)}
 .pstat-val.g{color:var(--g)}
 .pstat-val.y{color:var(--yellow)}
+.pstat-input{font-family:"Syne",sans-serif;font-size:1.1rem;font-weight:700;background:transparent;border:none;border-bottom:1px dashed var(--b);width:100%;padding:0 0 0.2rem;outline:none;transition:border-color .2s}
+.pstat-input::placeholder{color:var(--m);font-weight:400;font-size:0.85rem}
+.pstat-input:focus{border-color:var(--g)}
+.pstat-input.g{color:var(--g)}
+.pstat-input.y{color:var(--yellow)}
 .pstat-sub{font-size:0.68rem;color:var(--m);margin-top:0.2rem;font-family:var(--mono)}
 .feasible-badge{display:inline-block;font-size:0.6rem;padding:1px 5px;border-radius:2px;margin-left:4px;vertical-align:middle}
 .fb-yes{background:rgba(57,255,20,0.12);color:var(--g)}
@@ -224,14 +229,14 @@ footer{position:relative;z-index:1;text-align:center;padding:2rem;border-top:1px
         <div class="pstat-sub" id="pilot-ship-type">--</div>
       </div>
       <div class="pstat">
-        <div class="pstat-label">Cargo Capacity</div>
-        <div class="pstat-val g" id="pilot-cargo">-- m³</div>
+        <div class="pstat-label">Max Cargo (m³, editable)</div>
+        <input type="number" class="pstat-input g" id="pilot-cargo-input" min="0" step="10" placeholder="e.g. 5000" oninput="onPilotInputChange()"/>
         <div class="pstat-sub" id="pilot-cargo-note">base hull value</div>
       </div>
       <div class="pstat">
-        <div class="pstat-label">ISK Wallet</div>
-        <div class="pstat-val y" id="pilot-wallet">--</div>
-        <div class="pstat-sub">available to spend</div>
+        <div class="pstat-label">Max Budget (ISK, editable)</div>
+        <input type="number" class="pstat-input y" id="pilot-wallet-input" min="0" step="1000000" placeholder="e.g. 50000000" oninput="onPilotInputChange()"/>
+        <div class="pstat-sub" id="pilot-wallet-note">defaults to your wallet</div>
       </div>
       <div class="pstat">
         <div class="pstat-label">Max Trade Run</div>
@@ -433,7 +438,8 @@ async function loadPilotContext(){
     ]);
     if(typeof walletRes==='number'||typeof walletRes==='string'){
       PILOT.wallet=parseFloat(walletRes);
-      document.getElementById('pilot-wallet').textContent=fmtIsk(PILOT.wallet)+' ISK';
+      document.getElementById('pilot-wallet-input').value=Math.floor(PILOT.wallet);
+      document.getElementById('pilot-wallet-note').textContent='your wallet: '+fmtIsk(PILOT.wallet)+' ISK — edit to cap your trade run';
     }
     if(shipRes&&shipRes.ship_type_id){
       PILOT.shipTypeId=shipRes.ship_type_id;
@@ -444,15 +450,24 @@ async function loadPilotContext(){
       PILOT.cargoM3=baseCargo;
       const shipTypeName=typeInfo&&typeInfo.name?typeInfo.name:('Type #'+PILOT.shipTypeId);
       document.getElementById('pilot-ship-type').textContent=shipTypeName;
-      document.getElementById('pilot-cargo').textContent=baseCargo.toLocaleString()+' m³';
-      document.getElementById('pilot-cargo-note').textContent='base hull (no rigs/modules)';
-      if(baseCargo===0){
-        document.getElementById('pilot-cargo').textContent='no cargo';
-        document.getElementById('pilot-cargo-note').textContent='ship type has no cargo hold';
-      }
+      document.getElementById('pilot-cargo-input').value=baseCargo||'';
+      document.getElementById('pilot-cargo-note').textContent=baseCargo>0?'base hull, no rigs/modules — edit if you fit cargo expanders':'ship type has no cargo hold — enter one manually if needed';
     }
   }catch(e){console.warn('pilot context load failed',e)}
   updateMaxTradeRun();
+}
+
+// Re-reads the (now editable) cargo/budget stat inputs into PILOT and refreshes
+// feasibility badges + best-run summary live, no rescan needed.
+function onPilotInputChange(){
+  const cargoVal=parseFloat(document.getElementById('pilot-cargo-input').value);
+  PILOT.cargoM3=(!isNaN(cargoVal)&&cargoVal>0)?cargoVal:null;
+  const walletVal=parseFloat(document.getElementById('pilot-wallet-input').value);
+  PILOT.wallet=(!isNaN(walletVal)&&walletVal>=0)?walletVal:null;
+  if(state.results.length){
+    applyPilotFilter();
+    updateMaxRunForBest(state.filteredResults);
+  }
 }
 
 function updateMaxTradeRun(){
@@ -713,6 +728,12 @@ async function setWaypoint(destinationId,clearOthers){
   }catch(e){setStatus('Failed to set waypoint: '+e.message,true)}
 }
 
+function viewOnTracker(fromSysId,toSysId){
+  const fromName=state.systemNameCache[fromSysId]||('System #'+fromSysId);
+  const toName=state.systemNameCache[toSysId]||('System #'+toSysId);
+  location.href='/tracker.html?from='+fromSysId+'&fromName='+encodeURIComponent(fromName)+'&to='+toSysId+'&toName='+encodeURIComponent(toName);
+}
+
 // SCAN
 async function startScan(){
   const btn=document.getElementById('scan-btn');
@@ -805,19 +826,17 @@ async function startScan(){
     opps.sort((a,b)=>b.score-a.score);
     const top=opps.slice(0,limit);
 
-    setStatus('Resolving names for '+top.length+' opportunities...');setProgress(65);
+    setStatus('Resolving item names for '+top.length+' opportunities...');setProgress(65);
 
     const typeIds=[...new Set(top.map(o=>o.typeId))];
-    const stnIds=[...new Set([...top.map(o=>o.buyStationId),...top.map(o=>o.sellStationId)])];
     const itemNames=await resolveNames(typeIds);
-    const stnNames=await resolveNames(stnIds);
-    top.forEach(o=>{
-      o.typeName=itemNames[o.typeId]||'Type #'+o.typeId;
-      o.buyStationName=stnNames[o.buyStationId]||state.stationNameCache[o.buyStationId]||'Station #'+o.buyStationId;
-      o.sellStationName=stnNames[o.sellStationId]||state.stationNameCache[o.sellStationId]||'Station #'+o.sellStationId;
-    });
+    top.forEach(o=>{ o.typeName=itemNames[o.typeId]||'Type #'+o.typeId; });
 
-    setProgress(75);setStatus('Resolving system security ('+top.length+' stations, parallelized)...');
+    // Station names + system/security come from the same per-station lookup (getStationSystem),
+    // since /universe/names/ can't resolve player-owned structures (Upwell citadels etc) — only
+    // /universe/structures/{id}/ (authenticated) can. Assign names AFTER this loop finishes so
+    // structure names are picked up too, not just NPC stations.
+    setProgress(75);setStatus('Resolving station and system info ('+top.length+' opportunities, parallelized)...');
     const allStnIds=[...new Set([...top.map(o=>o.buyStationId),...top.map(o=>o.sellStationId)])];
     let res=0;
     await mapLimit(allStnIds,8,async sid=>{
@@ -826,6 +845,8 @@ async function startScan(){
       res++;setProgress(75+(res/allStnIds.length)*10);
     });
     top.forEach(o=>{
+      o.buyStationName=state.stationNameCache[o.buyStationId]||'Station #'+o.buyStationId;
+      o.sellStationName=state.stationNameCache[o.sellStationId]||'Station #'+o.sellStationId;
       const bSys=state.stationSystemCache[o.buyStationId];
       const sSys=state.stationSystemCache[o.sellStationId];
       o.buySystemId=bSys;o.sellSystemId=sSys;
@@ -940,6 +961,7 @@ function renderDetailRow(o){
     +'<div style="margin-top:0.6rem">'
     +'<button class="wp-btn" onclick="event.stopPropagation();setWaypoint('+o.buyStationId+',true)">&#8853; Set course to buy</button>'
     +'<button class="wp-btn" onclick="event.stopPropagation();setWaypoint('+o.sellStationId+',false)">+ Add sell as waypoint</button>'
+    +(o.buySystemId&&o.sellSystemId?'<button class="wp-btn" onclick="event.stopPropagation();viewOnTracker('+o.buySystemId+','+o.sellSystemId+')">&#8635; View route on Tracker</button>':'')
     +'</div></div>'
     +'<div><div class="dt-label">Buy Side</div><div class="dt-val">'+fmtIsk(o.buyPrice)+' ISK / unit</div><div class="dt-sub">'+o.buyOrderCount+' sell order(s) &middot; '+o.buyVol.toLocaleString()+' units available</div><div class="dt-sub">Cost with broker fee: '+fmtIsk(o.buyCost)+' ISK</div></div>'
     +'<div><div class="dt-label">Sell Side</div><div class="dt-val">'+fmtIsk(o.sellPrice)+' ISK / unit</div><div class="dt-sub">'+o.sellOrderCount+' buy order(s) &middot; '+o.sellVol.toLocaleString()+' units demanded</div><div class="dt-sub">Net after broker + tax: '+fmtIsk(o.sellNet)+' ISK</div></div>'

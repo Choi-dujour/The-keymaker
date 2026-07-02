@@ -800,6 +800,20 @@ function initMapInteraction() {
     updateMemberMarkers();
   });
 }
+
+// ── DEEP LINK (e.g. from Market Arbitrage: "View route" on an opportunity) ──
+// tracker.html?from=<systemId>&fromName=<name>&to=<systemId>&toName=<name>
+(function initFromQuery() {
+  const qs = new URLSearchParams(location.search);
+  const fromId = qs.get('from'), toId = qs.get('to');
+  if (!fromId || !toId) return;
+  originSystem = { id: Number(fromId), name: qs.get('fromName') || ('System #' + fromId) };
+  destSystem = { id: Number(toId), name: qs.get('toName') || ('System #' + toId) };
+  document.getElementById('origin-input').value = originSystem.name;
+  document.getElementById('dest-input').value = destSystem.name;
+  checkReady();
+  planRoute();
+})();
 </script>
 </body>
 </html>
