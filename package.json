@@ -5,10 +5,13 @@
   "description": "The-Keymaker EVE Online Corporation Website",
   "scripts": {
     "dev": "vercel dev",
-    "build": "echo 'Build complete'",
+    "build": "node scripts/build.mjs",
     "lint": "echo 'No linting configured'"
   },
   "dependencies": {
     "@vercel/analytics": "^1.4.1"
+  },
+  "devDependencies": {
+    "terser": "^5.48.0"
   }
 }

@@ -4,6 +4,8 @@
 import { kvKeys, kvMGet } from './_kv.js';
 
 export default async function handler(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
   // CEO auth check
   const cookies = parseCookies(req.headers.cookie || '');
   const sessionCookie = cookies.eve_session;

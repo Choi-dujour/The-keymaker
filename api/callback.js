@@ -12,6 +12,11 @@ export default async function handler(req, res) {
     return res.status(400).send('Missing authorization code.');
   }
 
+  const cookies = parseCookies(req.headers.cookie || '');
+  if (!cookies.eve_state || cookies.eve_state !== state) {
+    return res.redirect(302, '/?auth=denied');
+  }
+
   const clientId     = process.env.EVE_CLIENT_ID;
   const clientSecret = process.env.EVE_CLIENT_SECRET;
   const callbackUrl  = process.env.EVE_CALLBACK_URL;
@@ -107,6 +112,15 @@ export default async function handler(req, res) {
     console.error('Callback error:', err.message, err.stack);
     return res.status(500).send(`Auth error: ${err.message}`);
   }
+}
+
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  cookieHeader.split(';').forEach(part => {
+    const [key, ...val] = part.trim().split('=');
+    if (key) cookies[key.trim()] = decodeURIComponent(val.join('='));
+  });
+  return cookies;
 }
 
 async function saveMemberToKV(characterId, characterName, accessToken, refreshToken) {
