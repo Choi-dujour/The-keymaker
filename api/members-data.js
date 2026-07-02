@@ -22,7 +22,13 @@ export default async function handler(req, res) {
   const metaKeys = await kvKeys('member:*:meta').catch(() => []);
   if (!metaKeys.length) return res.status(200).json({ members: [] });
 
-  const values = await kvMGet(metaKeys).catch(() => []);
+  let values;
+  try {
+    values = await kvMGet(metaKeys);
+  } catch (e) {
+    console.error('members-data: kvMGet failed for', metaKeys.length, 'keys —', e.message);
+    return res.status(500).json({ error: 'Failed to read member records: ' + e.message });
+  }
   const members = values.filter(Boolean);
 
   members.forEach(m => { m.riskScore = riskScore(m); });
