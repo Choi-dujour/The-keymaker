@@ -19,7 +19,9 @@ export default async function handler(req, res) {
   }
 
   const characterId = req.query.characterId;
-  if (!characterId) return res.status(400).json({ error: 'characterId required' });
+  if (!characterId || !/^\d+$/.test(characterId)) {
+    return res.status(400).json({ error: 'characterId must be numeric' });
+  }
 
   const id = String(characterId);
   await Promise.all([

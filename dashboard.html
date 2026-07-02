@@ -221,6 +221,7 @@ tr:hover td{background:rgba(255,255,255,0.015)}
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
+<script src="/shared.js"></script>
 
 <div id="auth-gate"><div class="spin"></div><p>Verifying...</p></div>
 
@@ -486,7 +487,7 @@ tr:hover td{background:rgba(255,255,255,0.015)}
 </div>
 
 <script>
-const CORP=98800626;
+const CORP=CORP_ID;
 let SESSION=null;
 const ACT={'1':'Manufacturing','3':'Research TE','4':'Research ME','5':'Copying','8':'Invention','11':'Reactions'};
 
@@ -1200,8 +1201,6 @@ function fisk(n){
   if(n>=1e6)return(n/1e6).toFixed(2)+'M';
   return Math.round(n).toLocaleString();
 }
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-
 init();
 </script>
 </body>

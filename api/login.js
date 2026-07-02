@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 
 export default function handler(req, res) {
   const clientId = process.env.EVE_CLIENT_ID;
@@ -67,7 +68,7 @@ export default function handler(req, res) {
   ].join(' ');
 
 
-  const state = Math.random().toString(36).substring(2, 15);
+  const state = crypto.randomBytes(16).toString('hex');
 
   const authUrl = new URL('https://login.eveonline.com/v2/oauth/authorize');
   authUrl.searchParams.set('response_type', 'code');

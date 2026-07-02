@@ -88,6 +88,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:1.1rem 
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
+<script src="/shared.js"></script>
 
 <canvas id="c"></canvas>
 
@@ -178,26 +179,9 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:1.1rem 
 </footer>
 
 <script>
-const cv=document.getElementById('c'),cx=cv.getContext('2d');let st=[];
-function rs(){cv.width=innerWidth;cv.height=Math.max(document.body.scrollHeight,innerHeight);st=Array.from({length:Math.floor(cv.width*cv.height/7000)},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*0.9+0.15,o:Math.random()*0.35+0.05,f:Math.random()*0.002+0.001,p:Math.random()*Math.PI*2}))}
-let fr=0;(function draw(){cx.clearRect(0,0,cv.width,cv.height);fr++;st.forEach(s=>{const o=s.o+Math.sin(fr*s.f+s.p)*0.07;cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle=`rgba(200,200,255,${Math.max(0,Math.min(0.5,o))})`;cx.fill()});requestAnimationFrame(draw)})();
-rs();window.addEventListener('resize',rs);
-function loadMemberCount(retries=2){
-  fetch(`https://esi.evetech.net/latest/corporations/98800626/?datasource=tranquility&_=${Date.now()}`,{cache:'no-store'})
-    .then(r=>{if(!r.ok)throw new Error('ESI '+r.status);return r.json()})
-    .then(d=>{
-      const el=document.getElementById('info-members');
-      if(d.member_count!=null)el.textContent=d.member_count;
-      else throw new Error('no member_count');
-    })
-    .catch(e=>{
-      console.warn('Member count fetch failed:',e.message);
-      if(retries>0)setTimeout(()=>loadMemberCount(retries-1),1500);
-      else document.getElementById('info-members').textContent='N/A';
-    });
-}
-loadMemberCount();
-setInterval(loadMemberCount,120000);
+initStarfield('c',{density:7000,rMin:0.15,rSpread:0.9,oMin:0.05,oSpread:0.35,alphaCap:0.5,flickerAmp:0.07,fullPageHeight:true});
+loadMemberCount('info-members');
+setInterval(()=>loadMemberCount('info-members'),120000);
 const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.style.opacity='1';x.target.style.transform='translateY(0)'}}),{threshold:0.06});
 document.querySelectorAll('.offer-card,.info-cell,.rule').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(12px)';el.style.transition='opacity 0.4s ease,transform 0.4s ease';io.observe(el)});
 </script>

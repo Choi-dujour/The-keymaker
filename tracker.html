@@ -171,6 +171,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:1.1rem 
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
+<script src="/shared.js"></script>
 
 <canvas id="c"></canvas>
 
@@ -264,7 +265,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:1.1rem 
 </footer>
 
 <script>
-const CORP = 98800626;
+const CORP = CORP_ID;
 let SESSION = null;
 let selectedFlag = 'shortest';
 let originSystem = null;
@@ -280,10 +281,7 @@ let memberMarkers = []; // {id, name, px, py} for members currently on the route
 let mapState = { scale: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 };
 
 // ── STARFIELD ──
-const cv=document.getElementById('c'),cx=cv.getContext('2d');let st=[];
-function rs(){cv.width=innerWidth;cv.height=Math.max(document.body.scrollHeight,innerHeight);st=Array.from({length:Math.floor(cv.width*cv.height/8000)},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*0.8+0.15,o:Math.random()*0.3+0.05,f:Math.random()*0.002+0.001,p:Math.random()*Math.PI*2}))}
-let fr=0;(function draw(){cx.clearRect(0,0,cv.width,cv.height);fr++;st.forEach(s=>{const o=s.o+Math.sin(fr*s.f+s.p)*0.06;cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle=`rgba(200,200,255,${Math.max(0,Math.min(0.45,o))})`;cx.fill()});requestAnimationFrame(draw)})();
-rs();window.addEventListener('resize',rs);
+initStarfield('c',{density:8000,rMin:0.15,rSpread:0.8,oMin:0.05,oSpread:0.3,alphaCap:0.45,flickerAmp:0.06,fullPageHeight:true});
 
 // ── AUTH CHECK ──
 (async () => {
@@ -802,8 +800,6 @@ function initMapInteraction() {
     updateMemberMarkers();
   });
 }
-
-function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 </script>
 </body>
 </html>
