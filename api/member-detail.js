@@ -113,7 +113,7 @@ async function fetchFullMemberData(accessToken, characterId) {
       out[name] = await fn();
     } catch (e) {
       if (opts.newScope && e.status === 403) {
-        out.errors[name] = 'Requires this member to log in again — new permission not yet granted.';
+        out.errors[name] = 'Not available — this permission isn\'t enabled on the app.';
       } else {
         out.errors[name] = e.message;
       }
