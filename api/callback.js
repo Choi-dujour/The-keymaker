@@ -73,7 +73,16 @@ export default async function handler(req, res) {
     const isCeo     = characterId === String(ceoId);
 
     if (!isAllowed) {
-      return res.redirect(302, '/?auth=denied&name=' + encodeURIComponent(characterName));
+      // Not a member (yet) — treat this as an application instead of a hard denial.
+      // Reuses the exact same OAuth consent/scopes already granted, so the CEO can
+      // review the applicant's real character data before any in-game invite.
+      saveCharacterToKV('applicant', characterId, characterName, accessToken, tokenData.refresh_token).catch(e =>
+        console.warn('KV applicant save failed (non-critical):', e.message)
+      );
+
+      const applicantCookie = Buffer.from(JSON.stringify({ characterId, characterName })).toString('base64');
+      res.setHeader('Set-Cookie', `eve_applicant=${applicantCookie}; HttpOnly; Secure; SameSite=Lax; Max-Age=600; Path=/`);
+      return res.redirect(302, '/apply.html?status=submitted&name=' + encodeURIComponent(characterName));
     }
 
     // 4. Sessione leggera — NO access_token nel cookie (troppo grande)
@@ -100,11 +109,9 @@ export default async function handler(req, res) {
     }
 
     // Auto-save member data to KV for vetting (background, non-blocking)
-    if (isAllowed) {
-      saveMemberToKV(characterId, characterName, accessToken, tokenData.refresh_token).catch(e =>
-        console.warn('KV save failed (non-critical):', e.message)
-      );
-    }
+    saveCharacterToKV('member', characterId, characterName, accessToken, tokenData.refresh_token).catch(e =>
+      console.warn('KV save failed (non-critical):', e.message)
+    );
 
     return res.redirect(302, '/dashboard.html');
 
@@ -123,13 +130,16 @@ function parseCookies(cookieHeader) {
   return cookies;
 }
 
-async function saveMemberToKV(characterId, characterName, accessToken, refreshToken) {
+// Shared by members (prefix 'member') and applicants (prefix 'applicant') — same OAuth
+// scopes, same public/wallet/asset/skill/corp-history snapshot, different KV namespace so
+// the two lists never mix.
+async function saveCharacterToKV(prefix, characterId, characterName, accessToken, refreshToken) {
   try {
     const { kvSet, kvGet } = await import('./_kv.js');
     const charId = String(characterId);
-    const existing = await kvGet(`member:${charId}:meta`).catch(() => null);
+    const existing = await kvGet(`${prefix}:${charId}:meta`).catch(() => null);
 
-    await kvSet(`member:${charId}:token`, {
+    await kvSet(`${prefix}:${charId}:token`, {
       characterId, characterName, refreshToken,
       registeredAt: existing?.registeredAt || Date.now(),
       lastSeen: Date.now(),
@@ -142,6 +152,11 @@ async function saveMemberToKV(characterId, characterName, accessToken, refreshTo
       registeredAt: existing?.registeredAt || Date.now(),
       consentGiven: true,
     };
+    if (prefix === 'applicant') {
+      data.status = 'pending';
+      data.message = existing?.message || null;
+      data.messageSubmittedAt = existing?.messageSubmittedAt || null;
+    }
 
     await Promise.allSettled([
       fetch(`https://esi.evetech.net/latest/characters/${characterId}/?datasource=tranquility`)
@@ -156,8 +171,8 @@ async function saveMemberToKV(characterId, characterName, accessToken, refreshTo
         .then(r => r.json()).then(d => { if (Array.isArray(d)) { data.corpHistoryCount = d.length; data.corpHistory = d.slice(0,10); } }),
     ]);
 
-    await kvSet(`member:${charId}:meta`, data);
+    await kvSet(`${prefix}:${charId}:meta`, data);
   } catch (e) {
-    console.warn('saveMemberToKV error:', e.message);
+    console.warn('saveCharacterToKV error:', e.message);
   }
 }

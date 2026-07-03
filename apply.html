@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Apply — The-Keymaker [THE-K]</title>
+<meta name="description" content="Apply to The-Keymaker — verify your EVE Online character via SSO, no forms to fill by hand."/>
+<meta property="og:title" content="Apply — The-Keymaker [THE-K]"/>
+<meta property="og:description" content="We verify your character through EVE SSO — no manual forms."/>
+<meta property="og:image" content="https://images.evetech.net/corporations/98800626/logo?size=256"/>
+<meta name="theme-color" content="#39FF14"/>
+<link rel="icon" type="image/png" href="https://images.evetech.net/corporations/98800626/logo?size=64"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#06060e;--s:#0c0c1a;--s2:#101020;--b:#16162a;--g:#39FF14;--w:#ECEDF5;--m:#5a5a7a;--m2:#8080a0;--red:#ff4455;--mono:'JetBrains Mono',monospace}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--w);font-family:'Inter',sans-serif;overflow-x:hidden}
+#c{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(1.5rem,5vw,4rem);height:52px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);background:rgba(6,6,14,0.85);
+}
+.n-left{display:flex;align-items:center;gap:0.6rem}
+.n-logo{width:24px;height:24px;border-radius:3px;object-fit:cover;opacity:0.9}
+.n-name{font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.04em}
+.n-name em{color:var(--g);font-style:normal}
+.n-right{display:flex;gap:0.5rem}
+.btn{font-family:'Syne',sans-serif;font-size:0.62rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0.42rem 0.85rem;cursor:pointer;transition:all .18s;text-decoration:none;display:inline-flex;align-items:center;border:none;white-space:nowrap}
+.btn-o{background:transparent;border:1px solid var(--b);color:var(--m)}
+.btn-o:hover{border-color:var(--m);color:var(--w)}
+.btn-g{background:var(--g);color:#000}
+.btn-g:hover{background:#50ff30}
+.btn-lg{font-size:0.72rem;padding:0.75rem 1.5rem}
+.btn:disabled{opacity:0.5;cursor:default}
+
+.wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:0 clamp(1.5rem,5vw,4rem)}
+
+.hero{padding-top:calc(52px + 4.5rem);padding-bottom:2.5rem;border-bottom:1px solid var(--b)}
+.eye{font-size:0.58rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--g);opacity:0.7;margin-bottom:1.1rem;display:flex;align-items:center;gap:0.5rem}
+.eye::before{content:'';width:18px;height:1px;background:var(--g);opacity:0.6}
+h1{font-family:'Syne',sans-serif;font-size:clamp(1.9rem,5vw,3rem);font-weight:800;letter-spacing:-0.03em;line-height:1.05;margin-bottom:1.1rem}
+.hero-lead{font-size:0.95rem;color:var(--m);max-width:52ch;line-height:1.85}
+
+.sec{padding:3rem 0}
+.step{display:grid;grid-template-columns:2.2rem 1fr;gap:1.25rem;padding:1.1rem 0;border-bottom:1px solid var(--b);align-items:baseline}
+.step-n{font-size:0.58rem;letter-spacing:0.18em;color:var(--g);opacity:0.6}
+.step-t{font-size:0.85rem;color:var(--m);line-height:1.7}
+.step-t strong{color:var(--w);font-weight:500}
+
+.cta-box{margin-top:2.5rem;text-align:center;padding:2.5rem;background:var(--s);border:1px solid var(--b)}
+.cta-note{font-size:0.65rem;color:var(--m);margin-top:1rem;letter-spacing:0.04em}
+
+#apply-done{display:none}
+.done-badge{display:inline-flex;align-items:center;gap:0.5rem;font-family:var(--mono);font-size:0.8rem;color:var(--g);background:rgba(57,255,20,0.08);border:1px solid rgba(57,255,20,0.25);padding:0.6rem 1rem;margin-bottom:1.5rem}
+.apply-form textarea{width:100%;background:var(--s2);border:1px solid var(--b);color:var(--w);padding:0.9rem 1rem;font-family:'Inter',sans-serif;font-size:0.82rem;line-height:1.6;resize:vertical;min-height:120px;outline:none;transition:border-color .15s}
+.apply-form textarea:focus{border-color:var(--g)}
+.apply-form label{display:block;font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.6rem}
+.apply-msg{font-family:var(--mono);font-size:0.78rem;margin-top:0.9rem}
+.apply-msg.ok{color:var(--g)}
+.apply-msg.err{color:var(--red)}
+
+footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:1.1rem clamp(1.5rem,5vw,4rem);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.6rem;margin-top:3rem}
+.f-name{font-family:'Syne',sans-serif;font-size:0.7rem;font-weight:700;color:var(--m)}
+.f-name em{color:var(--g);font-style:normal}
+.f-note{font-size:0.6rem;color:var(--m);opacity:0.3}
+</style>
+</head>
+<body>
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="/shared.js"></script>
+
+<canvas id="c"></canvas>
+
+<nav>
+  <div class="n-left">
+    <img class="n-logo" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt=""/>
+    <div class="n-name">The-<em>Keymaker</em></div>
+  </div>
+  <div class="n-right">
+    <a href="/" class="btn btn-o">← Home</a>
+    <a href="/about.html" class="btn btn-o">About</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eye">Recruitment</div>
+    <h1>Apply to<br>The-<em style="color:var(--g);font-style:normal">Keymaker</em>.</h1>
+    <p class="hero-lead">We verify your character through EVE Online's own login — no forms to fill out by hand. Sign in, tell us a little about yourself if you want, and we'll take it from there.</p>
+  </div>
+
+  <div id="apply-start" class="sec">
+    <div class="step"><div class="step-n">01</div><div class="step-t"><strong>Sign in with EVE Online.</strong> This confirms it's really your character — nothing is auto-accepted.</div></div>
+    <div class="step"><div class="step-n">02</div><div class="step-t"><strong>Tell us about yourself.</strong> Timezone, playstyle, why you want in — totally optional.</div></div>
+    <div class="step"><div class="step-n">03</div><div class="step-t"><strong>We review it.</strong> Corp membership always happens in-game — this just gets the conversation started.</div></div>
+
+    <div class="cta-box">
+      <a href="/api/login" class="btn btn-g btn-lg">Continue with EVE Online</a>
+      <div class="cta-note">Already in the corp? <a href="/api/login" style="color:var(--g)">Log in</a> to reach the member dashboard instead.</div>
+    </div>
+  </div>
+
+  <div id="apply-done" class="sec">
+    <div class="done-badge">✓ Verified as <span id="done-name"></span></div>
+    <div class="apply-form">
+      <label for="apply-message">Optional message (timezone, playstyle, why join)</label>
+      <textarea id="apply-message" maxlength="1000" placeholder="Tell us a bit about yourself…"></textarea>
+      <div style="margin-top:1rem;display:flex;align-items:center;gap:1rem">
+        <button class="btn btn-g" id="apply-submit-btn" onclick="submitApplication()">Submit</button>
+        <span id="apply-status" class="apply-msg"></span>
+      </div>
+    </div>
+    <p class="hero-lead" style="margin-top:2rem;font-size:0.8rem">Your application is recorded. Actual corp membership still requires an in-game invite — feel free to also apply directly in the EVE client, or hop in Discord if you're already talking to someone here.</p>
+  </div>
+</div>
+
+<footer>
+  <div class="f-name">The-<em>Keymaker</em> · [THE-K] · Hek IV</div>
+  <div class="f-note">EVE Online © CCP hf. Independent fan site.</div>
+</footer>
+
+<script>
+initStarfield('c',{density:7000,rMin:0.15,rSpread:0.9,oMin:0.05,oSpread:0.35,alphaCap:0.5,flickerAmp:0.07,fullPageHeight:true});
+
+const params=new URLSearchParams(location.search);
+if(params.get('status')==='submitted'){
+  document.getElementById('apply-start').style.display='none';
+  document.getElementById('apply-done').style.display='block';
+  document.getElementById('done-name').textContent=params.get('name')||'you';
+}
+
+async function submitApplication(){
+  const btn=document.getElementById('apply-submit-btn');
+  const statusEl=document.getElementById('apply-status');
+  const message=document.getElementById('apply-message').value;
+  btn.disabled=true;
+  statusEl.textContent='Sending…';
+  statusEl.className='apply-msg';
+  try{
+    const r=await fetch('/api/apply-submit',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message}),
+    });
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.error||'Failed ('+r.status+')');
+    statusEl.textContent='Saved — thank you!';
+    statusEl.className='apply-msg ok';
+  }catch(e){
+    statusEl.textContent='Error: '+e.message;
+    statusEl.className='apply-msg err';
+    btn.disabled=false;
+  }
+}
+</script>
+</body>
+</html>

@@ -26,7 +26,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'characterId must be numeric' });
   }
 
-  const tokenData = await kvGet(`member:${characterId}:token`).catch(() => null);
+  let prefix = 'member';
+  let tokenData = await kvGet(`member:${characterId}:token`).catch(() => null);
+  if (!tokenData?.refreshToken) {
+    prefix = 'applicant';
+    tokenData = await kvGet(`applicant:${characterId}:token`).catch(() => null);
+  }
   if (!tokenData?.refreshToken) {
     return res.status(404).json({ error: 'This member has never logged into the dashboard — no ESI data available.' });
   }
@@ -36,13 +41,14 @@ export default async function handler(req, res) {
     return res.status(502).json({ error: "Failed to refresh this member's ESI access token — they may need to log in again." });
   }
 
-  await kvSet(`member:${characterId}:token`, {
+  await kvSet(`${prefix}:${characterId}:token`, {
     ...tokenData,
     refreshToken: newToken.refresh_token || tokenData.refreshToken,
     lastSeen: Date.now(),
   }).catch(() => {});
 
   const result = await fetchFullMemberData(newToken.access_token, characterId);
+  if (prefix === 'applicant') result.isApplicant = true;
   return res.status(200).json(result);
 }
 

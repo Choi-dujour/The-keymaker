@@ -288,6 +288,7 @@ tr:hover td{background:rgba(255,255,255,0.015)}
     <a class="sb-item nav-ceo" data-page="industry" href="#" style="display:none"><span class="sb-icon">⛏</span>Industry</a>
     <a class="sb-item nav-ceo" data-page="mining" href="#" style="display:none"><span class="sb-icon">◉</span>Mining</a>
     <a class="sb-item nav-ceo" data-page="assets" href="#" style="display:none"><span class="sb-icon">◎</span>Assets</a>
+    <a class="sb-item" data-page="applications" href="#" id="nav-applications" style="display:none"><span class="sb-icon">📥</span>Applications</a>
     <a class="sb-item" data-page="access" href="#" id="nav-access" style="display:none"><span class="sb-icon">🔑</span>Access</a>
     <div class="sb-section">Site</div>
     <a class="sb-item" href="/tracker.html" style="border-left:none"><span class="sb-icon">◎</span>Route Tracker</a>
@@ -481,6 +482,21 @@ tr:hover td{background:rgba(255,255,255,0.015)}
     </div>
   </div>
 
+  <!-- APPLICATIONS (CEO) -->
+  <div class="page" id="page-applications">
+    <div class="ph"><div class="ph-left"><div class="ph-eye">CEO</div><div class="ph-title">Applications</div></div></div>
+    <div class="notice">
+      Applicants verify their character through the same EVE SSO login members use — no data here was typed by hand except their optional message. Accepting/rejecting here is just a label for your own tracking: it does <strong>not</strong> touch actual corp membership, which still requires an in-game invite.
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><div class="tbl-title">Pending &amp; reviewed applications</div></div>
+      <div class="tbl-scroll">
+        <table><thead><tr><th>Character</th><th>Applied</th><th>Corp history</th><th>Message</th><th>Status</th><th></th></tr></thead>
+        <tbody id="applications-tbody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+
   <!-- ACCESS CONTROL (CEO) -->
   <div class="page" id="page-access">
     <div class="ph"><div class="ph-left"><div class="ph-eye">CEO</div><div class="ph-title">Access Control</div></div></div>
@@ -564,6 +580,7 @@ async function init(){
     document.getElementById('sb-role').textContent='CEO';
     document.getElementById('ceo-label').style.display='block';
     document.getElementById('nav-access').style.display='flex';
+    document.getElementById('nav-applications').style.display='flex';
     document.querySelectorAll('.sb-item.nav-ceo').forEach(el=>el.style.display='flex');
   }
   loadOverview();
@@ -1160,6 +1177,62 @@ async function checkKvHealth(){
   }
 }
 
+// ── APPLICATIONS (CEO) ──
+let applicationsData=[];
+async function loadApplications(){
+  const tb=document.getElementById('applications-tbody');
+  tb.innerHTML='<tr class="empty-row"><td colspan="6">Loading...</td></tr>';
+  try{
+    const r=await fetch('/api/applications-data');
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){
+      tb.innerHTML=`<tr class="empty-row"><td colspan="6">${esc(d.error||'Failed to load ('+r.status+')')}</td></tr>`;
+      return;
+    }
+    applicationsData=d.applications||[];
+    applicationsData.forEach(a=>{memberNameCache[a.characterId]=a.characterName});
+    renderApplications();
+  }catch(e){
+    tb.innerHTML=`<tr class="empty-row"><td colspan="6">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+function statusBadgeClass(status){
+  if(status==='accepted')return 'g';
+  if(status==='rejected')return 'r';
+  return 'y';
+}
+function renderApplications(){
+  const tb=document.getElementById('applications-tbody');
+  if(!applicationsData.length){tb.innerHTML='<tr class="empty-row"><td colspan="6">No applications yet.</td></tr>';return}
+  tb.innerHTML=applicationsData.map(a=>`
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:0.5rem;cursor:pointer" onclick="openMemberDetail('${a.characterId}')">
+        <img src="https://images.evetech.net/characters/${a.characterId}/portrait?size=32" style="width:24px;height:24px;border-radius:50%" loading="lazy"/>
+        <span style="font-size:0.8rem;color:var(--g)">${esc(a.characterName||'ID '+a.characterId)}</span>
+      </div></td>
+      <td style="font-size:0.7rem;color:var(--m)">${a.registeredAt?new Date(a.registeredAt).toLocaleDateString():'—'}</td>
+      <td style="font-family:var(--mono);font-size:0.75rem;color:var(--m2)">${a.corpHistoryCount??'—'} corp(s)</td>
+      <td style="font-size:0.75rem;color:var(--m2);max-width:220px">${a.message?esc(a.message).slice(0,140)+(a.message.length>140?'…':''):'<span style="color:var(--m)">—</span>'}</td>
+      <td><span class="badge ${statusBadgeClass(a.status)}">${esc(a.status||'pending')}</span></td>
+      <td style="display:flex;gap:0.35rem">
+        <button class="btn btn-g btn-sm" onclick="reviewApplication('${a.characterId}','accepted')">Accept</button>
+        <button class="btn btn-r btn-sm" onclick="reviewApplication('${a.characterId}','rejected')">Reject</button>
+      </td>
+    </tr>
+  `).join('');
+}
+async function reviewApplication(characterId,status){
+  try{
+    const r=await fetch('/api/application-review',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({characterId,status}),
+    });
+    if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||'HTTP '+r.status)}
+    await loadApplications();
+  }catch(e){alert('Failed to update: '+e.message)}
+}
+
 // ── REGISTERED MEMBERS (admin list, Access Control) ──
 let vettingData=[];
 async function loadMemberVetting(){
@@ -1238,7 +1311,7 @@ async function openMemberDetail(characterId){
       document.getElementById('mdm-body').innerHTML='<div class="mdm-empty">'+esc(d.error||'Failed to load ('+r.status+')')+'</div>';
       return;
     }
-    document.getElementById('mdm-sub').textContent='Fetched '+new Date(d.fetchedAt).toLocaleString();
+    document.getElementById('mdm-sub').textContent='Fetched '+new Date(d.fetchedAt).toLocaleString()+(d.isApplicant?' · Applicant — not yet a corp member':'');
     document.getElementById('mdm-body').innerHTML=renderMemberDetail(d);
   }catch(e){
     document.getElementById('mdm-body').innerHTML='<div class="mdm-empty">Error: '+esc(e.message)+'</div>';
@@ -1455,7 +1528,7 @@ function renderMemberDetail(d){
 }
 
 // ── NAV ──
-const loaders={members:loadMembers,tracker:loadTracker,killboard:loadKillboard,journal:loadJournal,wallet:loadWallet,industry:loadIndustry,mining:loadMining,assets:loadAssets};
+const loaders={members:loadMembers,tracker:loadTracker,killboard:loadKillboard,journal:loadJournal,wallet:loadWallet,industry:loadIndustry,mining:loadMining,assets:loadAssets,applications:loadApplications};
 const loaded=new Set(['overview']);
 document.querySelectorAll('.sb-item[data-page]').forEach(a=>{
   a.addEventListener('click',e=>{
