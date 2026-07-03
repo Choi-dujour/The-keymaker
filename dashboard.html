@@ -1183,7 +1183,7 @@ async function loadApplications(){
   const tb=document.getElementById('applications-tbody');
   tb.innerHTML='<tr class="empty-row"><td colspan="6">Loading...</td></tr>';
   try{
-    const r=await fetch('/api/applications-data');
+    const r=await fetch('/api/applications');
     const d=await r.json().catch(()=>({}));
     if(!r.ok){
       tb.innerHTML=`<tr class="empty-row"><td colspan="6">${esc(d.error||'Failed to load ('+r.status+')')}</td></tr>`;
@@ -1223,7 +1223,7 @@ function renderApplications(){
 }
 async function reviewApplication(characterId,status){
   try{
-    const r=await fetch('/api/application-review',{
+    const r=await fetch('/api/applications',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({characterId,status}),
@@ -1239,7 +1239,7 @@ async function loadMemberVetting(){
   const tb=document.getElementById('vetting-tbody');
   tb.innerHTML='<tr class="empty-row"><td colspan="4">Loading...</td></tr>';
   try{
-    const r=await fetch('/api/members-data');
+    const r=await fetch('/api/members');
     const d=await r.json().catch(()=>({}));
     if(!r.ok){
       tb.innerHTML=`<tr class="empty-row"><td colspan="4">${esc(d.error||'Failed to load ('+r.status+')')}</td></tr>`;
@@ -1269,7 +1269,7 @@ function renderVetting(){
 async function removeMember(id){
   if(!confirm('Remove stored data for character '+id+'? This deletes their KV token + vetting record.'))return;
   try{
-    const r=await fetch('/api/member-delete?characterId='+encodeURIComponent(id),{method:'POST'});
+    const r=await fetch('/api/members?action=delete&characterId='+encodeURIComponent(id),{method:'POST'});
     if(!r.ok)throw new Error('HTTP '+r.status);
     await loadMemberVetting();
   }catch(e){alert('Failed to remove: '+e.message)}
@@ -1277,7 +1277,7 @@ async function removeMember(id){
 async function purgeOrphaned(){
   if(!confirm('Delete KV records for any member no longer in WHITELIST_CHARACTER_IDS? This cannot be undone.'))return;
   try{
-    const r=await fetch('/api/member-purge',{method:'POST'});
+    const r=await fetch('/api/members?action=purge',{method:'POST'});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||('HTTP '+r.status));
     alert(d.purgedCount+' orphaned record(s) removed.');
