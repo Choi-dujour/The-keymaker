@@ -9,7 +9,7 @@
     "lint": "echo 'No linting configured'"
   },
   "dependencies": {
-    "@vercel/analytics": "^1.4.1"
+    "@vercel/analytics": "^2.0.1"
   },
   "devDependencies": {
     "terser": "^5.48.0"
