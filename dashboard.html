@@ -214,6 +214,30 @@ tr:hover td{background:rgba(255,255,255,0.015)}
 .asset-search{background:var(--s2);border:1px solid var(--b);color:var(--w);padding:0.4rem 0.75rem;font-family:'Inter',sans-serif;font-size:0.75rem;outline:none;transition:border-color .15s;flex:1;min-width:160px}
 .asset-search:focus{border-color:var(--g)}
 .asset-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--b);margin-bottom:1.5rem}
+
+/* MEMBER DETAIL MODAL */
+#members-tbody tr{cursor:pointer;transition:background .15s}
+#members-tbody tr:hover{background:var(--s2)}
+.mdm-overlay{position:fixed;inset:0;background:rgba(6,6,14,0.85);backdrop-filter:blur(4px);z-index:200;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:3rem 1.5rem}
+.mdm-overlay.show{display:flex}
+.mdm-box{background:var(--s);border:1px solid var(--b);max-width:1100px;width:100%;margin-bottom:3rem}
+.mdm-head{display:flex;align-items:center;gap:1rem;padding:1.25rem 1.5rem;border-bottom:1px solid var(--b);position:sticky;top:0;background:var(--s);z-index:1}
+.mdm-avatar{width:48px;height:48px;border-radius:4px;border:1px solid var(--b);object-fit:cover}
+.mdm-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700}
+.mdm-sub{font-size:0.72rem;color:var(--m);font-family:var(--mono);margin-top:0.2rem}
+.mdm-close{margin-left:auto;background:transparent;border:1px solid var(--b);color:var(--m2);font-size:0.9rem;width:32px;height:32px;cursor:pointer;transition:all .15s;flex-shrink:0}
+.mdm-close:hover{border-color:var(--red);color:var(--red)}
+.mdm-body{padding:1.5rem}
+.mdm-loading,.mdm-empty{padding:3rem;text-align:center;color:var(--m);font-family:var(--mono);font-size:0.85rem}
+.mdm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--b);margin-bottom:1px}
+.mdm-cell{background:var(--s2);padding:1rem 1.25rem;min-width:0}
+.mdm-cell h4{font-size:0.55rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.5rem;font-weight:700}
+.mdm-cell .mv{font-family:var(--mono);font-size:0.8rem;color:var(--w);line-height:1.7;overflow-wrap:break-word}
+.mdm-cell .mv .err{color:var(--red);font-style:italic}
+.mdm-section-title{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;margin:1.5rem 0 0.6rem;padding-top:1.25rem;border-top:1px solid var(--b)}
+.mdm-station{background:var(--s2);border:1px solid var(--b);padding:0.9rem 1.1rem;margin-bottom:0.6rem}
+.mdm-station-name{font-family:var(--mono);font-size:0.78rem;color:var(--g);margin-bottom:0.5rem}
+.mdm-item-row{display:flex;justify-content:space-between;gap:1rem;font-size:0.75rem;padding:0.2rem 0;color:var(--m2)}
 </style>
 </head>
 <body>
@@ -283,7 +307,7 @@ tr:hover td{background:rgba(255,255,255,0.015)}
   <div class="page" id="page-members">
     <div class="ph"><div class="ph-left"><div class="ph-eye">Corporation</div><div class="ph-title">Members</div></div></div>
     <div class="tbl-wrap">
-      <div class="tbl-head"><div class="tbl-title">Active pilots</div></div>
+      <div class="tbl-head"><div class="tbl-title">Active pilots</div><div style="font-size:0.7rem;color:var(--m)">Click a pilot for their full ESI profile</div></div>
       <div class="tbl-scroll">
         <table><thead><tr><th>Character</th><th>Status</th></tr></thead>
         <tbody id="members-tbody"><tr class="empty-row"><td colspan="2">Loading...</td></tr></tbody></table>
@@ -470,16 +494,31 @@ tr:hover td{background:rgba(255,255,255,0.015)}
 
     <div class="tbl-wrap" style="margin-top:1.5rem">
       <div class="tbl-head">
-        <div class="tbl-title">Member Vetting (KV data)</div>
+        <div class="tbl-title">Registered Members</div>
         <div style="display:flex;gap:0.5rem">
           <button class="btn btn-o btn-sm" onclick="exportMemberData()">Export JSON</button>
           <button class="btn btn-r btn-sm" onclick="purgeOrphaned()">Purge Orphaned</button>
         </div>
       </div>
       <div class="tbl-scroll">
-        <table><thead><tr><th>Character</th><th>Wallet</th><th>Total SP</th><th>Assets</th><th>Corp switches</th><th>Risk</th><th>Last Fetched</th><th></th></tr></thead>
-        <tbody id="vetting-tbody"><tr class="empty-row"><td colspan="8">Loading...</td></tr></tbody></table>
+        <table><thead><tr><th>Character</th><th>Registered</th><th>Last Fetched</th><th></th></tr></thead>
+        <tbody id="vetting-tbody"><tr class="empty-row"><td colspan="4">Loading...</td></tr></tbody></table>
       </div>
+    </div>
+  </div>
+
+  <!-- MEMBER DETAIL MODAL -->
+  <div class="mdm-overlay" id="mdm-overlay" onclick="if(event.target===this)closeMemberDetail()">
+    <div class="mdm-box">
+      <div class="mdm-head">
+        <img class="mdm-avatar" id="mdm-avatar" src="" alt=""/>
+        <div>
+          <div class="mdm-title" id="mdm-title">--</div>
+          <div class="mdm-sub" id="mdm-sub">--</div>
+        </div>
+        <button class="mdm-close" onclick="closeMemberDetail()">✕</button>
+      </div>
+      <div class="mdm-body" id="mdm-body"></div>
     </div>
   </div>
 
@@ -573,6 +612,7 @@ async function loadOverview(){
 }
 
 // ── MEMBERS ──
+let memberNameCache={};
 async function loadMembers(){
   const tb=document.getElementById('members-tbody');
   try{
@@ -582,8 +622,9 @@ async function loadMembers(){
       method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(chunk)
     });
     const names=await nr.json();
+    names.forEach(c=>{memberNameCache[c.id]=c.name});
     tb.innerHTML=names.map(c=>`
-      <tr><td><div class="td-port">
+      <tr onclick="openMemberDetail(${c.id})"><td><div class="td-port">
         <img class="td-img" src="https://images.evetech.net/characters/${c.id}/portrait?size=32" loading="lazy"/>
         ${esc(c.name)}
       </div></td><td><span class="badge g">Active</span></td></tr>`).join('');
@@ -1104,43 +1145,34 @@ async function checkKvHealth(){
   }
 }
 
-// ── MEMBER VETTING ──
+// ── REGISTERED MEMBERS (admin list, Access Control) ──
 let vettingData=[];
-function riskColor(score){
-  if(score>=15)return 'var(--red)';
-  if(score>=5)return 'var(--yellow)';
-  return 'var(--g)';
-}
 async function loadMemberVetting(){
   const tb=document.getElementById('vetting-tbody');
-  tb.innerHTML='<tr class="empty-row"><td colspan="8">Loading...</td></tr>';
+  tb.innerHTML='<tr class="empty-row"><td colspan="4">Loading...</td></tr>';
   try{
     const r=await fetch('/api/members-data');
     const d=await r.json().catch(()=>({}));
     if(!r.ok){
-      tb.innerHTML=`<tr class="empty-row"><td colspan="8">${esc(d.error||'Failed to load ('+r.status+')')}</td></tr>`;
+      tb.innerHTML=`<tr class="empty-row"><td colspan="4">${esc(d.error||'Failed to load ('+r.status+')')}</td></tr>`;
       return;
     }
     vettingData=d.members||[];
     renderVetting();
   }catch(e){
-    tb.innerHTML=`<tr class="empty-row"><td colspan="8">Error: ${esc(e.message)}</td></tr>`;
+    tb.innerHTML=`<tr class="empty-row"><td colspan="4">Error: ${esc(e.message)}</td></tr>`;
   }
 }
 function renderVetting(){
   const tb=document.getElementById('vetting-tbody');
-  if(!vettingData.length){tb.innerHTML='<tr class="empty-row"><td colspan="8">No member data stored yet.</td></tr>';return}
+  if(!vettingData.length){tb.innerHTML='<tr class="empty-row"><td colspan="4">No member data stored yet.</td></tr>';return}
   tb.innerHTML=vettingData.map(m=>`
     <tr>
       <td><div style="display:flex;align-items:center;gap:0.5rem">
         <img src="https://images.evetech.net/characters/${m.characterId}/portrait?size=32" style="width:24px;height:24px;border-radius:50%" loading="lazy"/>
         <span style="font-size:0.8rem">${esc(m.characterName||'ID '+m.characterId)}</span>
       </div></td>
-      <td style="font-family:var(--mono);font-size:0.78rem">${m.walletBalance!=null?fisk(m.walletBalance)+' ISK':'—'}</td>
-      <td style="font-family:var(--mono);font-size:0.78rem">${m.totalSP?m.totalSP.toLocaleString():'—'}</td>
-      <td style="font-family:var(--mono);font-size:0.78rem">${m.assetCount??'—'}</td>
-      <td style="font-family:var(--mono);font-size:0.78rem">${m.corpHistoryCount??'—'}</td>
-      <td style="font-family:var(--mono);font-size:0.78rem;color:${riskColor(m.riskScore||0)};font-weight:700">${m.riskScore||0}</td>
+      <td style="font-size:0.7rem;color:var(--m)">${m.registeredAt?new Date(m.registeredAt).toLocaleDateString():'—'}</td>
       <td style="font-size:0.7rem;color:var(--m)">${m.lastFetched?new Date(m.lastFetched).toLocaleDateString():'—'}</td>
       <td><button class="btn btn-r btn-sm" onclick="removeMember('${m.characterId}')">Remove</button></td>
     </tr>
@@ -1172,6 +1204,116 @@ function exportMemberData(){
   a.download='member-vetting-'+Date.now()+'.json';
   document.body.appendChild(a);a.click();a.remove();
   URL.revokeObjectURL(a.href);
+}
+
+// ── MEMBER DETAIL MODAL (full ESI fetch on click) ──
+async function openMemberDetail(characterId){
+  const ov=document.getElementById('mdm-overlay');
+  const name=memberNameCache[characterId]||('Character #'+characterId);
+  document.getElementById('mdm-avatar').src='https://images.evetech.net/characters/'+characterId+'/portrait?size=64';
+  document.getElementById('mdm-title').textContent=name;
+  document.getElementById('mdm-sub').textContent='Loading full ESI profile…';
+  document.getElementById('mdm-body').innerHTML='<div class="mdm-loading">Fetching everything ESI has on this pilot — this can take a few seconds…</div>';
+  ov.classList.add('show');
+  try{
+    const r=await fetch('/api/member-detail?characterId='+characterId);
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){
+      document.getElementById('mdm-sub').textContent='';
+      document.getElementById('mdm-body').innerHTML='<div class="mdm-empty">'+esc(d.error||'Failed to load ('+r.status+')')+'</div>';
+      return;
+    }
+    document.getElementById('mdm-sub').textContent='Fetched '+new Date(d.fetchedAt).toLocaleString();
+    document.getElementById('mdm-body').innerHTML=renderMemberDetail(d);
+  }catch(e){
+    document.getElementById('mdm-body').innerHTML='<div class="mdm-empty">Error: '+esc(e.message)+'</div>';
+  }
+}
+function closeMemberDetail(){
+  document.getElementById('mdm-overlay').classList.remove('show');
+}
+function mdmCell(title,html){
+  return '<div class="mdm-cell"><h4>'+esc(title)+'</h4><div class="mv">'+html+'</div></div>';
+}
+function mdmErrOr(d,key,html){
+  if(d.errors&&d.errors[key])return '<span class="err">Not available — '+esc(d.errors[key])+'</span>';
+  return html;
+}
+function nameOf(d,id){ return (d.names&&d.names[id])||('#'+id); }
+function renderMemberDetail(d){
+  const n=d.names||{};
+  let h='';
+
+  h+='<div class="mdm-grid">';
+  h+=mdmCell('Profile',mdmErrOr(d,'profile',d.profile?(
+    'Born '+(d.profile.birthday?new Date(d.profile.birthday).toLocaleDateString():'—')+'<br>'+
+    'Security status: '+(d.profile.security_status!=null?d.profile.security_status.toFixed(2):'—')+'<br>'+
+    'Corp history: '+((d.corpHistory||[]).length)+' entries'
+  ):'—'));
+  h+=mdmCell('Wallet',mdmErrOr(d,'wallet',d.wallet!=null?(
+    fisk(d.wallet)+' ISK<br>'+
+    'Recent journal entries: '+((d.walletJournal||[]).length)
+  ):'—'));
+  h+=mdmCell('Skills',mdmErrOr(d,'skills',d.skills?(
+    (d.skills.total_sp||0).toLocaleString()+' SP total<br>'+
+    (d.skills.skills||[]).length+' skills trained<br>'+
+    'Queue: '+((d.skillQueue||[]).length)+' entries'
+  ):'—'));
+  h+=mdmCell('Location, ship & status',mdmErrOr(d,'location',
+    (d.location?('System: '+nameOf(d,d.location.solar_system_id)+'<br>'):'')+
+    (d.ship?('Ship: '+esc(d.ship.ship_name||'—')+' ('+nameOf(d,d.ship.ship_type_id)+')<br>'):'')+
+    (d.online?('Online: '+(d.online.online?'yes':'no')+(d.online.last_login?' · last login '+new Date(d.online.last_login).toLocaleDateString():'')):'')
+  ));
+  h+=mdmCell('Clones & implants',mdmErrOr(d,'clones',
+    ((d.clones&&d.clones.jump_clones)?d.clones.jump_clones.length:0)+' jump clone(s)<br>'+
+    'Active implants: '+((d.implants||[]).map(id=>esc(nameOf(d,id))).join(', ')||'none')
+  ));
+  h+=mdmCell('Loyalty & fatigue',
+    'LP: '+((d.loyaltyPoints||[]).reduce((s,l)=>s+(l.loyalty_points||0),0).toLocaleString())+' across '+((d.loyaltyPoints||[]).length)+' corp(s)<br>'+
+    (d.fatigue&&d.fatigue.jump_fatigue_expire_date?('Jump fatigue until '+new Date(d.fatigue.jump_fatigue_expire_date).toLocaleString()):'No active jump fatigue')
+  );
+  h+='</div>';
+
+  h+='<div class="mdm-section-title">Contacts, standings &amp; corp history</div>';
+  h+='<div class="mdm-grid">';
+  h+=mdmCell('Contacts',((d.contacts||[]).length)+' saved contact(s)');
+  h+=mdmCell('NPC standings',((d.standings||[]).length)+' faction/corp standing(s)');
+  h+=mdmCell('Corp history',(d.corpHistory||[]).slice(0,8).map(c=>esc(nameOf(d,c.corporation_id))+' <span style="color:var(--m)">('+new Date(c.start_date).toLocaleDateString()+')</span>').join('<br>')||'—');
+  h+='</div>';
+
+  h+='<div class="mdm-section-title">Industry, mining &amp; contracts</div>';
+  h+='<div class="mdm-grid">';
+  h+=mdmCell('Industry jobs',mdmErrOr(d,'industryJobs',((d.industryJobs||[]).length)+' job(s)'));
+  h+=mdmCell('Mining ledger',mdmErrOr(d,'miningLedger',((d.miningLedger||[]).length)+' entries (recent)'));
+  h+=mdmCell('Contracts',mdmErrOr(d,'contracts',((d.contracts||[]).length)+' contract(s)'));
+  h+=mdmCell('Blueprints',mdmErrOr(d,'blueprints',(d.blueprints||[]).slice(0,10).map(b=>esc(nameOf(d,b.type_id))).join(', ')+(((d.blueprints||[]).length>10)?' …':'')||'none'));
+  h+='</div>';
+
+  h+='<div class="mdm-section-title">Medals, titles &amp; notifications</div>';
+  h+='<div class="mdm-grid">';
+  h+=mdmCell('Medals',((d.medals||[]).length)+' medal(s)');
+  h+=mdmCell('Titles',((d.titles||[]).map(t=>esc(t.name)).join(', ')||'none'));
+  h+=mdmCell('Notifications',((d.notifications||[]).length)+' unread/recent');
+  h+=mdmCell('Calendar',((d.calendar||[]).length)+' upcoming event(s)');
+  h+='</div>';
+
+  h+='<div class="mdm-section-title">Mail (headers only)</div>';
+  h+='<div class="mdm-grid"><div class="mdm-cell" style="grid-column:1/-1"><div class="mv">'+
+    ((d.mailHeaders||[]).slice(0,10).map(m=>'From '+esc(nameOf(d,m.from))+': <strong>'+esc(m.subject||'(no subject)')+'</strong> <span style="color:var(--m)">'+(m.timestamp?new Date(m.timestamp).toLocaleDateString():'')+'</span>').join('<br>')||mdmErrOr(d,'mailHeaders','No mail.'))+
+  '</div></div></div>';
+
+  h+='<div class="mdm-section-title">Assets by station ('+(d.assetCount||0)+' total)</div>';
+  if((d.assetsByLocation||[]).length){
+    h+=d.assetsByLocation.map(g=>
+      '<div class="mdm-station"><div class="mdm-station-name">'+esc(g.station)+'</div>'+
+      g.items.map(it=>'<div class="mdm-item-row"><span>'+esc(it.name)+(it.singleton?'':' &times;'+it.quantity)+'</span><span>'+esc(it.flag)+'</span></div>').join('')+
+      '</div>'
+    ).join('');
+  }else{
+    h+='<div class="mdm-empty">'+mdmErrOr(d,'assetsRaw','No assets found.')+'</div>';
+  }
+
+  return h;
 }
 
 // ── NAV ──
