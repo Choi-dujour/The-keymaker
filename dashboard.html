@@ -315,8 +315,19 @@ tr:hover td{background:rgba(255,255,255,0.015)}
       <div class="card"><div class="card-l" id="ov-wallet-label">Wallet</div><div class="card-v" id="ov-wallet" style="font-size:1rem;padding-top:0.3rem">—</div></div>
       <div class="card"><div class="card-l">Kills (30d)</div><div class="card-v" id="ov-kills">—</div></div>
       <div class="card"><div class="card-l">Industry</div><div class="card-v" id="ov-jobs">—</div><div class="card-sub">Active jobs</div></div>
+      <div class="card ov-ceo" style="display:none"><div class="card-l">Applications</div><div class="card-v" id="ov-pending-apps">—</div><div class="card-sub">Pending review</div></div>
     </div>
     <div class="notice"><strong>Live data</strong> fetched from ESI API using your authenticated session. Corp-level data requires Director+ roles in-game.</div>
+
+    <div class="tbl-wrap ov-ceo" style="display:none">
+      <div class="tbl-head"><div class="tbl-title">Latest Applications</div><a href="#" onclick="document.querySelector('[data-page=applications]').click();return false" style="font-size:0.7rem;color:var(--g);text-decoration:none">View all →</a></div>
+      <div style="padding:1rem 1.25rem"><div class="mdm-list" id="ov-apps-list"><div class="mdm-empty-note">Loading…</div></div></div>
+    </div>
+
+    <div class="tbl-wrap ov-ceo" style="display:none">
+      <div class="tbl-head"><div class="tbl-title">Recently Registered</div><a href="#" onclick="document.querySelector('[data-page=access]').click();return false" style="font-size:0.7rem;color:var(--g);text-decoration:none">View all →</a></div>
+      <div style="padding:1rem 1.25rem"><div class="mdm-list" id="ov-members-list"><div class="mdm-empty-note">Loading…</div></div></div>
+    </div>
   </div>
 
   <!-- MEMBERS -->
@@ -582,6 +593,7 @@ async function init(){
     document.getElementById('nav-access').style.display='flex';
     document.getElementById('nav-applications').style.display='flex';
     document.querySelectorAll('.sb-item.nav-ceo').forEach(el=>el.style.display='flex');
+    document.querySelectorAll('.ov-ceo').forEach(el=>el.style.display='');
   }
   loadOverview();
 }
@@ -630,6 +642,8 @@ async function loadOverview(){
     esi(`/corporations/${CORP}/industry/jobs/?include_completed=false`, true).then(j=>{
       document.getElementById('ov-jobs').textContent=j.length;
     }).catch(()=>{document.getElementById('ov-jobs').textContent='N/A'}),
+
+    ...(SESSION.isCeo ? [loadOverviewApplications(), loadOverviewRegistered()] : []),
   ]);
 
   const ts = document.getElementById('ov-last-update');
@@ -640,6 +654,48 @@ async function loadOverview(){
     overviewInterval = setInterval(() => {
       if (document.getElementById('page-overview').classList.contains('active')) loadOverview();
     }, 90000); // auto-refresh every 90s while overview is open
+  }
+}
+
+async function loadOverviewApplications(){
+  const list = document.getElementById('ov-apps-list');
+  try{
+    const r = await fetch('/api/applications');
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error||'HTTP '+r.status);
+    const apps = d.applications||[];
+    apps.forEach(a=>{memberNameCache[a.characterId]=a.characterName});
+    document.getElementById('ov-pending-apps').textContent = apps.filter(a=>(a.status||'pending')==='pending').length;
+    if(!apps.length){ list.innerHTML='<div class="mdm-empty-note">No applications yet.</div>'; return }
+    list.innerHTML = apps.slice(0,5).map(a=>`
+      <div class="mdm-row" style="cursor:pointer" onclick="openMemberDetail('${a.characterId}')">
+        <span class="lbl">${esc(a.characterName||'ID '+a.characterId)}</span>
+        <span class="badge ${statusBadgeClass(a.status)}">${esc(a.status||'pending')}</span>
+      </div>
+    `).join('');
+  }catch(e){
+    document.getElementById('ov-pending-apps').textContent='N/A';
+    list.innerHTML='<div class="mdm-empty-note">Error: '+esc(e.message)+'</div>';
+  }
+}
+
+async function loadOverviewRegistered(){
+  const list = document.getElementById('ov-members-list');
+  try{
+    const r = await fetch('/api/members');
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error||'HTTP '+r.status);
+    const members = d.members||[];
+    members.forEach(m=>{memberNameCache[m.characterId]=m.characterName});
+    if(!members.length){ list.innerHTML='<div class="mdm-empty-note">No members registered yet.</div>'; return }
+    list.innerHTML = members.slice(0,5).map(m=>`
+      <div class="mdm-row" style="cursor:pointer" onclick="openMemberDetail('${m.characterId}')">
+        <span class="lbl">${esc(m.characterName||'ID '+m.characterId)}</span>
+        <span class="sub">${m.registeredAt?new Date(m.registeredAt).toLocaleDateString():'—'}</span>
+      </div>
+    `).join('');
+  }catch(e){
+    list.innerHTML='<div class="mdm-empty-note">Error: '+esc(e.message)+'</div>';
   }
 }
 
