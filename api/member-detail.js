@@ -72,7 +72,11 @@ async function fetchFullMemberData(accessToken, characterId) {
   async function esiGet(path, auth = true) {
     const url = `${ESI}${path}${path.includes('?') ? '&' : '?'}datasource=tranquility`;
     const r = await fetch(url, auth ? { headers } : undefined);
-    if (!r.ok) throw new Error(`ESI ${r.status} on ${path}`);
+    if (!r.ok) {
+      const e = new Error(`ESI ${r.status} on ${path}`);
+      e.status = r.status;
+      throw e;
+    }
     return r.json();
   }
 
@@ -82,7 +86,11 @@ async function fetchFullMemberData(accessToken, characterId) {
       const url = `${ESI}${path}${path.includes('?') ? '&' : '?'}datasource=tranquility&page=${page}`;
       const r = await fetch(url, { headers });
       if (!r.ok) {
-        if (page === 1) throw new Error(`ESI ${r.status} on ${path}`);
+        if (page === 1) {
+          const e = new Error(`ESI ${r.status} on ${path}`);
+          e.status = r.status;
+          throw e;
+        }
         break;
       }
       const data = await r.json();
@@ -94,11 +102,15 @@ async function fetchFullMemberData(accessToken, characterId) {
     return all;
   }
 
-  async function section(name, fn) {
+  async function section(name, fn, opts = {}) {
     try {
       out[name] = await fn();
     } catch (e) {
-      out.errors[name] = e.message;
+      if (opts.newScope && e.status === 403) {
+        out.errors[name] = 'Requires this member to log in again — new permission not yet granted.';
+      } else {
+        out.errors[name] = e.message;
+      }
     }
   }
 
@@ -130,21 +142,31 @@ async function fetchFullMemberData(accessToken, characterId) {
     section('calendar', () => esiGet(`/characters/${characterId}/calendar/`)),
     section('mailHeaders', () => esiGet(`/characters/${characterId}/mail/`)),
     section('assetsRaw', () => esiGetPaged(`/characters/${characterId}/assets/`, 5)),
+    section('characterStats', () => esiGet(`/characters/${characterId}/stats/`), { newScope: true }),
+    section('fwStats', () => esiGet(`/characters/${characterId}/fw/stats/`), { newScope: true }),
+    section('bookmarks', () => esiGetPaged(`/characters/${characterId}/bookmarks/`, 2), { newScope: true }),
   ]);
 
-  await resolveAssetLocations(out, headers);
+  await resolveEverything(out, headers);
   delete out.assetsRaw;
-  await enrichNames(out, headers);
 
   return out;
 }
 
-// Collects every other reference ID scattered across sections (corp history, contacts,
-// mail senders, implants, clone bay locations, blueprints, current ship, standings, current
-// system) and resolves them all in one batch, so the frontend can show names instead of bare
-// IDs without needing its own ESI calls.
-async function enrichNames(out, headers) {
+// Collects every reference ID scattered across every section — asset types/locations, corp
+// history, contacts, mail senders, implants, clone bay locations, blueprints, current ship,
+// standings, current system, contract parties/locations, industry job blueprints/products/
+// facilities, bookmark locations — and resolves them all in one batch, so the frontend can show
+// names instead of bare IDs without needing its own ESI calls. Also groups top-level assets
+// (ones not packed inside another asset/ship) by their resolved station/structure name.
+async function resolveEverything(out, headers) {
+  const assets = out.assetsRaw || [];
+  const itemIds = new Set(assets.map(a => a.item_id));
+  const topLevelAssets = assets.filter(a => !itemIds.has(a.location_id));
+
   const ids = new Set();
+  assets.forEach(a => ids.add(a.type_id));
+  topLevelAssets.forEach(a => ids.add(a.location_id));
   (out.corpHistory || []).forEach(h => ids.add(h.corporation_id));
   (out.contacts || []).forEach(c => ids.add(c.contact_id));
   (out.mailHeaders || []).forEach(m => { if (m.from) ids.add(m.from); });
@@ -157,10 +179,29 @@ async function enrichNames(out, headers) {
   if (out.ship?.ship_type_id) ids.add(out.ship.ship_type_id);
   (out.standings || []).forEach(s => ids.add(s.from_id));
   if (out.location?.solar_system_id) ids.add(out.location.solar_system_id);
+  (out.contracts || []).forEach(c => {
+    if (c.issuer_id) ids.add(c.issuer_id);
+    if (c.assignee_id) ids.add(c.assignee_id);
+    if (c.start_location_id) ids.add(c.start_location_id);
+    if (c.end_location_id) ids.add(c.end_location_id);
+  });
+  (out.industryJobs || []).forEach(j => {
+    if (j.blueprint_type_id) ids.add(j.blueprint_type_id);
+    if (j.product_type_id) ids.add(j.product_type_id);
+    if (j.facility_id) ids.add(j.facility_id);
+  });
+  (out.miningLedger || []).forEach(m => { if (m.type_id) ids.add(m.type_id); });
+  (out.bookmarks || []).forEach(b => {
+    if (b.location_id) ids.add(b.location_id);
+    if (b.item?.type_id) ids.add(b.item.type_id);
+  });
+  if (out.fwStats?.faction_id) ids.add(out.fwStats.faction_id);
 
   const idList = [...ids].filter(id => typeof id === 'number' && id > 0);
   const resolved = await resolveNamesBatch(idList);
 
+  // /universe/names/ resolves NPC stations, systems, corps, characters etc. but never
+  // player-owned structures (citadels) — those need a per-id authenticated lookup.
   const missing = idList.filter(id => !resolved[id] && id > 1e12);
   await Promise.allSettled(missing.map(async id => {
     try {
@@ -173,33 +214,13 @@ async function enrichNames(out, headers) {
   }));
 
   out.names = resolved;
-}
-
-async function resolveAssetLocations(out, headers) {
-  const assets = out.assetsRaw;
-  if (!Array.isArray(assets)) {
-    out.assetsByLocation = [];
-    return;
-  }
-
-  const itemIds = new Set(assets.map(a => a.item_id));
-  const typeIds = [...new Set(assets.map(a => a.type_id))];
-  // Assets whose location_id is itself another asset's item_id are packed inside
-  // that container/ship — only top-level assets sit directly "at" a station/structure.
-  const topLevel = assets.filter(a => !itemIds.has(a.location_id));
-  const locationIds = [...new Set(topLevel.map(a => a.location_id))];
-
-  const [typeNames, locationNames] = await Promise.all([
-    resolveNamesBatch(typeIds),
-    resolveLocationNames(locationIds, headers),
-  ]);
 
   const groups = {};
-  for (const a of topLevel) {
-    const locName = locationNames[a.location_id] || `Location #${a.location_id}`;
+  for (const a of topLevelAssets) {
+    const locName = resolved[a.location_id] || `Location #${a.location_id}`;
     if (!groups[locName]) groups[locName] = [];
     groups[locName].push({
-      name: typeNames[a.type_id] || `Type #${a.type_id}`,
+      name: resolved[a.type_id] || `Type #${a.type_id}`,
       quantity: a.quantity,
       flag: a.location_flag,
       singleton: a.is_singleton,
@@ -223,23 +244,6 @@ async function resolveNamesBatch(ids) {
       if (Array.isArray(names)) names.forEach(n => { out[n.id] = n.name; });
     } catch {}
   }
-  return out;
-}
-
-async function resolveLocationNames(ids, headers) {
-  const out = {};
-  // /universe/names/ resolves NPC stations & systems but never player structures.
-  Object.assign(out, await resolveNamesBatch(ids));
-  const remaining = ids.filter(id => !out[id]);
-  await Promise.allSettled(remaining.map(async id => {
-    try {
-      const r = await fetch(`${ESI}/universe/structures/${id}/?datasource=tranquility`, { headers });
-      if (r.ok) {
-        const info = await r.json();
-        out[id] = info.name;
-      }
-    } catch {}
-  }));
   return out;
 }
 

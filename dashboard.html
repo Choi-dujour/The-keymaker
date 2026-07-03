@@ -238,6 +238,21 @@ tr:hover td{background:rgba(255,255,255,0.015)}
 .mdm-station{background:var(--s2);border:1px solid var(--b);padding:0.9rem 1.1rem;margin-bottom:0.6rem}
 .mdm-station-name{font-family:var(--mono);font-size:0.78rem;color:var(--g);margin-bottom:0.5rem}
 .mdm-item-row{display:flex;justify-content:space-between;gap:1rem;font-size:0.75rem;padding:0.2rem 0;color:var(--m2)}
+.mdm-full{background:var(--s2);border:1px solid var(--b);padding:1.1rem 1.25rem;margin-bottom:1px}
+.mdm-full h4{font-size:0.55rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.7rem;font-weight:700}
+.mdm-list{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:0.3rem}
+.mdm-row{display:flex;justify-content:space-between;align-items:center;gap:1rem;font-size:0.78rem;font-family:var(--mono);padding:0.22rem 0;border-bottom:1px solid var(--b)}
+.mdm-row:last-child{border-bottom:none}
+.mdm-row .lbl{color:var(--w);overflow-wrap:anywhere}
+.mdm-row .sub{color:var(--m);font-size:0.68rem;white-space:nowrap;flex-shrink:0}
+.mdm-badge{display:inline-block;padding:0.1rem 0.5rem;border-radius:2px;font-size:0.68rem;font-family:var(--mono);white-space:nowrap}
+.mdm-badge.pos{background:rgba(57,255,20,0.12);color:var(--g)}
+.mdm-badge.neg{background:rgba(255,68,85,0.12);color:var(--red)}
+.mdm-badge.neu{background:rgba(128,128,160,0.15);color:var(--m2)}
+.mdm-stat-row{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.85rem}
+.mdm-stat-chip{background:var(--s);border:1px solid var(--b);padding:0.4rem 0.75rem;font-family:var(--mono);font-size:0.68rem;color:var(--m2)}
+.mdm-stat-chip b{color:var(--w);font-size:0.88rem;display:block;margin-top:0.2rem;font-weight:700}
+.mdm-empty-note{color:var(--m);font-family:var(--mono);font-size:0.78rem;font-style:italic}
 </style>
 </head>
 <body>
@@ -1236,24 +1251,147 @@ function mdmCell(title,html){
   return '<div class="mdm-cell"><h4>'+esc(title)+'</h4><div class="mv">'+html+'</div></div>';
 }
 function mdmErrOr(d,key,html){
-  if(d.errors&&d.errors[key])return '<span class="err">Not available — '+esc(d.errors[key])+'</span>';
+  if(d.errors&&d.errors[key])return '<span class="mdm-empty-note">'+esc(d.errors[key])+'</span>';
   return html;
 }
 function nameOf(d,id){ return (d.names&&d.names[id])||('#'+id); }
+function prettyKey(k){
+  return String(k||'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+}
+function standingBadge(v){
+  const cls=v>0?'pos':v<0?'neg':'neu';
+  return '<span class="mdm-badge '+cls+'">'+(v>0?'+':'')+v.toFixed(2)+'</span>';
+}
+function renderContacts(d){
+  const list=d.contacts||[];
+  if(!list.length)return mdmErrOr(d,'contacts','<span class="mdm-empty-note">No saved contacts.</span>');
+  const rows=list.slice(0,20).map(c=>'<div class="mdm-row"><span class="lbl">'+esc(nameOf(d,c.contact_id))+'</span>'+standingBadge(c.standing||0)+'</div>').join('');
+  const more=list.length>20?'<div class="mdm-empty-note">+'+(list.length-20)+' more</div>':'';
+  return '<div class="mdm-list">'+rows+'</div>'+more;
+}
+function renderStandings(d){
+  const list=d.standings||[];
+  if(!list.length)return mdmErrOr(d,'standings','<span class="mdm-empty-note">No standings recorded.</span>');
+  const rows=list.map(s=>'<div class="mdm-row"><span class="lbl">'+esc(nameOf(d,s.from_id))+'</span>'+standingBadge(s.standing||0)+'</div>').join('');
+  return '<div class="mdm-list">'+rows+'</div>';
+}
+function renderCorpHistory(d){
+  const list=d.corpHistory||[];
+  if(!list.length)return '<span class="mdm-empty-note">No corp history.</span>';
+  const rows=list.map(c=>'<div class="mdm-row"><span class="lbl">'+esc(nameOf(d,c.corporation_id))+'</span><span class="sub">'+new Date(c.start_date).toLocaleDateString()+'</span></div>').join('');
+  return '<div class="mdm-list">'+rows+'</div>';
+}
+function renderJournal(d){
+  const list=d.walletJournal||[];
+  if(!list.length)return mdmErrOr(d,'walletJournal','<span class="mdm-empty-note">No recent transactions.</span>');
+  const rows=list.slice(0,15).map(j=>{
+    const amt=j.amount||0;
+    const cls=amt>0?'amount-pos':amt<0?'amount-neg':'amount-neu';
+    const sign=amt>0?'+':amt<0?'-':'';
+    return '<div class="mdm-row"><span class="lbl">'+esc(prettyKey(j.ref_type||'unknown'))+'<span class="sub" style="margin-left:0.5rem">'+(j.date?new Date(j.date).toLocaleDateString():'')+'</span></span><span class="'+cls+'">'+sign+fisk(Math.abs(amt))+' ISK</span></div>';
+  }).join('');
+  return '<div class="mdm-list">'+rows+'</div>';
+}
+function renderCountedList(list,keyFn,labelFn,subFn,limit){
+  if(!list.length)return null;
+  const counts={};
+  list.forEach(x=>{const k=keyFn(x);counts[k]=(counts[k]||0)+1});
+  const chips=Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([k,c])=>'<div class="mdm-stat-chip">'+esc(prettyKey(k))+'<b>'+c+'</b></div>').join('');
+  const rows=list.slice(0,limit).map(x=>'<div class="mdm-row"><span class="lbl">'+labelFn(x)+'</span><span class="sub">'+subFn(x)+'</span></div>').join('');
+  return '<div class="mdm-stat-row">'+chips+'</div><div class="mdm-list">'+rows+'</div>';
+}
+function renderNotifications(d){
+  const list=d.notifications||[];
+  if(!list.length)return mdmErrOr(d,'notifications','<span class="mdm-empty-note">No notifications.</span>');
+  return renderCountedList(list,n=>n.type,n=>esc(prettyKey(n.type)),n=>n.timestamp?new Date(n.timestamp).toLocaleDateString():'',8);
+}
+function renderContracts(d){
+  const list=d.contracts||[];
+  if(!list.length)return mdmErrOr(d,'contracts','<span class="mdm-empty-note">No contracts.</span>');
+  return renderCountedList(list,c=>c.status,
+    c=>esc(prettyKey(c.type))+' — '+esc(c.title||'untitled'),
+    c=>{const price=c.price||c.reward||c.collateral||0;return price?fisk(price)+' ISK':esc(prettyKey(c.status));},
+    10);
+}
+function renderIndustryJobs(d){
+  const list=d.industryJobs||[];
+  if(!list.length)return mdmErrOr(d,'industryJobs','<span class="mdm-empty-note">No industry jobs.</span>');
+  return renderCountedList(list,j=>j.status,
+    j=>esc(nameOf(d,j.blueprint_type_id))+' &rarr; '+esc(nameOf(d,j.product_type_id)),
+    j=>esc(prettyKey(j.status)),10);
+}
+function renderBlueprints(d){
+  const list=d.blueprints||[];
+  if(!list.length)return mdmErrOr(d,'blueprints','<span class="mdm-empty-note">No blueprints.</span>');
+  const rows=list.slice(0,20).map(b=>{
+    const kind=b.quantity===-1?'BPO':b.quantity===-2?'BPC':'stack';
+    const eff=(b.material_efficiency!=null)?('ME '+b.material_efficiency+' / TE '+b.time_efficiency):'';
+    return '<div class="mdm-row"><span class="lbl">'+esc(nameOf(d,b.type_id))+' <span class="sub">('+kind+(b.runs>0?', '+b.runs+' runs':'')+')</span></span><span class="sub">'+eff+'</span></div>';
+  }).join('');
+  const more=list.length>20?'<div class="mdm-empty-note">+'+(list.length-20)+' more</div>':'';
+  return '<div class="mdm-list">'+rows+'</div>'+more;
+}
+function renderMining(d){
+  const list=d.miningLedger||[];
+  if(!list.length)return mdmErrOr(d,'miningLedger','<span class="mdm-empty-note">No mining activity recorded.</span>');
+  const totals={};
+  list.forEach(m=>{totals[m.type_id]=(totals[m.type_id]||0)+m.quantity});
+  const rows=Object.entries(totals).sort((a,b)=>b[1]-a[1]).map(([typeId,qty])=>
+    '<div class="mdm-row"><span class="lbl">'+esc(nameOf(d,typeId))+'</span><span class="sub">'+qty.toLocaleString()+' units</span></div>'
+  ).join('');
+  return '<div class="mdm-list">'+rows+'</div>';
+}
+function renderBookmarks(d){
+  const list=d.bookmarks||[];
+  if(!list.length)return mdmErrOr(d,'bookmarks','<span class="mdm-empty-note">No bookmarks saved.</span>');
+  const rows=list.slice(0,20).map(b=>'<div class="mdm-row"><span class="lbl">'+esc(b.label||'(untitled)')+'</span><span class="sub">'+esc(nameOf(d,b.location_id))+'</span></div>').join('');
+  return '<div class="mdm-list">'+rows+'</div>';
+}
+function renderFwStats(d){
+  if(d.errors&&d.errors.fwStats)return '<span class="mdm-empty-note">'+esc(d.errors.fwStats)+'</span>';
+  const fw=d.fwStats;
+  if(!fw||!fw.faction_id)return '<span class="mdm-empty-note">Not enrolled in Faction Warfare.</span>';
+  let h='<div class="mdm-stat-row">';
+  h+='<div class="mdm-stat-chip">Faction<b>'+esc(nameOf(d,fw.faction_id))+'</b></div>';
+  h+='<div class="mdm-stat-chip">Current rank<b>'+(fw.current_rank??'—')+'</b></div>';
+  h+='<div class="mdm-stat-chip">Highest rank<b>'+(fw.highest_rank??'—')+'</b></div>';
+  if(fw.kills)h+='<div class="mdm-stat-chip">Kills (total)<b>'+(fw.kills.total||0).toLocaleString()+'</b></div>';
+  if(fw.victory_points)h+='<div class="mdm-stat-chip">Victory points<b>'+(fw.victory_points.total||0).toLocaleString()+'</b></div>';
+  h+='</div>';
+  return h;
+}
+function renderCharacterStats(d){
+  const stats=d.characterStats;
+  if(!stats)return mdmErrOr(d,'characterStats','<span class="mdm-empty-note">Not available.</span>');
+  const items=[];
+  if(Array.isArray(stats)){
+    stats.forEach(group=>{
+      const cat=group.category||group.name||'stats';
+      const rows=Array.isArray(group.stats)?group.stats:null;
+      if(rows){
+        rows.slice(0,4).forEach(s=>items.push({label:prettyKey(cat)+': '+prettyKey(s.name||''),value:s.value}));
+      }else{
+        Object.entries(group).forEach(([k,v])=>{ if(typeof v==='number')items.push({label:prettyKey(cat+' '+k),value:v}); });
+      }
+    });
+  }else if(typeof stats==='object'){
+    Object.entries(stats).forEach(([k,v])=>{
+      if(typeof v==='number')items.push({label:prettyKey(k),value:v});
+      else if(v&&typeof v==='object')Object.entries(v).forEach(([k2,v2])=>{ if(typeof v2==='number')items.push({label:prettyKey(k+' '+k2),value:v2}); });
+    });
+  }
+  if(!items.length)return '<span class="mdm-empty-note">No stats reported.</span>';
+  return '<div class="mdm-stat-row">'+items.slice(0,16).map(it=>'<div class="mdm-stat-chip">'+esc(it.label)+'<b>'+(typeof it.value==='number'?it.value.toLocaleString():esc(String(it.value)))+'</b></div>').join('')+'</div>';
+}
 function renderMemberDetail(d){
-  const n=d.names||{};
   let h='';
 
   h+='<div class="mdm-grid">';
   h+=mdmCell('Profile',mdmErrOr(d,'profile',d.profile?(
     'Born '+(d.profile.birthday?new Date(d.profile.birthday).toLocaleDateString():'—')+'<br>'+
-    'Security status: '+(d.profile.security_status!=null?d.profile.security_status.toFixed(2):'—')+'<br>'+
-    'Corp history: '+((d.corpHistory||[]).length)+' entries'
+    'Security status: '+(d.profile.security_status!=null?d.profile.security_status.toFixed(2):'—')
   ):'—'));
-  h+=mdmCell('Wallet',mdmErrOr(d,'wallet',d.wallet!=null?(
-    fisk(d.wallet)+' ISK<br>'+
-    'Recent journal entries: '+((d.walletJournal||[]).length)
-  ):'—'));
+  h+=mdmCell('Wallet',mdmErrOr(d,'wallet',d.wallet!=null?(fisk(d.wallet)+' ISK'):'—'));
   h+=mdmCell('Skills',mdmErrOr(d,'skills',d.skills?(
     (d.skills.total_sp||0).toLocaleString()+' SP total<br>'+
     (d.skills.skills||[]).length+' skills trained<br>'+
@@ -1272,35 +1410,35 @@ function renderMemberDetail(d){
     'LP: '+((d.loyaltyPoints||[]).reduce((s,l)=>s+(l.loyalty_points||0),0).toLocaleString())+' across '+((d.loyaltyPoints||[]).length)+' corp(s)<br>'+
     (d.fatigue&&d.fatigue.jump_fatigue_expire_date?('Jump fatigue until '+new Date(d.fatigue.jump_fatigue_expire_date).toLocaleString()):'No active jump fatigue')
   );
+  h+=mdmCell('Medals & titles',
+    ((d.medals||[]).length)+' medal(s)<br>'+
+    'Titles: '+((d.titles||[]).map(t=>esc(t.name)).join(', ')||'none')
+  );
   h+='</div>';
 
-  h+='<div class="mdm-section-title">Contacts, standings &amp; corp history</div>';
-  h+='<div class="mdm-grid">';
-  h+=mdmCell('Contacts',((d.contacts||[]).length)+' saved contact(s)');
-  h+=mdmCell('NPC standings',((d.standings||[]).length)+' faction/corp standing(s)');
-  h+=mdmCell('Corp history',(d.corpHistory||[]).slice(0,8).map(c=>esc(nameOf(d,c.corporation_id))+' <span style="color:var(--m)">('+new Date(c.start_date).toLocaleDateString()+')</span>').join('<br>')||'—');
-  h+='</div>';
+  h+='<div class="mdm-section-title">Character stats</div><div class="mdm-full">'+renderCharacterStats(d)+'</div>';
 
-  h+='<div class="mdm-section-title">Industry, mining &amp; contracts</div>';
-  h+='<div class="mdm-grid">';
-  h+=mdmCell('Industry jobs',mdmErrOr(d,'industryJobs',((d.industryJobs||[]).length)+' job(s)'));
-  h+=mdmCell('Mining ledger',mdmErrOr(d,'miningLedger',((d.miningLedger||[]).length)+' entries (recent)'));
-  h+=mdmCell('Contracts',mdmErrOr(d,'contracts',((d.contracts||[]).length)+' contract(s)'));
-  h+=mdmCell('Blueprints',mdmErrOr(d,'blueprints',(d.blueprints||[]).slice(0,10).map(b=>esc(nameOf(d,b.type_id))).join(', ')+(((d.blueprints||[]).length>10)?' …':'')||'none'));
-  h+='</div>';
+  h+='<div class="mdm-section-title">Contacts</div><div class="mdm-full">'+renderContacts(d)+'</div>';
+  h+='<div class="mdm-section-title">NPC standings</div><div class="mdm-full">'+renderStandings(d)+'</div>';
+  h+='<div class="mdm-section-title">Corp history</div><div class="mdm-full">'+renderCorpHistory(d)+'</div>';
+  h+='<div class="mdm-section-title">Wallet journal (recent)</div><div class="mdm-full">'+renderJournal(d)+'</div>';
+  h+='<div class="mdm-section-title">Notifications</div><div class="mdm-full">'+renderNotifications(d)+'</div>';
+  h+='<div class="mdm-section-title">Contracts</div><div class="mdm-full">'+renderContracts(d)+'</div>';
+  h+='<div class="mdm-section-title">Blueprints</div><div class="mdm-full">'+renderBlueprints(d)+'</div>';
+  h+='<div class="mdm-section-title">Industry jobs</div><div class="mdm-full">'+renderIndustryJobs(d)+'</div>';
+  h+='<div class="mdm-section-title">Mining ledger (by ore type)</div><div class="mdm-full">'+renderMining(d)+'</div>';
+  h+='<div class="mdm-section-title">Bookmarks</div><div class="mdm-full">'+renderBookmarks(d)+'</div>';
+  h+='<div class="mdm-section-title">Faction Warfare</div><div class="mdm-full">'+renderFwStats(d)+'</div>';
 
-  h+='<div class="mdm-section-title">Medals, titles &amp; notifications</div>';
-  h+='<div class="mdm-grid">';
-  h+=mdmCell('Medals',((d.medals||[]).length)+' medal(s)');
-  h+=mdmCell('Titles',((d.titles||[]).map(t=>esc(t.name)).join(', ')||'none'));
-  h+=mdmCell('Notifications',((d.notifications||[]).length)+' unread/recent');
-  h+=mdmCell('Calendar',((d.calendar||[]).length)+' upcoming event(s)');
-  h+='</div>';
+  h+='<div class="mdm-section-title">Calendar</div><div class="mdm-full">'+(
+    (d.calendar||[]).length ? '<div class="mdm-list">'+(d.calendar||[]).map(e=>'<div class="mdm-row"><span class="lbl">'+esc(e.title||'(untitled)')+'</span><span class="sub">'+(e.event_date?new Date(e.event_date).toLocaleDateString():'')+'</span></div>').join('')+'</div>'
+    : mdmErrOr(d,'calendar','<span class="mdm-empty-note">No upcoming events.</span>')
+  )+'</div>';
 
-  h+='<div class="mdm-section-title">Mail (headers only)</div>';
-  h+='<div class="mdm-grid"><div class="mdm-cell" style="grid-column:1/-1"><div class="mv">'+
-    ((d.mailHeaders||[]).slice(0,10).map(m=>'From '+esc(nameOf(d,m.from))+': <strong>'+esc(m.subject||'(no subject)')+'</strong> <span style="color:var(--m)">'+(m.timestamp?new Date(m.timestamp).toLocaleDateString():'')+'</span>').join('<br>')||mdmErrOr(d,'mailHeaders','No mail.'))+
-  '</div></div></div>';
+  h+='<div class="mdm-section-title">Mail (headers only)</div><div class="mdm-full">'+(
+    (d.mailHeaders||[]).length ? '<div class="mdm-list">'+(d.mailHeaders||[]).slice(0,15).map(m=>'<div class="mdm-row"><span class="lbl">From '+esc(nameOf(d,m.from))+': <strong>'+esc(m.subject||'(no subject)')+'</strong></span><span class="sub">'+(m.timestamp?new Date(m.timestamp).toLocaleDateString():'')+'</span></div>').join('')+'</div>'
+    : mdmErrOr(d,'mailHeaders','<span class="mdm-empty-note">No mail.</span>')
+  )+'</div>';
 
   h+='<div class="mdm-section-title">Assets by station ('+(d.assetCount||0)+' total)</div>';
   if((d.assetsByLocation||[]).length){
