@@ -77,7 +77,31 @@ export default function handler(req, res) {
   authUrl.searchParams.set('scope', scopes);
   authUrl.searchParams.set('state', state);
 
- 
-  res.setHeader('Set-Cookie', `eve_state=${state}; HttpOnly; Secure; SameSite=Lax; Max-Age=300; Path=/`);
+
+  const setCookies = [`eve_state=${state}; HttpOnly; Secure; SameSite=Lax; Max-Age=300; Path=/`];
+
+  // PI character linking: /api/login?link=1 while already logged in stamps an
+  // HMAC-signed cookie with the current characterId; api/callback.js consumes
+  // it to join the two characters into one PI group. Signed so a member can't
+  // forge a link into someone else's group.
+  if (req.query.link === '1') {
+    try {
+      const cookies = parseCookies(req.headers.cookie || '');
+      const session = JSON.parse(Buffer.from(cookies.eve_session, 'base64').toString('utf8'));
+      const payload = Buffer.from(JSON.stringify({ cid: String(session.characterId), exp: Date.now() + 600000 })).toString('base64url');
+      const sig = crypto.createHmac('sha256', process.env.EVE_CLIENT_SECRET).update(payload).digest('hex');
+      setCookies.push(`pi_link=${payload}.${sig}; HttpOnly; Secure; SameSite=Lax; Max-Age=600; Path=/`);
+    } catch {
+      // no valid session → plain login, no link
+    }
+  }
+
+  res.setHeader('Set-Cookie', setCookies);
   res.redirect(302, authUrl.toString());
+}
+
+function parseCookies(h) {
+  const c = {};
+  h.split(';').forEach(p => { const [k, ...v] = p.trim().split('='); if (k) c[k.trim()] = decodeURIComponent(v.join('=')); });
+  return c;
 }

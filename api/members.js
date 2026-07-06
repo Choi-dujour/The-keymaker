@@ -67,6 +67,8 @@ async function deleteMember(req, res) {
   await Promise.all([
     kvDel(`member:${id}:token`),
     kvDel(`member:${id}:meta`),
+    kvDel(`pi:planets:${id}`),
+    kvDel(`pi:group:${id}`),
   ]);
 
   return res.status(200).json({ ok: true, deleted: id });
@@ -99,7 +101,10 @@ async function purgeMembers(req, res) {
     }
     if (isCorpMember) continue;
 
-    await Promise.all([kvDel(`member:${id}:token`), kvDel(`member:${id}:meta`)]);
+    await Promise.all([
+      kvDel(`member:${id}:token`), kvDel(`member:${id}:meta`),
+      kvDel(`pi:planets:${id}`), kvDel(`pi:group:${id}`),
+    ]);
     purged.push(id);
   }
 

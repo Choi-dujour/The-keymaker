@@ -53,7 +53,7 @@ body{background:var(--bg);color:var(--w);font-family:'Inter',sans-serif}
 .btn-o:hover{border-color:var(--m);color:var(--w)}
 .btn-g{background:var(--g);color:#000}
 .btn-g:hover{background:#50ff30}
-#btn-dashboard,#btn-arbitrage{display:none}
+#btn-dashboard,#btn-arbitrage,#btn-pi{display:none}
 
 .center{
   display:flex;flex-direction:column;
@@ -101,6 +101,7 @@ h1 em{color:var(--g);font-style:normal}
       <a href="/about.html" class="btn btn-o">About</a>
       <a href="/tracker.html" class="btn btn-o">Tracker</a>
       <a href="/arbitrage.html" class="btn btn-o" id="btn-arbitrage">Arbitrage</a>
+      <a href="/pi.html" class="btn btn-o" id="btn-pi">PI</a>
       <a href="/api/login" class="btn btn-o" id="btn-login">⬡ Login</a>
       <a href="/dashboard.html" class="btn btn-o" id="btn-dashboard">Dashboard</a>
       <a href="/apply.html" class="btn btn-g">Apply</a>
@@ -139,7 +140,7 @@ h1 em{color:var(--g);font-style:normal}
 
 <script>
 initStarfield('c',{density:6000,rMin:0.15,rSpread:0.9,oMin:0.05,oSpread:0.35,alphaCap:0.5,flickerAmp:0.07,fullPageHeight:false});
-(async()=>{try{const r=await fetch('/api/me');if(r.ok){const s=await r.json();if(s.authenticated){document.getElementById('btn-login').style.display='none';document.getElementById('btn-dashboard').style.display='inline-flex';document.getElementById('btn-arbitrage').style.display='inline-flex'}}}catch{}})();
+(async()=>{try{const r=await fetch('/api/me');if(r.ok){const s=await r.json();if(s.authenticated){document.getElementById('btn-login').style.display='none';document.getElementById('btn-dashboard').style.display='inline-flex';document.getElementById('btn-arbitrage').style.display='inline-flex';document.getElementById('btn-pi').style.display='inline-flex'}}}catch{}})();
 loadMemberCount('stat-members');
 setInterval(()=>loadMemberCount('stat-members'),120000); // refresh every 2 min
 </script>
