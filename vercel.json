@@ -1,5 +1,13 @@
 {
   "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "the-keymaker-ruby.vercel.app" }],
+      "destination": "https://www.the-keymaker.net/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ],
