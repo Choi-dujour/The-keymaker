@@ -4,9 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Galaxy Map — The-Keymaker [THE-K]</title>
-<meta name="description" content="Interactive 3D map of New Eden with live killmail feed from zKillboard."/>
+<meta name="description" content="Interactive 3D map of New Eden — route planning, live killmail feed, sovereignty layers."/>
 <meta property="og:title" content="Galaxy Map — The-Keymaker [THE-K]"/>
-<meta property="og:description" content="Navigable 3D galaxy with real-time kills per region."/>
+<meta property="og:description" content="Navigable 3D galaxy with route planner and real-time kills."/>
 <meta property="og:image" content="https://images.evetech.net/corporations/98800626/logo?size=256"/>
 <meta property="og:url" content="https://www.the-keymaker.net/map.html"/>
 <link rel="canonical" href="https://www.the-keymaker.net/map.html"/>
@@ -52,19 +52,44 @@ nav{
 .panel-title{font-family:'Syne',sans-serif;font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--m2)}
 .panel-body{overflow-y:auto;flex:1}
 
-#regions-panel{top:68px;left:16px;width:230px;max-height:calc(100vh - 160px)}
-.reg-filter-wrap input{width:100%;background:var(--s2);border:1px solid var(--b);color:var(--w);padding:0.45rem 0.65rem;font-size:0.72rem;outline:none;font-family:'Inter',sans-serif}
-.reg-filter-wrap input:focus{border-color:var(--g)}
-.reg-filter-wrap{padding:0.6rem 0.9rem;border-bottom:1px solid var(--b)}
-.reg-row{display:flex;align-items:center;gap:0.5rem;padding:0.28rem 0.9rem;font-size:0.72rem;color:var(--m2);cursor:pointer;user-select:none}
-.reg-row:hover{background:rgba(255,255,255,0.03);color:var(--w)}
-.reg-row input{accent-color:var(--g);cursor:pointer}
-.reg-row .reg-name{flex:1;cursor:pointer}
-.reg-row.checked{color:var(--w)}
-.reg-actions{display:flex;gap:0.4rem;padding:0.5rem 0.9rem;border-top:1px solid var(--b)}
-.reg-actions button{flex:1;background:transparent;border:1px solid var(--b);color:var(--m);font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;font-family:'Syne',sans-serif;font-weight:700;padding:0.35rem;cursor:pointer}
-.reg-actions button:hover{border-color:var(--m);color:var(--w)}
+/* MODE SWITCH (top center) */
+#mode-switch{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:55;display:flex;background:rgba(12,12,26,0.88);border:1px solid var(--b);backdrop-filter:blur(14px)}
+#mode-switch button{background:transparent;border:none;border-right:1px solid var(--b);color:var(--m);font-family:'Syne',sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0.5rem 1rem;cursor:pointer;transition:all .15s}
+#mode-switch button:last-child{border-right:none}
+#mode-switch button:hover{color:var(--w)}
+#mode-switch button.on{color:var(--g);background:rgba(57,255,20,0.07)}
+#sov-legend{position:fixed;top:104px;left:50%;transform:translateX(-50%);z-index:54;background:rgba(12,12,26,0.88);border:1px solid var(--b);backdrop-filter:blur(14px);padding:0.5rem 0.8rem;display:none;max-width:min(560px,92vw)}
+#sov-legend.show{display:flex;flex-wrap:wrap;gap:0.35rem 0.9rem}
+.lg-item{display:flex;align-items:center;gap:0.35rem;font-size:0.62rem;color:var(--m2);white-space:nowrap}
+.lg-dot{width:8px;height:8px;border-radius:50%}
 
+/* ROUTE PANEL */
+#route-panel{top:68px;left:16px;width:250px;max-height:calc(100vh - 160px)}
+.rp-body{padding:0.75rem 0.9rem;display:flex;flex-direction:column;gap:0.6rem}
+.rp-field{position:relative}
+.rp-field label{display:block;font-size:0.56rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.3rem}
+.rp-field input{width:100%;background:var(--s2);border:1px solid var(--b);color:var(--w);padding:0.5rem 0.7rem;font-size:0.78rem;outline:none;font-family:'Inter',sans-serif}
+.rp-field input:focus{border-color:var(--g)}
+.ac{position:absolute;top:100%;left:0;right:0;z-index:60;background:var(--s2);border:1px solid var(--b2);border-top:none;max-height:180px;overflow-y:auto;display:none}
+.ac.open{display:block}
+.ac-item{padding:0.45rem 0.7rem;font-size:0.72rem;cursor:pointer;display:flex;justify-content:space-between;gap:0.5rem}
+.ac-item:hover{background:rgba(57,255,20,0.08)}
+.ac-sec{font-family:var(--mono);font-size:0.62rem}
+.flag-group{display:flex;gap:0.3rem}
+.flag-btn{flex:1;font-family:'Syne',sans-serif;font-size:0.54rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:transparent;border:1px solid var(--b);color:var(--m);padding:0.38rem 0.2rem;cursor:pointer;transition:all .15s}
+.flag-btn.active{border-color:var(--g);color:var(--g);background:rgba(57,255,20,0.06)}
+.rp-actions{display:flex;gap:0.4rem}
+.rp-actions button{flex:1;font-family:'Syne',sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:0.5rem;cursor:pointer;border:1px solid var(--b);background:transparent;color:var(--m);transition:all .15s}
+.rp-actions .go{background:var(--g);border-color:var(--g);color:#000}
+.rp-actions .go:hover{background:#50ff30}
+.rp-actions button:not(.go):hover{border-color:var(--m);color:var(--w)}
+.rp-summary{font-size:0.66rem;color:var(--m);line-height:1.8;border-top:1px solid var(--b);padding-top:0.55rem;display:none}
+.rp-summary.show{display:block}
+.rp-summary b{color:var(--w);font-weight:500}
+.rp-hq{font-size:0.62rem;color:var(--m);border-top:1px solid var(--b);padding-top:0.55rem;display:flex;align-items:center;gap:0.4rem}
+.rp-hq a{color:var(--g);text-decoration:none;cursor:pointer}
+
+/* FEED */
 #feed-panel{top:68px;right:16px;width:290px;max-height:calc(100vh - 160px)}
 .badge{font-family:var(--mono);font-size:0.58rem;padding:0.15rem 0.5rem;border-radius:2px;letter-spacing:0.1em}
 .badge.live{color:var(--g);background:rgba(57,255,20,0.1)}
@@ -80,21 +105,23 @@ nav{
 .kill-sub{display:flex;justify-content:space-between;font-size:0.6rem;color:var(--m);margin-top:0.12rem}
 .feed-empty{padding:1.2rem 0.9rem;font-size:0.7rem;color:var(--m);text-align:center;line-height:1.7}
 
+/* INFO CARD */
 #info-card{bottom:16px;left:16px;width:250px;padding:0.9rem 1rem;display:none}
 #info-card.show{display:block}
 #info-card h3{font-family:'Syne',sans-serif;font-size:1rem;margin-bottom:0.2rem}
 #info-card .ic-region{font-size:0.65rem;color:var(--m);margin-bottom:0.5rem}
-.sec-badge{font-family:var(--mono);font-size:0.68rem;padding:0.12rem 0.45rem;border-radius:2px}
-.sec-hi{color:var(--g);background:rgba(57,255,20,0.1)}
-.sec-lo{color:var(--orange);background:rgba(255,136,51,0.1)}
-.sec-null{color:var(--red);background:rgba(255,68,85,0.1)}
+#info-card .ic-sov{font-size:0.66rem;color:var(--m2);margin:0.4rem 0 0}
+.sec-badge{font-family:var(--mono);font-size:0.68rem;padding:0.12rem 0.45rem;border-radius:2px;background:rgba(255,255,255,0.06)}
 #info-card .ic-links{display:flex;gap:0.5rem;margin-top:0.6rem}
 #info-card .ic-links a{font-size:0.62rem;color:var(--m2);text-decoration:none}
 #info-card .ic-links a:hover{color:var(--g)}
 #info-card .ic-x{position:absolute;top:0.4rem;right:0.6rem;background:none;border:none;color:var(--m);cursor:pointer;font-size:0.9rem}
 
-#hover-label{position:fixed;z-index:60;pointer-events:none;display:none;background:rgba(12,12,26,0.92);border:1px solid var(--b2);padding:0.2rem 0.55rem;font-size:0.68rem;font-family:var(--mono);white-space:nowrap}
-#hover-label .hl-sec{margin-left:0.4rem}
+/* OVERLAY LABELS */
+#hover-label{position:fixed;z-index:60;pointer-events:none;display:none;background:rgba(12,12,26,0.92);border:1px solid var(--b2);padding:0.25rem 0.55rem;font-size:0.68rem;font-family:var(--mono);white-space:nowrap;line-height:1.5}
+.region-label{position:fixed;z-index:40;pointer-events:none;font-family:var(--mono);font-size:0.62rem;letter-spacing:0.28em;text-transform:uppercase;color:rgba(170,175,200,0.55);white-space:nowrap;transform:translate(-50%,-50%);text-shadow:0 0 6px #000}
+.route-label{position:fixed;z-index:45;pointer-events:none;font-family:var(--mono);font-size:0.66rem;white-space:nowrap;transform:translate(8px,-50%);text-shadow:0 1px 4px #000,0 0 8px #000}
+.route-label b{font-weight:500}
 
 /* CEO panel is injected by JS */
 #ceo-panel{bottom:16px;right:16px;width:330px;max-height:44vh}
@@ -109,6 +136,9 @@ nav{
 .ceo-controls button:hover,.ceo-controls button.on{border-color:var(--g);color:var(--g)}
 .ceo-stalled{padding:0.45rem 0.9rem;font-size:0.62rem;color:var(--yellow);border-bottom:1px solid var(--b)}
 #replay-name{position:fixed;z-index:60;pointer-events:none;display:none;color:var(--g);font-size:0.62rem;font-family:var(--mono);text-shadow:0 0 6px #000}
+#toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(150%);z-index:300;background:var(--s2);border:1px solid rgba(57,255,20,0.4);color:var(--w);padding:0.7rem 1.4rem;font-size:0.78rem;transition:transform .25s;max-width:90vw}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:var(--red)}
 
 /* Mobile: panels become toggleable sheets */
 .sheet-toggles{display:none;position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:70;gap:0.5rem}
@@ -116,9 +146,10 @@ nav{
 .sheet-toggles button.on{border-color:var(--g);color:var(--g)}
 @media(max-width:760px){
   .sheet-toggles{display:flex}
-  #regions-panel,#feed-panel,#ceo-panel{top:auto;left:8px;right:8px;bottom:60px;width:auto;max-height:46vh;display:none}
-  #regions-panel.open,#feed-panel.open,#ceo-panel.open{display:flex}
+  #route-panel,#feed-panel,#ceo-panel{top:auto;left:8px;right:8px;bottom:60px;width:auto;max-height:46vh;display:none}
+  #route-panel.open,#feed-panel.open,#ceo-panel.open{display:flex}
   #info-card{bottom:60px}
+  .region-label{font-size:0.54rem}
 }
 </style>
 </head>
@@ -146,19 +177,43 @@ nav{
   </div>
 </nav>
 
-<div class="panel" id="regions-panel">
-  <div class="panel-head"><span class="panel-title">Regions</span><span class="badge off" id="feed-badge">OFF</span></div>
-  <div class="reg-filter-wrap"><input type="text" id="reg-filter" placeholder="Filter regions…"/></div>
-  <div class="panel-body" id="reg-list"></div>
-  <div class="reg-actions">
-    <button id="reg-none">Clear</button>
-    <button id="reg-home">Home regions</button>
+<div id="mode-switch">
+  <button class="on" data-mode="sec">Security</button>
+  <button data-mode="sov">Sovereignty</button>
+  <button data-mode="faction">Factions</button>
+</div>
+<div id="sov-legend"></div>
+
+<div class="panel" id="route-panel">
+  <div class="panel-head"><span class="panel-title">Route</span><span class="badge off" id="feed-badge">OFF</span></div>
+  <div class="rp-body">
+    <div class="rp-field">
+      <label>Origin</label>
+      <input type="text" id="rp-from" placeholder="e.g. Hek" autocomplete="off"/>
+      <div class="ac" id="rp-from-ac"></div>
+    </div>
+    <div class="rp-field">
+      <label>Destination</label>
+      <input type="text" id="rp-to" placeholder="e.g. Jita" autocomplete="off"/>
+      <div class="ac" id="rp-to-ac"></div>
+    </div>
+    <div class="flag-group">
+      <button class="flag-btn active" data-flag="shortest">Short</button>
+      <button class="flag-btn" data-flag="secure">Safe</button>
+      <button class="flag-btn" data-flag="insecure">No-high</button>
+    </div>
+    <div class="rp-actions">
+      <button class="go" id="rp-plan">Plan route</button>
+      <button id="rp-clear">Clear</button>
+    </div>
+    <div class="rp-summary" id="rp-summary"></div>
+    <div class="rp-hq" id="rp-hq" style="display:none">⌂ HQ: <a id="rp-hq-link"></a></div>
   </div>
 </div>
 
 <div class="panel" id="feed-panel">
-  <div class="panel-head"><span class="panel-title">Kill feed</span><span class="panel-title" id="feed-count"></span></div>
-  <div class="panel-body" id="feed-list"><div class="feed-empty">Waiting for kills in the selected regions…</div></div>
+  <div class="panel-head"><span class="panel-title">Kills on route</span><span class="panel-title" id="feed-count"></span></div>
+  <div class="panel-body" id="feed-list"><div class="feed-empty">Plan a route to watch live kills along it.</div></div>
 </div>
 
 <div class="panel" id="info-card">
@@ -166,6 +221,7 @@ nav{
   <h3 id="ic-name"></h3>
   <div class="ic-region" id="ic-region"></div>
   <span class="sec-badge" id="ic-sec"></span>
+  <div class="ic-sov" id="ic-sov" style="display:none"></div>
   <div class="ic-links">
     <a id="ic-dotlan" target="_blank" rel="noopener">DOTLAN ↗</a>
     <a id="ic-zkill" target="_blank" rel="noopener">zKillboard ↗</a>
@@ -174,9 +230,10 @@ nav{
 
 <div id="hover-label"></div>
 <div id="replay-name"></div>
+<div id="toast"></div>
 
 <div class="sheet-toggles">
-  <button id="tg-regions">Regions</button>
+  <button id="tg-route">Route</button>
   <button id="tg-feed">Feed</button>
 </div>
 
@@ -186,25 +243,46 @@ import * as THREE from 'three';
 import { OrbitControls } from '/vendor/OrbitControls.min.js';
 
 const TEST_MODE = location.hash.includes('test');
-const HOME_REGIONS = [10000042, 10000030, 10000028]; // Metropolis, Heimatar, Molden Heath
+const ESI = 'https://esi.evetech.net/latest';
 
 // ────────────────────────── data ──────────────────────────
-const dataRes = await fetch('/map-data.json');
-const DATA = await dataRes.json();
+const DATA = await fetch('/map-data.json').then(r => r.json());
 const REGIONS = DATA.regions.map(([id, name]) => ({ id, name }));
 const SYSTEMS = DATA.systems.map(([id, name, sec10, r, x, y, z]) => ({ id, name, sec10, r, x, y, z }));
 const SYS_BY_ID = new Map(SYSTEMS.map((s, i) => [s.id, i]));
-const REGION_BY_ID = new Map(REGIONS.map((r, i) => [r.id, i]));
 const ADJ = Array.from({ length: SYSTEMS.length }, () => []);
 for (const [a, b] of DATA.jumps) { ADJ[a].push(b); ADJ[b].push(a); }
 
-// region selection (persisted)
-let selected = new Set(HOME_REGIONS);
-try {
-  const saved = JSON.parse(localStorage.getItem('map_regions') || 'null');
-  if (Array.isArray(saved)) selected = new Set(saved.filter(id => REGION_BY_ID.has(id)));
-} catch {}
-function saveSelection(){ try { localStorage.setItem('map_regions', JSON.stringify([...selected])); } catch {} }
+// ────────────────────────── EVE security palette (in-game colors) ──────────
+const SEC_HEX = { 10:'#2E74DF', 9:'#379CF6', 8:'#4ACFF3', 7:'#5CDCA6', 6:'#71E754', 5:'#F5FF83', 4:'#DC6D07', 3:'#CE440F', 2:'#BC1113', 1:'#732020', 0:'#8F2F6B' };
+function secHex(sec10){ return SEC_HEX[Math.max(0, Math.min(10, sec10))]; }
+const SEC_COLORS = {};
+for (const [k, v] of Object.entries(SEC_HEX)) SEC_COLORS[k] = new THREE.Color(v);
+function secColor(sec10){ return SEC_COLORS[Math.max(0, Math.min(10, sec10))]; }
+function secLabelOf(sec10){ return (sec10 / 10).toFixed(1); }
+
+// ────────────────────────── faction colors (political map) ─────────────────
+const FACTIONS = {
+  500001: ['Caldari State', '#4E7CBF'],
+  500002: ['Minmatar Republic', '#A63A2B'],
+  500003: ['Amarr Empire', '#C8A24A'],
+  500004: ['Gallente Federation', '#3F9E5F'],
+  500005: ['Jove Empire', '#9AA3AD'],
+  500006: ['CONCORD Assembly', '#57A6A0'],
+  500007: ['Ammatar Mandate', '#93764A'],
+  500008: ['Khanid Kingdom', '#8A4E6B'],
+  500009: ['The Syndicate', '#8E8E9E'],
+  500010: ['Guristas Pirates', '#B4A054'],
+  500011: ['Angel Cartel', '#8C7A5C'],
+  500012: ['Blood Raider Covenant', '#8F2222'],
+  500014: ['ORE', '#C77F2A'],
+  500015: ['Thukker Tribe', '#7A5C3C'],
+  500016: ['Servant Sisters of EVE', '#B8B8C8'],
+  500018: ['Mordu\'s Legion', '#6C8FB8'],
+  500019: ["Sansha's Nation", '#9BA24E'],
+  500020: ['Serpentis', '#5D8F5D'],
+  500026: ['Triglavian Collective', '#B03030'],
+};
 
 // ────────────────────────── scene ──────────────────────────
 const canvas = document.getElementById('gl');
@@ -217,29 +295,9 @@ const camera = new THREE.PerspectiveCamera(55, 1, 0.5, 6000);
 // positions: (x, z, y) so the galactic disc lies flat under the default camera
 const pos = new Float32Array(SYSTEMS.length * 3);
 SYSTEMS.forEach((s, i) => { pos[i*3] = s.x; pos[i*3+1] = s.z; pos[i*3+2] = s.y; });
+function vecOf(i){ return new THREE.Vector3(pos[i*3], pos[i*3+1], pos[i*3+2]); }
 
-// security palette on theme colors
-const SEC_COLORS = (() => {
-  const stops = { 10: '#39FF14', 7: '#5fe83a', 5: '#ffcc33', 3: '#ff8833', 1: '#ff8833', 0: '#ff4455' };
-  const out = [];
-  for (let s10 = -10; s10 <= 10; s10++) {
-    let hex;
-    if (s10 >= 10) hex = stops[10];
-    else if (s10 >= 7) hex = stops[7];
-    else if (s10 >= 5) hex = stops[5];
-    else if (s10 >= 1) hex = stops[3];
-    else hex = stops[0];
-    out.push(new THREE.Color(hex));
-  }
-  return out; // index = sec10 + 10
-})();
-
-const baseColors = new Float32Array(SYSTEMS.length * 3);
-SYSTEMS.forEach((s, i) => {
-  const c = SEC_COLORS[Math.max(-10, Math.min(10, s.sec10)) + 10];
-  baseColors[i*3] = c.r; baseColors[i*3+1] = c.g; baseColors[i*3+2] = c.b;
-});
-const colorAttr = new THREE.BufferAttribute(baseColors.slice(), 3);
+const colorAttr = new THREE.BufferAttribute(new Float32Array(SYSTEMS.length * 3), 3);
 
 function discTexture(){
   const c = document.createElement('canvas'); c.width = c.height = 64;
@@ -270,15 +328,12 @@ scene.add(new THREE.LineSegments(jumpsGeo, new THREE.LineBasicMaterial({
   color: 0x2a2a4a, transparent: true, opacity: 0.28, depthWrite: false, blending: THREE.AdditiveBlending,
 })));
 
-// center camera on the k-space centroid
+// frame the camera on the k-space bounding sphere
 const centroid = new THREE.Vector3();
-for (let i = 0; i < SYSTEMS.length; i++) centroid.add(new THREE.Vector3(pos[i*3], pos[i*3+1], pos[i*3+2]));
+for (let i = 0; i < SYSTEMS.length; i++) centroid.add(vecOf(i));
 centroid.divideScalar(SYSTEMS.length);
 let radius = 0;
-for (let i = 0; i < SYSTEMS.length; i++) {
-  const d = centroid.distanceTo(new THREE.Vector3(pos[i*3], pos[i*3+1], pos[i*3+2]));
-  if (d > radius) radius = d;
-}
+for (let i = 0; i < SYSTEMS.length; i++) radius = Math.max(radius, centroid.distanceTo(vecOf(i)));
 const fitDist = radius / Math.tan((camera.fov / 2) * Math.PI / 180) * 0.62; // slight crop of outliers
 camera.position.set(centroid.x, centroid.y + fitDist * 0.75, centroid.z + fitDist * 0.66);
 
@@ -290,6 +345,16 @@ controls.minDistance = 4; controls.maxDistance = fitDist * 2.2;
 
 let needsRender = true;
 controls.addEventListener('change', () => { needsRender = true; });
+
+// world-unit sizes must shrink as the camera closes in, or nearby stars/
+// sprites balloon into giant blobs (sizeAttenuation grows them on approach)
+let worldScale = 1;
+function updateWorldScale(){
+  const d = camera.position.distanceTo(controls.target);
+  points.material.size = Math.min(2.4, Math.max(0.28, d * 0.0038));
+  worldScale = Math.min(1, Math.max(0.05, d / 500));
+  if (hqSprite) hqSprite.scale.setScalar(Math.min(4.5, Math.max(0.35, d * 0.01)));
+}
 function resize(){
   renderer.setSize(innerWidth, innerHeight);
   camera.aspect = innerWidth / innerHeight;
@@ -298,20 +363,145 @@ function resize(){
 }
 addEventListener('resize', resize); resize();
 
-// ────────────────────────── region highlight ──────────────────────────
-function applyHighlight(){
+// ────────────────────────── color modes + sovereignty ──────────────────────
+let colorMode = 'sec';           // 'sec' | 'sov' | 'faction'
+let SOV = null;                  // Map system_id -> {a: allianceId|null, f: factionId|null}
+let sovNames = {};               // allianceId -> name
+let sovLoading = false;
+const DIM_OFF_ROUTE = 0.3;
+const grayColor = new THREE.Color('#3a3a48');
+
+function allianceColor(id){
+  return new THREE.Color().setHSL(((id * 137.508) % 360) / 360, 0.62, 0.55);
+}
+const allianceColorCache = new Map();
+function baseColorOf(i){
+  const s = SYSTEMS[i];
+  if (colorMode === 'sec' || !SOV) return secColor(s.sec10);
+  const sov = SOV.get(s.id);
+  if (colorMode === 'sov') {
+    if (!sov?.a) return grayColor;
+    let c = allianceColorCache.get(sov.a);
+    if (!c) { c = allianceColor(sov.a); allianceColorCache.set(sov.a, c); }
+    return c;
+  }
+  // faction mode
+  const fid = sov?.f;
+  if (!fid) return grayColor;
+  const meta = FACTIONS[fid];
+  return meta ? new THREE.Color(meta[1]) : allianceColor(fid);
+}
+
+function applyColors(){
   const arr = colorAttr.array;
-  const allSelected = selected.size === 0; // nothing checked = show everything bright
   for (let i = 0; i < SYSTEMS.length; i++) {
-    const on = allSelected || selected.has(REGIONS[SYSTEMS[i].r].id);
-    const f = on ? 1 : 0.16;
-    arr[i*3] = baseColors[i*3] * f; arr[i*3+1] = baseColors[i*3+1] * f; arr[i*3+2] = baseColors[i*3+2] * f;
+    const dim = ROUTE_SET.size ? (ROUTE_SET.has(SYSTEMS[i].id) ? 1 : DIM_OFF_ROUTE) : 1;
+    const c = baseColorOf(i);
+    arr[i*3] = c.r * dim; arr[i*3+1] = c.g * dim; arr[i*3+2] = c.b * dim;
   }
   colorAttr.needsUpdate = true;
   needsRender = true;
 }
 
-// camera fly-to
+async function ensureSov(){
+  if (SOV || sovLoading) return !!SOV;
+  sovLoading = true;
+  try {
+    const list = await fetch(`${ESI}/sovereignty/map/?datasource=tranquility`).then(r => { if (!r.ok) throw new Error('ESI ' + r.status); return r.json(); });
+    SOV = new Map();
+    const allianceCount = new Map();
+    for (const e of list) {
+      SOV.set(e.system_id, { a: e.alliance_id || null, f: e.faction_id || null });
+      if (e.alliance_id) allianceCount.set(e.alliance_id, (allianceCount.get(e.alliance_id) || 0) + 1);
+    }
+    // resolve names for the biggest alliances (legend + hover)
+    const top = [...allianceCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30).map(([id]) => id);
+    if (top.length) {
+      try {
+        const r = await fetch(`${ESI}/universe/names/?datasource=tranquility`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(top),
+        });
+        if (r.ok) for (const it of await r.json()) sovNames[it.id] = it.name;
+      } catch {}
+    }
+    SOV._allianceCount = allianceCount;
+    return true;
+  } catch (e) {
+    toast('Sovereignty data unavailable (' + e.message + ')', true);
+    return false;
+  } finally {
+    sovLoading = false;
+  }
+}
+
+function sovLabelOf(systemId){
+  if (!SOV) return null;
+  const sov = SOV.get(systemId);
+  if (!sov) return null;
+  if (sov.a) return sovNames[sov.a] || 'Alliance #' + sov.a;
+  if (sov.f) return FACTIONS[sov.f]?.[0] || 'Faction #' + sov.f;
+  return null;
+}
+
+function renderLegend(){
+  const el = document.getElementById('sov-legend');
+  if (colorMode === 'sec' || !SOV) { el.className = ''; el.innerHTML = ''; return; }
+  let items = [];
+  if (colorMode === 'sov') {
+    const top = [...SOV._allianceCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+    items = top.map(([id, n]) => ({ color: '#' + allianceColor(id).getHexString(), label: (sovNames[id] || '#' + id) + ' (' + n + ')' }));
+  } else {
+    const count = new Map();
+    for (const { f } of SOV.values()) if (f) count.set(f, (count.get(f) || 0) + 1);
+    items = [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12)
+      .map(([id]) => ({ color: FACTIONS[id]?.[1] || '#888', label: FACTIONS[id]?.[0] || '#' + id }));
+  }
+  el.innerHTML = items.map(i => '<span class="lg-item"><span class="lg-dot" style="background:' + i.color + '"></span>' + esc(i.label) + '</span>').join('');
+  el.className = 'show';
+}
+
+document.getElementById('mode-switch').addEventListener('click', async e => {
+  const b = e.target.closest('button');
+  if (!b || b.dataset.mode === colorMode) return;
+  const mode = b.dataset.mode;
+  if (mode !== 'sec' && !(await ensureSov())) return;
+  colorMode = mode;
+  document.querySelectorAll('#mode-switch button').forEach(x => x.classList.toggle('on', x.dataset.mode === mode));
+  applyColors();
+  renderLegend();
+});
+
+// ────────────────────────── region labels ──────────────────────────
+const regionLabels = [];
+{
+  const sums = REGIONS.map(() => ({ v: new THREE.Vector3(), n: 0 }));
+  SYSTEMS.forEach((s, i) => { sums[s.r].v.add(vecOf(i)); sums[s.r].n++; });
+  REGIONS.forEach((r, i) => {
+    if (!sums[i].n) return;
+    const div = document.createElement('div');
+    div.className = 'region-label';
+    div.textContent = r.name;
+    document.body.appendChild(div);
+    regionLabels.push({ div, pos: sums[i].v.divideScalar(sums[i].n) });
+  });
+}
+const tmpV = new THREE.Vector3();
+function updateRegionLabels(){
+  const camDist = camera.position.distanceTo(controls.target);
+  const show = camDist > fitDist * 0.12;
+  for (const l of regionLabels) {
+    if (!show) { l.div.style.display = 'none'; continue; }
+    tmpV.copy(l.pos).project(camera);
+    if (tmpV.z > 1 || tmpV.x < -1.05 || tmpV.x > 1.05 || tmpV.y < -1.05 || tmpV.y > 1.05) {
+      l.div.style.display = 'none'; continue;
+    }
+    l.div.style.display = 'block';
+    l.div.style.left = ((tmpV.x * 0.5 + 0.5) * innerWidth) + 'px';
+    l.div.style.top = ((-tmpV.y * 0.5 + 0.5) * innerHeight) + 'px';
+  }
+}
+
+// ────────────────────────── camera fly ──────────────────────────
 let flyAnim = null;
 function flyTo(target, dist){
   const from = { t: controls.target.clone(), p: camera.position.clone() };
@@ -319,43 +509,221 @@ function flyTo(target, dist){
   const to = { t: target.clone(), p: target.clone().add(dir.multiplyScalar(dist)) };
   flyAnim = { from, to, t0: performance.now(), dur: 850 };
 }
-function regionCentroid(regionIdx){
-  const v = new THREE.Vector3(); let n = 0;
-  for (let i = 0; i < SYSTEMS.length; i++) if (SYSTEMS[i].r === regionIdx) { v.x += pos[i*3]; v.y += pos[i*3+1]; v.z += pos[i*3+2]; n++; }
-  return n ? v.divideScalar(n) : centroid.clone();
+
+// ────────────────────────── ROUTE PLANNER ──────────────────────────
+let ROUTE = [];                 // system indices in order
+let ROUTE_SET = new Set();      // system ids on route
+let routeLine = null;
+const routeLabels = [];
+let selFrom = null, selTo = null, routeFlag = 'shortest';
+
+function setupAutocomplete(inputId, acId, onPick){
+  const input = document.getElementById(inputId);
+  const ac = document.getElementById(acId);
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    onPick(null);
+    if (q.length < 2) { ac.className = 'ac'; return; }
+    const starts = [], contains = [];
+    for (let i = 0; i < SYSTEMS.length; i++) {
+      const n = SYSTEMS[i].name.toLowerCase();
+      if (n.startsWith(q)) starts.push(i);
+      else if (n.includes(q)) contains.push(i);
+      if (starts.length >= 8) break;
+    }
+    const hits = starts.concat(contains).slice(0, 8);
+    if (!hits.length) { ac.className = 'ac'; return; }
+    ac.innerHTML = hits.map(i => '<div class="ac-item" data-i="' + i + '"><span>' + esc(SYSTEMS[i].name) + '</span><span class="ac-sec" style="color:' + secHex(SYSTEMS[i].sec10) + '">' + secLabelOf(SYSTEMS[i].sec10) + '</span></div>').join('');
+    ac.className = 'ac open';
+  });
+  ac.addEventListener('mousedown', e => {
+    const item = e.target.closest('.ac-item');
+    if (!item) return;
+    const i = Number(item.dataset.i);
+    input.value = SYSTEMS[i].name;
+    ac.className = 'ac';
+    onPick(i);
+  });
+  input.addEventListener('blur', () => setTimeout(() => { ac.className = 'ac'; }, 150));
+}
+setupAutocomplete('rp-from', 'rp-from-ac', i => { selFrom = i; });
+setupAutocomplete('rp-to', 'rp-to-ac', i => { selTo = i; });
+
+document.querySelectorAll('.flag-btn').forEach(b => b.addEventListener('click', () => {
+  routeFlag = b.dataset.flag;
+  document.querySelectorAll('.flag-btn').forEach(x => x.classList.toggle('active', x === b));
+}));
+
+function resolveInput(inputId, sel){
+  if (sel !== null) return sel;
+  const name = document.getElementById(inputId).value.trim().toLowerCase();
+  if (!name) return null;
+  const i = SYSTEMS.findIndex(s => s.name.toLowerCase() === name);
+  return i >= 0 ? i : null;
 }
 
-// ────────────────────────── region panel ──────────────────────────
-const regList = document.getElementById('reg-list');
-function renderRegionList(){
-  const q = document.getElementById('reg-filter').value.trim().toLowerCase();
-  regList.innerHTML = REGIONS
-    .map((r, i) => ({ r, i }))
-    .sort((a, b) => a.r.name.localeCompare(b.r.name))
-    .filter(({ r }) => !q || r.name.toLowerCase().includes(q))
-    .map(({ r, i }) => {
-      const on = selected.has(r.id);
-      return `<label class="reg-row${on ? ' checked' : ''}" data-rid="${r.id}">`
-        + `<input type="checkbox" ${on ? 'checked' : ''} data-rid="${r.id}"/>`
-        + `<span class="reg-name" data-fly="${i}">${esc(r.name)}</span></label>`;
-    }).join('');
+function bfsRoute(fromId, toId){
+  const a = SYS_BY_ID.get(fromId), b = SYS_BY_ID.get(toId);
+  if (a === undefined || b === undefined) return null;
+  if (a === b) return [a];
+  const prev = new Int32Array(SYSTEMS.length).fill(-1);
+  prev[a] = a;
+  let frontier = [a];
+  while (frontier.length) {
+    const next = [];
+    for (const u of frontier) for (const v of ADJ[u]) {
+      if (prev[v] !== -1) continue;
+      prev[v] = u;
+      if (v === b) { const p = [v]; let x = v; while (x !== a) { x = prev[x]; p.push(x); } return p.reverse(); }
+      next.push(v);
+    }
+    frontier = next;
+  }
+  return null;
 }
-regList.addEventListener('change', e => {
-  const rid = Number(e.target.dataset.rid);
-  if (!rid) return;
-  if (e.target.checked) selected.add(rid); else selected.delete(rid);
-  saveSelection(); renderRegionList(); applyHighlight();
-});
-regList.addEventListener('click', e => {
-  const fly = e.target.dataset.fly;
-  if (fly !== undefined) flyTo(regionCentroid(Number(fly)), 210);
-});
-document.getElementById('reg-filter').addEventListener('input', renderRegionList);
-document.getElementById('reg-none').addEventListener('click', () => { selected.clear(); saveSelection(); renderRegionList(); applyHighlight(); });
-document.getElementById('reg-home').addEventListener('click', () => { selected = new Set(HOME_REGIONS); saveSelection(); renderRegionList(); applyHighlight(); });
+if (TEST_MODE) { window.__bfsRoute = bfsRoute; window.__planRoute = (f, t) => applyRoute(bfsRoute(f, t)); }
 
-renderRegionList();
-applyHighlight();
+async function planRoute(){
+  const fi = resolveInput('rp-from', selFrom), ti = resolveInput('rp-to', selTo);
+  if (fi === null || ti === null) { toast('Pick origin and destination systems.', true); return; }
+  let indices = null;
+  try {
+    const ids = await fetch(`${ESI}/route/${SYSTEMS[fi].id}/${SYSTEMS[ti].id}/?flag=${routeFlag}&datasource=tranquility`, { signal: AbortSignal.timeout(8000) })
+      .then(r => { if (!r.ok) throw new Error('ESI ' + r.status); return r.json(); });
+    indices = ids.map(id => SYS_BY_ID.get(id)).filter(i => i !== undefined);
+  } catch {
+    indices = bfsRoute(SYSTEMS[fi].id, SYSTEMS[ti].id); // offline fallback (shortest only)
+    if (indices) toast('Route service unreachable — using shortest path.');
+  }
+  if (!indices || indices.length < 2) { toast('No route found.', true); return; }
+  try { localStorage.setItem('map_route', JSON.stringify({ f: SYSTEMS[fi].id, t: SYSTEMS[ti].id, flag: routeFlag })); } catch {}
+  applyRoute(indices);
+}
+
+function applyRoute(indices){
+  clearRouteVisuals();
+  if (!indices || indices.length < 2) return;
+  ROUTE = indices;
+  ROUTE_SET = new Set(indices.map(i => SYSTEMS[i].id));
+
+  // polyline colored per-vertex with each system's sec color (in-game style)
+  const pts = new Float32Array(indices.length * 3);
+  const cols = new Float32Array(indices.length * 3);
+  indices.forEach((i, k) => {
+    pts[k*3] = pos[i*3]; pts[k*3+1] = pos[i*3+1]; pts[k*3+2] = pos[i*3+2];
+    const c = secColor(SYSTEMS[i].sec10);
+    cols[k*3] = c.r; cols[k*3+1] = c.g; cols[k*3+2] = c.b;
+  });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+  routeLine = new THREE.Line(geo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false }));
+  scene.add(routeLine);
+
+  // per-system labels along the route (cap: thin out long routes, keep ends)
+  const step = indices.length > 36 ? Math.ceil(indices.length / 36) : 1;
+  indices.forEach((i, k) => {
+    if (step > 1 && k % step !== 0 && k !== indices.length - 1) return;
+    const div = document.createElement('div');
+    div.className = 'route-label';
+    div.innerHTML = '<b style="color:#ECEDF5">' + esc(SYSTEMS[i].name) + '</b> <span style="color:' + secHex(SYSTEMS[i].sec10) + '">' + secLabelOf(SYSTEMS[i].sec10) + '</span>';
+    document.body.appendChild(div);
+    routeLabels.push({ div, pos: vecOf(i) });
+  });
+
+  // summary + fit camera to the route
+  const lows = indices.filter(i => SYSTEMS[i].sec10 < 5 && SYSTEMS[i].sec10 >= 1).length;
+  const nulls = indices.filter(i => SYSTEMS[i].sec10 < 1).length;
+  const sum = document.getElementById('rp-summary');
+  sum.innerHTML = '<b>' + (indices.length - 1) + '</b> jumps · <b>' + esc(SYSTEMS[indices[0]].name) + '</b> → <b>' + esc(SYSTEMS[indices[indices.length-1]].name) + '</b>'
+    + (lows ? ' · <span style="color:' + SEC_HEX[4] + '">' + lows + ' lowsec</span>' : '')
+    + (nulls ? ' · <span style="color:' + SEC_HEX[0] + '">' + nulls + ' nullsec</span>' : '');
+  sum.classList.add('show');
+
+  const box = new THREE.Box3();
+  indices.forEach(i => box.expandByPoint(vecOf(i)));
+  const c = box.getCenter(new THREE.Vector3());
+  const r = Math.max(6, box.getSize(new THREE.Vector3()).length() / 2);
+  flyTo(c, r * 2.2);
+
+  applyColors();
+  startFeed();
+  document.getElementById('feed-list').innerHTML = '<div class="feed-empty">Watching ' + ROUTE.length + ' systems on your route…</div>';
+  feedRows = 0;
+}
+
+function clearRouteVisuals(){
+  if (routeLine) { scene.remove(routeLine); routeLine.geometry.dispose(); routeLine.material.dispose(); routeLine = null; }
+  for (const l of routeLabels) l.div.remove();
+  routeLabels.length = 0;
+  ROUTE = []; ROUTE_SET = new Set();
+  needsRender = true;
+}
+
+function clearRoute(){
+  clearRouteVisuals();
+  document.getElementById('rp-summary').classList.remove('show');
+  try { localStorage.removeItem('map_route'); } catch {}
+  stopFeed();
+  document.getElementById('feed-list').innerHTML = '<div class="feed-empty">Plan a route to watch live kills along it.</div>';
+  feedRows = 0; document.getElementById('feed-count').textContent = '';
+  applyColors();
+}
+
+document.getElementById('rp-plan').addEventListener('click', planRoute);
+document.getElementById('rp-clear').addEventListener('click', clearRoute);
+
+function updateRouteLabels(){
+  for (const l of routeLabels) {
+    tmpV.copy(l.pos).project(camera);
+    if (tmpV.z > 1 || tmpV.x < -1.02 || tmpV.x > 1.02 || tmpV.y < -1.02 || tmpV.y > 1.02) {
+      l.div.style.display = 'none'; continue;
+    }
+    l.div.style.display = 'block';
+    l.div.style.left = ((tmpV.x * 0.5 + 0.5) * innerWidth) + 'px';
+    l.div.style.top = ((-tmpV.y * 0.5 + 0.5) * innerHeight) + 'px';
+  }
+}
+
+// restore last route
+try {
+  const saved = JSON.parse(localStorage.getItem('map_route') || 'null');
+  if (saved && SYS_BY_ID.has(saved.f) && SYS_BY_ID.has(saved.t)) {
+    document.getElementById('rp-from').value = SYSTEMS[SYS_BY_ID.get(saved.f)].name;
+    document.getElementById('rp-to').value = SYSTEMS[SYS_BY_ID.get(saved.t)].name;
+    selFrom = SYS_BY_ID.get(saved.f); selTo = SYS_BY_ID.get(saved.t);
+    routeFlag = saved.flag || 'shortest';
+    document.querySelectorAll('.flag-btn').forEach(x => x.classList.toggle('active', x.dataset.flag === routeFlag));
+    if (!TEST_MODE) planRoute();
+  }
+} catch {}
+
+// ────────────────────────── HQ marker (auto from ESI via shared.js) ────────
+let hqSprite = null;
+function placeHq(hq){
+  const i = SYS_BY_ID.get(hq.systemId);
+  if (i === undefined) return;
+  if (!hqSprite) {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    ctx.strokeStyle = '#39FF14'; ctx.lineWidth = 4;
+    ctx.strokeRect(18, 26, 28, 22);                       // house body
+    ctx.beginPath(); ctx.moveTo(12, 28); ctx.lineTo(32, 12); ctx.lineTo(52, 28); ctx.stroke(); // roof
+    hqSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
+    hqSprite.scale.setScalar(4.5);
+    scene.add(hqSprite);
+  }
+  hqSprite.position.copy(vecOf(i));
+  const parts = hq.station.split(' - ');
+  const hqEl = document.getElementById('rp-hq');
+  hqEl.style.display = 'flex';
+  const link = document.getElementById('rp-hq-link');
+  link.textContent = parts[0];
+  link.onclick = () => flyTo(vecOf(i), 40);
+  needsRender = true;
+}
+if (window.CORP_HQ) placeHq(window.CORP_HQ);
+window.addEventListener('corp-hq', e => placeHq(e.detail));
 
 // ────────────────────────── picking / hover ──────────────────────────
 const raycaster = new THREE.Raycaster();
@@ -384,16 +752,17 @@ canvas.addEventListener('pointerup', e => {
   }
 });
 
-function secLabelOf(sec10){ return (sec10 / 10).toFixed(1); }
-function secClassOf(sec10){ return sec10 >= 5 ? 'sec-hi' : sec10 >= 1 ? 'sec-lo' : 'sec-null'; }
-
 function showInfo(idx){
   const s = SYSTEMS[idx];
   document.getElementById('ic-name').textContent = s.name;
   document.getElementById('ic-region').textContent = REGIONS[s.r].name;
   const secEl = document.getElementById('ic-sec');
   secEl.textContent = secLabelOf(s.sec10);
-  secEl.className = 'sec-badge ' + secClassOf(s.sec10);
+  secEl.style.color = secHex(s.sec10);
+  const sovEl = document.getElementById('ic-sov');
+  const sov = sovLabelOf(s.id);
+  if (sov) { sovEl.textContent = 'Sovereignty: ' + sov; sovEl.style.display = ''; }
+  else sovEl.style.display = 'none';
   document.getElementById('ic-dotlan').href = 'https://evemaps.dotlan.net/system/' + encodeURIComponent(s.name);
   document.getElementById('ic-zkill').href = 'https://zkillboard.com/system/' + s.id + '/';
   document.getElementById('info-card').classList.add('show');
@@ -421,15 +790,15 @@ function pulseAt(sysIdx, iskValue, color = 0xff4455){
     scene.add(sprite);
   }
   sprite.material.color.setHex(color);
-  sprite.position.set(pos[sysIdx*3], pos[sysIdx*3+1], pos[sysIdx*3+2]);
+  sprite.position.copy(vecOf(sysIdx));
   sprite.visible = true;
-  const maxScale = 6 + Math.max(0, Math.log10(Math.max(1, iskValue)) - 6) * 2.2; // 10M→6, 1B→~11, 100B→~15
+  const maxScale = 6 + Math.max(0, Math.log10(Math.max(1, iskValue)) - 6) * 2.2;
   pulses.push({ sprite, t0: performance.now(), dur: 2500, maxScale });
-  if (iskValue >= 1e9) setTimeout(() => { if (SYS_BY_ID) pulseAt(sysIdx, 1, 0xffffff); }, 220);
+  if (iskValue >= 1e9) setTimeout(() => pulseAt(sysIdx, 1, 0xffffff), 220);
   needsRender = true;
 }
 
-// ────────────────────────── kill feed ──────────────────────────
+// ────────────────────────── kill feed (route-scoped) ──────────────────────
 const feedList = document.getElementById('feed-list');
 const feedBadge = document.getElementById('feed-badge');
 const seenKills = new Set(); const seenOrder = [];
@@ -453,13 +822,12 @@ async function resolveShipNames(ids){
   if (!need.length) return;
   need.forEach(id => shipPending.add(id));
   try {
-    const r = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+    const r = await fetch(`${ESI}/universe/names/?datasource=tranquility`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(need),
     });
     if (r.ok) for (const it of await r.json()) shipNames.set(it.id, it.name);
   } catch {}
   need.forEach(id => shipPending.delete(id));
-  // patch rows rendered before the name arrived
   document.querySelectorAll('[data-ship]').forEach(el => {
     const n = shipNames.get(Number(el.dataset.ship));
     if (n) { el.textContent = n; el.removeAttribute('data-ship'); }
@@ -471,10 +839,9 @@ function handleKill(km){
   seenKills.add(km.killmail_id); seenOrder.push(km.killmail_id);
   if (seenOrder.length > 2000) seenKills.delete(seenOrder.shift());
 
+  if (!ROUTE_SET.size || !ROUTE_SET.has(km.solar_system_id)) return; // route-only feed
   const sysIdx = SYS_BY_ID.get(km.solar_system_id);
   if (sysIdx === undefined) return;
-  const regionId = REGIONS[SYSTEMS[sysIdx].r].id;
-  if (selected.size && !selected.has(regionId)) return;
 
   const isk = km.zkb?.totalValue || 0;
   pulseAt(sysIdx, isk);
@@ -500,9 +867,9 @@ function handleKill(km){
 }
 if (TEST_MODE) window.__handleKill = handleKill;
 
-// R2Z2 live loop with zkill-REST fallback
+// R2Z2 live loop with zkill-REST fallback — runs only while a route is set
 const R2Z2 = 'https://r2z2.zkillboard.com/ephemeral/';
-let feedMode = 'off', seq = null, liveFails = 0;
+let feedMode = 'off', seq = null, liveFails = 0, feedGen = 0;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pageVisible = () => document.visibilityState !== 'hidden';
 
@@ -514,19 +881,27 @@ async function fetchSequence(){
 }
 
 async function startFeed(){
-  if (TEST_MODE) { setBadge('off'); return; } // tests drive handleKill directly
+  if (feedMode !== 'off') return;    // already polling
+  if (TEST_MODE) { setBadge('off'); return; }
+  const gen = ++feedGen;
   try {
     seq = await fetchSequence();
+    if (gen !== feedGen) return;
     feedMode = 'live'; setBadge('live');
-    liveLoop();
+    liveLoop(gen);
   } catch {
-    enterFallback();
+    enterFallback(gen);
   }
 }
+function stopFeed(){
+  feedGen++;
+  feedMode = 'off';
+  setBadge('off');
+}
 
-async function liveLoop(){
+async function liveLoop(gen){
   let lastSeqCheck = Date.now();
-  while (feedMode === 'live') {
+  while (feedMode === 'live' && gen === feedGen) {
     if (!pageVisible()) { await sleep(2000); continue; }
     let got = false;
     try {
@@ -535,9 +910,9 @@ async function liveLoop(){
       if (r.ok) { seq++; got = true; handleKill(await r.json()); }
       else if (r.status !== 404) throw new Error('r2z2 ' + r.status);
     } catch {
-      if (++liveFails >= 3) return enterFallback();
+      if (++liveFails >= 3) return enterFallback(gen);
     }
-    if (!got && Date.now() - lastSeqCheck > 300000) { // heal gaps / counter resets
+    if (!got && Date.now() - lastSeqCheck > 300000) {
       lastSeqCheck = Date.now();
       try { const n = await fetchSequence(); if (Math.abs(n - seq) > 20) seq = n; } catch {}
     }
@@ -545,11 +920,15 @@ async function liveLoop(){
   }
 }
 
-async function enterFallback(){
+async function enterFallback(gen){
+  if (gen !== feedGen) return;
   feedMode = 'delayed'; setBadge('delayed');
-  while (feedMode === 'delayed') {
+  while (feedMode === 'delayed' && gen === feedGen) {
     if (!pageVisible()) { await sleep(5000); continue; }
-    for (const regionId of [...selected]) {
+    // poll the regions the route crosses, then handleKill filters to route systems
+    const regionIds = [...new Set(ROUTE.map(i => REGIONS[SYSTEMS[i].r].id))];
+    for (const regionId of regionIds) {
+      if (gen !== feedGen) return;
       try {
         const kills = await fetch('https://zkillboard.com/api/regionID/' + regionId + '/pastSeconds/3600/').then(r => r.json());
         let budget = 20;
@@ -557,7 +936,7 @@ async function enterFallback(){
           if (seenKills.has(k.killmail_id)) continue;
           if (budget-- <= 0) break;
           try {
-            const km = await fetch('https://esi.evetech.net/latest/killmails/' + k.killmail_id + '/' + k.zkb.hash + '/?datasource=tranquility').then(r => r.json());
+            const km = await fetch(`${ESI}/killmails/` + k.killmail_id + '/' + k.zkb.hash + '/?datasource=tranquility').then(r => r.json());
             handleKill({ ...km, zkb: k.zkb });
           } catch {}
         }
@@ -567,9 +946,8 @@ async function enterFallback(){
     await sleep(60000);
   }
 }
-startFeed();
 
-// ────────────────────────── CEO layer (injected only for the CEO) ──────────────────────────
+// ────────────────────────── CEO layer (injected only for the CEO) ──────────
 let SESSION = null;
 const ceo = { movements: [], names: {}, pathGroup: null, showPaths: true, replay: null, panel: null };
 
@@ -587,27 +965,6 @@ const ceo = { movements: [], names: {}, pathGroup: null, showPaths: true, replay
     if (s.isCeo) initCeoLayer();
   } catch {}
 })();
-
-function bfsRoute(fromId, toId){
-  const a = SYS_BY_ID.get(fromId), b = SYS_BY_ID.get(toId);
-  if (a === undefined || b === undefined) return null;
-  if (a === b) return [a];
-  const prev = new Int32Array(SYSTEMS.length).fill(-1);
-  prev[a] = a;
-  let frontier = [a];
-  while (frontier.length) {
-    const next = [];
-    for (const u of frontier) for (const v of ADJ[u]) {
-      if (prev[v] !== -1) continue;
-      prev[v] = u;
-      if (v === b) { const p = [v]; let x = v; while (x !== a) { x = prev[x]; p.push(x); } return p.reverse(); }
-      next.push(v);
-    }
-    frontier = next;
-  }
-  return null;
-}
-if (TEST_MODE) window.__bfsRoute = bfsRoute;
 
 function initCeoLayer(){
   const panel = document.createElement('div');
@@ -684,7 +1041,7 @@ function drawPaths(){
   for (const m of shown) {
     const route = bfsRoute(m.f, m.t);
     if (!route || route.length < 2) continue;
-    const pts = route.map(i => new THREE.Vector3(pos[i*3], pos[i*3+1], pos[i*3+2]));
+    const pts = route.map(i => vecOf(i));
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
     const age = Math.min(1, (now - m.ts) / range);
     const line = new THREE.Line(geo, new THREE.LineDashedMaterial({
@@ -703,7 +1060,6 @@ function drawPaths(){
 
 function disposeGroup(g){ g.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); }); }
 
-// replay: virtual clock over the window; a glowing dot travels each route
 const replayName = document.getElementById('replay-name');
 let replayDot = null;
 function toggleReplay(){
@@ -736,7 +1092,6 @@ function updateReplay(nowMs){
   const speed = Number(document.getElementById('mv-speed').value);
   rp.vt += (nowMs - rp.wall) * speed; rp.wall = nowMs;
   if (rp.vt > rp.t1) { stopReplay(); return false; }
-  // active movement: the one whose ts is closest below vt within 10 virtual minutes
   let active = null;
   for (const m of ceo.movements) {
     if (m.ts <= rp.vt && rp.vt - m.ts < 600000 && m._pts) active = m;
@@ -749,6 +1104,7 @@ function updateReplay(nowMs){
     const i0 = Math.min(pts.length - 2, Math.floor(fi));
     const p = pts[i0].clone().lerp(pts[i0 + 1], fi - i0);
     replayDot.position.copy(p);
+    replayDot.scale.setScalar(Math.max(0.4, 3.2 * worldScale));
     replayDot.visible = true;
     const proj = p.clone().project(camera);
     replayName.style.display = 'block';
@@ -762,19 +1118,27 @@ function updateReplay(nowMs){
   return true;
 }
 
-// ────────────────────────── mobile sheets ──────────────────────────
-for (const [btnId, panelId] of [['tg-regions', 'regions-panel'], ['tg-feed', 'feed-panel']]) {
+// ────────────────────────── misc UI ──────────────────────────
+function toast(msg, isErr){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = isErr ? 'err show' : 'show';
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+for (const [btnId, panelId] of [['tg-route', 'route-panel'], ['tg-feed', 'feed-panel']]) {
   document.getElementById(btnId).addEventListener('click', e => {
     const p = document.getElementById(panelId);
     const open = p.classList.toggle('open');
     e.target.classList.toggle('on', open);
-    if (open) for (const [ob, op] of [['tg-regions', 'regions-panel'], ['tg-feed', 'feed-panel']]) {
+    if (open) for (const [ob, op] of [['tg-route', 'route-panel'], ['tg-feed', 'feed-panel']]) {
       if (op !== panelId) { document.getElementById(op).classList.remove('open'); document.getElementById(ob).classList.remove('on'); }
     }
   });
 }
 
 // ────────────────────────── render loop ──────────────────────────
+applyColors();
+
 function frame(nowMs){
   requestAnimationFrame(frame);
   controls.update();
@@ -794,7 +1158,7 @@ function frame(nowMs){
     if (k >= 1) {
       p.sprite.visible = false; pulsePool.push(p.sprite); pulses.splice(i, 1);
     } else {
-      p.sprite.scale.setScalar(0.6 + k * p.maxScale);
+      p.sprite.scale.setScalar((0.6 + k * p.maxScale) * Math.max(worldScale, 0.12));
       p.sprite.material.opacity = 1 - k;
     }
     needsRender = true;
@@ -809,7 +1173,9 @@ function frame(nowMs){
       hoverIdx = idx;
       if (idx >= 0) {
         const s = SYSTEMS[idx];
-        hoverLabel.innerHTML = esc(s.name) + '<span class="hl-sec ' + secClassOf(s.sec10).replace('sec-', 'sec-') + '" style="color:' + (s.sec10 >= 5 ? 'var(--g)' : s.sec10 >= 1 ? 'var(--orange)' : 'var(--red)') + '">' + secLabelOf(s.sec10) + '</span>';
+        const sov = sovLabelOf(s.id);
+        hoverLabel.innerHTML = esc(s.name) + ' <span style="color:' + secHex(s.sec10) + '">' + secLabelOf(s.sec10) + '</span>'
+          + (sov ? '<br><span style="color:var(--m2);font-size:0.6rem">Sovereignty: ' + esc(sov) + '</span>' : '');
         hoverLabel.style.display = 'block';
       } else hoverLabel.style.display = 'none';
     }
@@ -819,7 +1185,10 @@ function frame(nowMs){
 
   if (needsRender) {
     needsRender = false;
+    updateWorldScale();
     renderer.render(scene, camera);
+    updateRegionLabels();
+    updateRouteLabels();
   }
 }
 requestAnimationFrame(frame);
