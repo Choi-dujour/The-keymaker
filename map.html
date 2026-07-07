@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Galaxy Map — The-Keymaker [THE-K]</title>
+<meta name="description" content="Interactive 3D map of New Eden with live killmail feed from zKillboard."/>
+<meta property="og:title" content="Galaxy Map — The-Keymaker [THE-K]"/>
+<meta property="og:description" content="Navigable 3D galaxy with real-time kills per region."/>
+<meta property="og:image" content="https://images.evetech.net/corporations/98800626/logo?size=256"/>
+<meta property="og:url" content="https://www.the-keymaker.net/map.html"/>
+<link rel="canonical" href="https://www.the-keymaker.net/map.html"/>
+<meta name="theme-color" content="#39FF14"/>
+<link rel="icon" type="image/png" href="https://images.evetech.net/corporations/98800626/logo?size=64"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060e;--s:#0c0c1a;--s2:#101020;--b:#16162a;--b2:#1e1e36;
+  --g:#39FF14;--w:#ECEDF5;--m:#5a5a7a;--m2:#8080a0;
+  --red:#ff4455;--yellow:#ffcc33;--orange:#ff8833;--blue:#4488ff;
+  --mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--w);font-family:'Inter',sans-serif;font-size:14px}
+#gl{position:fixed;inset:0;display:block;touch-action:none}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(1.25rem,4vw,3rem);height:52px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);background:rgba(6,6,14,0.75);
+}
+.n-left{display:flex;align-items:center;gap:0.6rem}
+.n-logo{width:24px;height:24px;border-radius:3px;object-fit:cover;opacity:0.9}
+.n-name{font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.04em}
+.n-name em{color:var(--g);font-style:normal}
+.n-right{display:flex;gap:0.5rem;overflow-x:auto}
+.btn{font-family:'Syne',sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.85rem;cursor:pointer;transition:all .18s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;border:none;white-space:nowrap}
+.btn-o{background:transparent;border:1px solid var(--b);color:var(--m)}
+.btn-o:hover{border-color:var(--m);color:var(--w)}
+
+/* PANELS */
+.panel{
+  position:fixed;z-index:50;background:rgba(12,12,26,0.88);border:1px solid var(--b);
+  backdrop-filter:blur(14px);display:flex;flex-direction:column;
+}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:0.6rem;padding:0.7rem 0.9rem;border-bottom:1px solid var(--b)}
+.panel-title{font-family:'Syne',sans-serif;font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--m2)}
+.panel-body{overflow-y:auto;flex:1}
+
+#regions-panel{top:68px;left:16px;width:230px;max-height:calc(100vh - 160px)}
+.reg-filter-wrap input{width:100%;background:var(--s2);border:1px solid var(--b);color:var(--w);padding:0.45rem 0.65rem;font-size:0.72rem;outline:none;font-family:'Inter',sans-serif}
+.reg-filter-wrap input:focus{border-color:var(--g)}
+.reg-filter-wrap{padding:0.6rem 0.9rem;border-bottom:1px solid var(--b)}
+.reg-row{display:flex;align-items:center;gap:0.5rem;padding:0.28rem 0.9rem;font-size:0.72rem;color:var(--m2);cursor:pointer;user-select:none}
+.reg-row:hover{background:rgba(255,255,255,0.03);color:var(--w)}
+.reg-row input{accent-color:var(--g);cursor:pointer}
+.reg-row .reg-name{flex:1;cursor:pointer}
+.reg-row.checked{color:var(--w)}
+.reg-actions{display:flex;gap:0.4rem;padding:0.5rem 0.9rem;border-top:1px solid var(--b)}
+.reg-actions button{flex:1;background:transparent;border:1px solid var(--b);color:var(--m);font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;font-family:'Syne',sans-serif;font-weight:700;padding:0.35rem;cursor:pointer}
+.reg-actions button:hover{border-color:var(--m);color:var(--w)}
+
+#feed-panel{top:68px;right:16px;width:290px;max-height:calc(100vh - 160px)}
+.badge{font-family:var(--mono);font-size:0.58rem;padding:0.15rem 0.5rem;border-radius:2px;letter-spacing:0.1em}
+.badge.live{color:var(--g);background:rgba(57,255,20,0.1)}
+.badge.live::before{content:'●';margin-right:0.3rem;animation:blink 1.6s infinite}
+.badge.delayed{color:var(--yellow);background:rgba(255,204,51,0.1)}
+.badge.off{color:var(--m);background:rgba(90,90,122,0.15)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.kill-row{display:block;padding:0.5rem 0.9rem;border-bottom:1px solid rgba(22,22,42,0.7);text-decoration:none;color:var(--w);transition:background .12s}
+.kill-row:hover{background:rgba(255,68,85,0.06)}
+.kill-top{display:flex;justify-content:space-between;gap:0.5rem;font-size:0.72rem}
+.kill-ship{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kill-isk{font-family:var(--mono);font-size:0.66rem;color:var(--red);white-space:nowrap}
+.kill-sub{display:flex;justify-content:space-between;font-size:0.6rem;color:var(--m);margin-top:0.12rem}
+.feed-empty{padding:1.2rem 0.9rem;font-size:0.7rem;color:var(--m);text-align:center;line-height:1.7}
+
+#info-card{bottom:16px;left:16px;width:250px;padding:0.9rem 1rem;display:none}
+#info-card.show{display:block}
+#info-card h3{font-family:'Syne',sans-serif;font-size:1rem;margin-bottom:0.2rem}
+#info-card .ic-region{font-size:0.65rem;color:var(--m);margin-bottom:0.5rem}
+.sec-badge{font-family:var(--mono);font-size:0.68rem;padding:0.12rem 0.45rem;border-radius:2px}
+.sec-hi{color:var(--g);background:rgba(57,255,20,0.1)}
+.sec-lo{color:var(--orange);background:rgba(255,136,51,0.1)}
+.sec-null{color:var(--red);background:rgba(255,68,85,0.1)}
+#info-card .ic-links{display:flex;gap:0.5rem;margin-top:0.6rem}
+#info-card .ic-links a{font-size:0.62rem;color:var(--m2);text-decoration:none}
+#info-card .ic-links a:hover{color:var(--g)}
+#info-card .ic-x{position:absolute;top:0.4rem;right:0.6rem;background:none;border:none;color:var(--m);cursor:pointer;font-size:0.9rem}
+
+#hover-label{position:fixed;z-index:60;pointer-events:none;display:none;background:rgba(12,12,26,0.92);border:1px solid var(--b2);padding:0.2rem 0.55rem;font-size:0.68rem;font-family:var(--mono);white-space:nowrap}
+#hover-label .hl-sec{margin-left:0.4rem}
+
+/* CEO panel is injected by JS */
+#ceo-panel{bottom:16px;right:16px;width:330px;max-height:44vh}
+.mv-row{display:flex;align-items:baseline;gap:0.5rem;padding:0.38rem 0.9rem;font-size:0.7rem;border-bottom:1px solid rgba(22,22,42,0.7)}
+.mv-time{font-family:var(--mono);font-size:0.6rem;color:var(--m);white-space:nowrap}
+.mv-who{color:var(--g);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px}
+.mv-route{flex:1;color:var(--m2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mv-route b{color:var(--w);font-weight:500}
+.ceo-controls{display:flex;gap:0.4rem;padding:0.55rem 0.9rem;border-bottom:1px solid var(--b);flex-wrap:wrap;align-items:center}
+.ceo-controls select{background:var(--s2);border:1px solid var(--b);color:var(--w);font-size:0.65rem;padding:0.3rem 0.4rem;outline:none}
+.ceo-controls button{background:transparent;border:1px solid var(--b);color:var(--m);font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;font-family:'Syne',sans-serif;font-weight:700;padding:0.32rem 0.6rem;cursor:pointer}
+.ceo-controls button:hover,.ceo-controls button.on{border-color:var(--g);color:var(--g)}
+.ceo-stalled{padding:0.45rem 0.9rem;font-size:0.62rem;color:var(--yellow);border-bottom:1px solid var(--b)}
+#replay-name{position:fixed;z-index:60;pointer-events:none;display:none;color:var(--g);font-size:0.62rem;font-family:var(--mono);text-shadow:0 0 6px #000}
+
+/* Mobile: panels become toggleable sheets */
+.sheet-toggles{display:none;position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:70;gap:0.5rem}
+.sheet-toggles button{background:rgba(12,12,26,0.9);border:1px solid var(--b);color:var(--m2);font-family:'Syne',sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:0.5rem 0.9rem;cursor:pointer}
+.sheet-toggles button.on{border-color:var(--g);color:var(--g)}
+@media(max-width:760px){
+  .sheet-toggles{display:flex}
+  #regions-panel,#feed-panel,#ceo-panel{top:auto;left:8px;right:8px;bottom:60px;width:auto;max-height:46vh;display:none}
+  #regions-panel.open,#feed-panel.open,#ceo-panel.open{display:flex}
+  #info-card{bottom:60px}
+}
+</style>
+</head>
+<body>
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="/shared.js"></script>
+
+<canvas id="gl"></canvas>
+
+<nav>
+  <div class="n-left">
+    <img class="n-logo" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt=""/>
+    <div class="n-name">The-<em>Keymaker</em></div>
+  </div>
+  <div class="n-right">
+    <a href="/" class="btn btn-o">← Home</a>
+    <a href="/tracker.html" class="btn btn-o">Tracker</a>
+    <a href="/arbitrage.html" class="btn btn-o" id="nav-arbitrage" style="display:none">Arbitrage</a>
+    <a href="/pi.html" class="btn btn-o" id="nav-pi" style="display:none">PI</a>
+    <a href="/api/login" class="btn btn-o" id="nav-login">⬡ Login</a>
+    <a href="/dashboard.html" class="btn btn-o" id="nav-dashboard" style="display:none">Dashboard</a>
+  </div>
+</nav>
+
+<div class="panel" id="regions-panel">
+  <div class="panel-head"><span class="panel-title">Regions</span><span class="badge off" id="feed-badge">OFF</span></div>
+  <div class="reg-filter-wrap"><input type="text" id="reg-filter" placeholder="Filter regions…"/></div>
+  <div class="panel-body" id="reg-list"></div>
+  <div class="reg-actions">
+    <button id="reg-none">Clear</button>
+    <button id="reg-home">Home regions</button>
+  </div>
+</div>
+
+<div class="panel" id="feed-panel">
+  <div class="panel-head"><span class="panel-title">Kill feed</span><span class="panel-title" id="feed-count"></span></div>
+  <div class="panel-body" id="feed-list"><div class="feed-empty">Waiting for kills in the selected regions…</div></div>
+</div>
+
+<div class="panel" id="info-card">
+  <button class="ic-x" id="ic-close">×</button>
+  <h3 id="ic-name"></h3>
+  <div class="ic-region" id="ic-region"></div>
+  <span class="sec-badge" id="ic-sec"></span>
+  <div class="ic-links">
+    <a id="ic-dotlan" target="_blank" rel="noopener">DOTLAN ↗</a>
+    <a id="ic-zkill" target="_blank" rel="noopener">zKillboard ↗</a>
+  </div>
+</div>
+
+<div id="hover-label"></div>
+<div id="replay-name"></div>
+
+<div class="sheet-toggles">
+  <button id="tg-regions">Regions</button>
+  <button id="tg-feed">Feed</button>
+</div>
+
+<script type="importmap">{"imports":{"three":"/vendor/three.module.min.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from '/vendor/OrbitControls.min.js';
+
+const TEST_MODE = location.hash.includes('test');
+const HOME_REGIONS = [10000042, 10000030, 10000028]; // Metropolis, Heimatar, Molden Heath
+
+// ────────────────────────── data ──────────────────────────
+const dataRes = await fetch('/map-data.json');
+const DATA = await dataRes.json();
+const REGIONS = DATA.regions.map(([id, name]) => ({ id, name }));
+const SYSTEMS = DATA.systems.map(([id, name, sec10, r, x, y, z]) => ({ id, name, sec10, r, x, y, z }));
+const SYS_BY_ID = new Map(SYSTEMS.map((s, i) => [s.id, i]));
+const REGION_BY_ID = new Map(REGIONS.map((r, i) => [r.id, i]));
+const ADJ = Array.from({ length: SYSTEMS.length }, () => []);
+for (const [a, b] of DATA.jumps) { ADJ[a].push(b); ADJ[b].push(a); }
+
+// region selection (persisted)
+let selected = new Set(HOME_REGIONS);
+try {
+  const saved = JSON.parse(localStorage.getItem('map_regions') || 'null');
+  if (Array.isArray(saved)) selected = new Set(saved.filter(id => REGION_BY_ID.has(id)));
+} catch {}
+function saveSelection(){ try { localStorage.setItem('map_regions', JSON.stringify([...selected])); } catch {} }
+
+// ────────────────────────── scene ──────────────────────────
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth <= 760 ? 1.5 : 2));
+renderer.setClearColor(0x06060e);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, 1, 0.5, 6000);
+
+// positions: (x, z, y) so the galactic disc lies flat under the default camera
+const pos = new Float32Array(SYSTEMS.length * 3);
+SYSTEMS.forEach((s, i) => { pos[i*3] = s.x; pos[i*3+1] = s.z; pos[i*3+2] = s.y; });
+
+// security palette on theme colors
+const SEC_COLORS = (() => {
+  const stops = { 10: '#39FF14', 7: '#5fe83a', 5: '#ffcc33', 3: '#ff8833', 1: '#ff8833', 0: '#ff4455' };
+  const out = [];
+  for (let s10 = -10; s10 <= 10; s10++) {
+    let hex;
+    if (s10 >= 10) hex = stops[10];
+    else if (s10 >= 7) hex = stops[7];
+    else if (s10 >= 5) hex = stops[5];
+    else if (s10 >= 1) hex = stops[3];
+    else hex = stops[0];
+    out.push(new THREE.Color(hex));
+  }
+  return out; // index = sec10 + 10
+})();
+
+const baseColors = new Float32Array(SYSTEMS.length * 3);
+SYSTEMS.forEach((s, i) => {
+  const c = SEC_COLORS[Math.max(-10, Math.min(10, s.sec10)) + 10];
+  baseColors[i*3] = c.r; baseColors[i*3+1] = c.g; baseColors[i*3+2] = c.b;
+});
+const colorAttr = new THREE.BufferAttribute(baseColors.slice(), 3);
+
+function discTexture(){
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(32,32,0,32,32,32);
+  g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.35,'rgba(255,255,255,0.8)'); g.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(c);
+}
+
+const pointsGeo = new THREE.BufferGeometry();
+pointsGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+pointsGeo.setAttribute('color', colorAttr);
+const points = new THREE.Points(pointsGeo, new THREE.PointsMaterial({
+  vertexColors: true, size: 2.4, sizeAttenuation: true, map: discTexture(),
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+}));
+scene.add(points);
+
+const jumpPos = new Float32Array(DATA.jumps.length * 6);
+DATA.jumps.forEach(([a, b], i) => {
+  jumpPos[i*6]   = pos[a*3];   jumpPos[i*6+1] = pos[a*3+1]; jumpPos[i*6+2] = pos[a*3+2];
+  jumpPos[i*6+3] = pos[b*3];   jumpPos[i*6+4] = pos[b*3+1]; jumpPos[i*6+5] = pos[b*3+2];
+});
+const jumpsGeo = new THREE.BufferGeometry();
+jumpsGeo.setAttribute('position', new THREE.BufferAttribute(jumpPos, 3));
+scene.add(new THREE.LineSegments(jumpsGeo, new THREE.LineBasicMaterial({
+  color: 0x2a2a4a, transparent: true, opacity: 0.28, depthWrite: false, blending: THREE.AdditiveBlending,
+})));
+
+// center camera on the k-space centroid
+const centroid = new THREE.Vector3();
+for (let i = 0; i < SYSTEMS.length; i++) centroid.add(new THREE.Vector3(pos[i*3], pos[i*3+1], pos[i*3+2]));
+centroid.divideScalar(SYSTEMS.length);
+let radius = 0;
+for (let i = 0; i < SYSTEMS.length; i++) {
+  const d = centroid.distanceTo(new THREE.Vector3(pos[i*3], pos[i*3+1], pos[i*3+2]));
+  if (d > radius) radius = d;
+}
+const fitDist = radius / Math.tan((camera.fov / 2) * Math.PI / 180) * 0.62; // slight crop of outliers
+camera.position.set(centroid.x, centroid.y + fitDist * 0.75, centroid.z + fitDist * 0.66);
+
+const controls = new OrbitControls(camera, canvas);
+controls.target.copy(centroid);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.rotateSpeed = 0.5; controls.zoomSpeed = 0.8;
+controls.minDistance = 4; controls.maxDistance = fitDist * 2.2;
+
+let needsRender = true;
+controls.addEventListener('change', () => { needsRender = true; });
+function resize(){
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  needsRender = true;
+}
+addEventListener('resize', resize); resize();
+
+// ────────────────────────── region highlight ──────────────────────────
+function applyHighlight(){
+  const arr = colorAttr.array;
+  const allSelected = selected.size === 0; // nothing checked = show everything bright
+  for (let i = 0; i < SYSTEMS.length; i++) {
+    const on = allSelected || selected.has(REGIONS[SYSTEMS[i].r].id);
+    const f = on ? 1 : 0.16;
+    arr[i*3] = baseColors[i*3] * f; arr[i*3+1] = baseColors[i*3+1] * f; arr[i*3+2] = baseColors[i*3+2] * f;
+  }
+  colorAttr.needsUpdate = true;
+  needsRender = true;
+}
+
+// camera fly-to
+let flyAnim = null;
+function flyTo(target, dist){
+  const from = { t: controls.target.clone(), p: camera.position.clone() };
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  const to = { t: target.clone(), p: target.clone().add(dir.multiplyScalar(dist)) };
+  flyAnim = { from, to, t0: performance.now(), dur: 850 };
+}
+function regionCentroid(regionIdx){
+  const v = new THREE.Vector3(); let n = 0;
+  for (let i = 0; i < SYSTEMS.length; i++) if (SYSTEMS[i].r === regionIdx) { v.x += pos[i*3]; v.y += pos[i*3+1]; v.z += pos[i*3+2]; n++; }
+  return n ? v.divideScalar(n) : centroid.clone();
+}
+
+// ────────────────────────── region panel ──────────────────────────
+const regList = document.getElementById('reg-list');
+function renderRegionList(){
+  const q = document.getElementById('reg-filter').value.trim().toLowerCase();
+  regList.innerHTML = REGIONS
+    .map((r, i) => ({ r, i }))
+    .sort((a, b) => a.r.name.localeCompare(b.r.name))
+    .filter(({ r }) => !q || r.name.toLowerCase().includes(q))
+    .map(({ r, i }) => {
+      const on = selected.has(r.id);
+      return `<label class="reg-row${on ? ' checked' : ''}" data-rid="${r.id}">`
+        + `<input type="checkbox" ${on ? 'checked' : ''} data-rid="${r.id}"/>`
+        + `<span class="reg-name" data-fly="${i}">${esc(r.name)}</span></label>`;
+    }).join('');
+}
+regList.addEventListener('change', e => {
+  const rid = Number(e.target.dataset.rid);
+  if (!rid) return;
+  if (e.target.checked) selected.add(rid); else selected.delete(rid);
+  saveSelection(); renderRegionList(); applyHighlight();
+});
+regList.addEventListener('click', e => {
+  const fly = e.target.dataset.fly;
+  if (fly !== undefined) flyTo(regionCentroid(Number(fly)), 210);
+});
+document.getElementById('reg-filter').addEventListener('input', renderRegionList);
+document.getElementById('reg-none').addEventListener('click', () => { selected.clear(); saveSelection(); renderRegionList(); applyHighlight(); });
+document.getElementById('reg-home').addEventListener('click', () => { selected = new Set(HOME_REGIONS); saveSelection(); renderRegionList(); applyHighlight(); });
+
+renderRegionList();
+applyHighlight();
+
+// ────────────────────────── picking / hover ──────────────────────────
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+const hoverLabel = document.getElementById('hover-label');
+let hoverIdx = -1, pendingHover = null, downXY = null;
+
+function pick(clientX, clientY){
+  pointer.x = (clientX / innerWidth) * 2 - 1;
+  pointer.y = -(clientY / innerHeight) * 2 + 1;
+  const dist = camera.position.distanceTo(controls.target);
+  raycaster.params.Points.threshold = Math.min(6, Math.max(0.5, dist * 0.006));
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObject(points);
+  return hits.length ? hits[0].index : -1;
+}
+canvas.addEventListener('pointermove', e => { pendingHover = [e.clientX, e.clientY]; });
+canvas.addEventListener('pointerdown', e => { downXY = [e.clientX, e.clientY]; });
+canvas.addEventListener('pointerup', e => {
+  if (!downXY) return;
+  const moved = Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]);
+  downXY = null;
+  if (moved < 5) {
+    const idx = pick(e.clientX, e.clientY);
+    if (idx >= 0) showInfo(idx); else hideInfo();
+  }
+});
+
+function secLabelOf(sec10){ return (sec10 / 10).toFixed(1); }
+function secClassOf(sec10){ return sec10 >= 5 ? 'sec-hi' : sec10 >= 1 ? 'sec-lo' : 'sec-null'; }
+
+function showInfo(idx){
+  const s = SYSTEMS[idx];
+  document.getElementById('ic-name').textContent = s.name;
+  document.getElementById('ic-region').textContent = REGIONS[s.r].name;
+  const secEl = document.getElementById('ic-sec');
+  secEl.textContent = secLabelOf(s.sec10);
+  secEl.className = 'sec-badge ' + secClassOf(s.sec10);
+  document.getElementById('ic-dotlan').href = 'https://evemaps.dotlan.net/system/' + encodeURIComponent(s.name);
+  document.getElementById('ic-zkill').href = 'https://zkillboard.com/system/' + s.id + '/';
+  document.getElementById('info-card').classList.add('show');
+}
+function hideInfo(){ document.getElementById('info-card').classList.remove('show'); }
+document.getElementById('ic-close').addEventListener('click', hideInfo);
+
+// ────────────────────────── kill pulses ──────────────────────────
+function ringTexture(){
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.strokeStyle = 'rgba(255,255,255,1)'; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.arc(32, 32, 26, 0, Math.PI * 2); ctx.stroke();
+  return new THREE.CanvasTexture(c);
+}
+const ringTex = ringTexture();
+const pulses = [];
+const pulsePool = [];
+function pulseAt(sysIdx, iskValue, color = 0xff4455){
+  let sprite = pulsePool.pop();
+  if (!sprite) {
+    sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: ringTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    }));
+    scene.add(sprite);
+  }
+  sprite.material.color.setHex(color);
+  sprite.position.set(pos[sysIdx*3], pos[sysIdx*3+1], pos[sysIdx*3+2]);
+  sprite.visible = true;
+  const maxScale = 6 + Math.max(0, Math.log10(Math.max(1, iskValue)) - 6) * 2.2; // 10M→6, 1B→~11, 100B→~15
+  pulses.push({ sprite, t0: performance.now(), dur: 2500, maxScale });
+  if (iskValue >= 1e9) setTimeout(() => { if (SYS_BY_ID) pulseAt(sysIdx, 1, 0xffffff); }, 220);
+  needsRender = true;
+}
+
+// ────────────────────────── kill feed ──────────────────────────
+const feedList = document.getElementById('feed-list');
+const feedBadge = document.getElementById('feed-badge');
+const seenKills = new Set(); const seenOrder = [];
+let feedRows = 0, killCount = 0;
+const shipNames = new Map(); const shipPending = new Set();
+
+function setBadge(mode){
+  feedBadge.className = 'badge ' + mode;
+  feedBadge.textContent = mode === 'live' ? 'LIVE' : mode === 'delayed' ? 'DELAYED' : 'OFF';
+}
+function iskFmt(v){
+  if (v == null) return '';
+  if (v >= 1e9) return (v/1e9).toFixed(2) + 'B';
+  if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
+  if (v >= 1e3) return (v/1e3).toFixed(0) + 'k';
+  return String(Math.round(v));
+}
+
+async function resolveShipNames(ids){
+  const need = ids.filter(id => id && !shipNames.has(id) && !shipPending.has(id));
+  if (!need.length) return;
+  need.forEach(id => shipPending.add(id));
+  try {
+    const r = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(need),
+    });
+    if (r.ok) for (const it of await r.json()) shipNames.set(it.id, it.name);
+  } catch {}
+  need.forEach(id => shipPending.delete(id));
+  // patch rows rendered before the name arrived
+  document.querySelectorAll('[data-ship]').forEach(el => {
+    const n = shipNames.get(Number(el.dataset.ship));
+    if (n) { el.textContent = n; el.removeAttribute('data-ship'); }
+  });
+}
+
+function handleKill(km){
+  if (!km || !km.killmail_id || seenKills.has(km.killmail_id)) return;
+  seenKills.add(km.killmail_id); seenOrder.push(km.killmail_id);
+  if (seenOrder.length > 2000) seenKills.delete(seenOrder.shift());
+
+  const sysIdx = SYS_BY_ID.get(km.solar_system_id);
+  if (sysIdx === undefined) return;
+  const regionId = REGIONS[SYSTEMS[sysIdx].r].id;
+  if (selected.size && !selected.has(regionId)) return;
+
+  const isk = km.zkb?.totalValue || 0;
+  pulseAt(sysIdx, isk);
+
+  const shipId = km.victim?.ship_type_id;
+  const shipName = shipNames.get(shipId);
+  if (shipId && !shipName) resolveShipNames([shipId]);
+  const t = km.killmail_time ? new Date(km.killmail_time) : new Date();
+  const hh = String(t.getHours()).padStart(2,'0'), mm = String(t.getMinutes()).padStart(2,'0'), ss = String(t.getSeconds()).padStart(2,'0');
+
+  if (feedRows === 0) feedList.innerHTML = '';
+  const row = document.createElement('a');
+  row.className = 'kill-row';
+  row.href = 'https://zkillboard.com/kill/' + km.killmail_id + '/';
+  row.target = '_blank'; row.rel = 'noopener';
+  row.innerHTML = '<div class="kill-top"><span class="kill-ship"' + (shipName ? '' : ' data-ship="' + (shipId||0) + '"') + '>'
+    + esc(shipName || ('Ship #' + (shipId || '?'))) + '</span><span class="kill-isk">' + iskFmt(isk) + ' ISK</span></div>'
+    + '<div class="kill-sub"><span>' + esc(SYSTEMS[sysIdx].name) + ' · ' + esc(REGIONS[SYSTEMS[sysIdx].r].name) + '</span><span>' + hh + ':' + mm + ':' + ss + '</span></div>';
+  feedList.prepend(row);
+  feedRows++; killCount++;
+  document.getElementById('feed-count').textContent = killCount + ' kills';
+  while (feedRows > 50) { feedList.lastChild.remove(); feedRows--; }
+}
+if (TEST_MODE) window.__handleKill = handleKill;
+
+// R2Z2 live loop with zkill-REST fallback
+const R2Z2 = 'https://r2z2.zkillboard.com/ephemeral/';
+let feedMode = 'off', seq = null, liveFails = 0;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const pageVisible = () => document.visibilityState !== 'hidden';
+
+async function fetchSequence(){
+  const s = await fetch(R2Z2 + 'sequence.json').then(r => { if (!r.ok) throw new Error('seq ' + r.status); return r.json(); });
+  const n = typeof s === 'object' && s !== null ? (s.sequence ?? s.id ?? s.seq) : s;
+  if (!Number.isFinite(Number(n))) throw new Error('bad sequence payload');
+  return Number(n);
+}
+
+async function startFeed(){
+  if (TEST_MODE) { setBadge('off'); return; } // tests drive handleKill directly
+  try {
+    seq = await fetchSequence();
+    feedMode = 'live'; setBadge('live');
+    liveLoop();
+  } catch {
+    enterFallback();
+  }
+}
+
+async function liveLoop(){
+  let lastSeqCheck = Date.now();
+  while (feedMode === 'live') {
+    if (!pageVisible()) { await sleep(2000); continue; }
+    let got = false;
+    try {
+      const r = await fetch(R2Z2 + (seq + 1) + '.json');
+      liveFails = 0;
+      if (r.ok) { seq++; got = true; handleKill(await r.json()); }
+      else if (r.status !== 404) throw new Error('r2z2 ' + r.status);
+    } catch {
+      if (++liveFails >= 3) return enterFallback();
+    }
+    if (!got && Date.now() - lastSeqCheck > 300000) { // heal gaps / counter resets
+      lastSeqCheck = Date.now();
+      try { const n = await fetchSequence(); if (Math.abs(n - seq) > 20) seq = n; } catch {}
+    }
+    await sleep(got ? 500 : 7000);
+  }
+}
+
+async function enterFallback(){
+  feedMode = 'delayed'; setBadge('delayed');
+  while (feedMode === 'delayed') {
+    if (!pageVisible()) { await sleep(5000); continue; }
+    for (const regionId of [...selected]) {
+      try {
+        const kills = await fetch('https://zkillboard.com/api/regionID/' + regionId + '/pastSeconds/3600/').then(r => r.json());
+        let budget = 20;
+        for (const k of (Array.isArray(kills) ? kills : [])) {
+          if (seenKills.has(k.killmail_id)) continue;
+          if (budget-- <= 0) break;
+          try {
+            const km = await fetch('https://esi.evetech.net/latest/killmails/' + k.killmail_id + '/' + k.zkb.hash + '/?datasource=tranquility').then(r => r.json());
+            handleKill({ ...km, zkb: k.zkb });
+          } catch {}
+        }
+      } catch {}
+      await sleep(1500);
+    }
+    await sleep(60000);
+  }
+}
+startFeed();
+
+// ────────────────────────── CEO layer (injected only for the CEO) ──────────────────────────
+let SESSION = null;
+const ceo = { movements: [], names: {}, pathGroup: null, showPaths: true, replay: null, panel: null };
+
+(async () => {
+  try {
+    const r = await fetch('/api/me');
+    if (!r.ok) return;
+    const s = await r.json();
+    if (!s.authenticated) return;
+    SESSION = s;
+    document.getElementById('nav-login').style.display = 'none';
+    document.getElementById('nav-dashboard').style.display = 'inline-flex';
+    document.getElementById('nav-arbitrage').style.display = 'inline-flex';
+    document.getElementById('nav-pi').style.display = 'inline-flex';
+    if (s.isCeo) initCeoLayer();
+  } catch {}
+})();
+
+function bfsRoute(fromId, toId){
+  const a = SYS_BY_ID.get(fromId), b = SYS_BY_ID.get(toId);
+  if (a === undefined || b === undefined) return null;
+  if (a === b) return [a];
+  const prev = new Int32Array(SYSTEMS.length).fill(-1);
+  prev[a] = a;
+  let frontier = [a];
+  while (frontier.length) {
+    const next = [];
+    for (const u of frontier) for (const v of ADJ[u]) {
+      if (prev[v] !== -1) continue;
+      prev[v] = u;
+      if (v === b) { const p = [v]; let x = v; while (x !== a) { x = prev[x]; p.push(x); } return p.reverse(); }
+      next.push(v);
+    }
+    frontier = next;
+  }
+  return null;
+}
+if (TEST_MODE) window.__bfsRoute = bfsRoute;
+
+function initCeoLayer(){
+  const panel = document.createElement('div');
+  panel.className = 'panel'; panel.id = 'ceo-panel';
+  panel.innerHTML = '<div class="panel-head"><span class="panel-title">Member movements</span><span class="panel-title" id="mv-count"></span></div>'
+    + '<div class="ceo-stalled" id="ceo-stalled" style="display:none"></div>'
+    + '<div class="ceo-controls">'
+    + '<select id="mv-range"><option value="3600000">1h</option><option value="21600000">6h</option><option value="86400000" selected>24h</option><option value="604800000">7d</option></select>'
+    + '<button id="mv-paths" class="on">Paths</button>'
+    + '<button id="mv-replay">▶ Replay</button>'
+    + '<select id="mv-speed"><option value="60">60×</option><option value="600" selected>600×</option><option value="3600">3600×</option></select>'
+    + '</div>'
+    + '<div class="panel-body" id="mv-list"><div class="feed-empty">Loading…</div></div>';
+  document.body.appendChild(panel);
+  ceo.panel = panel;
+
+  document.getElementById('mv-range').addEventListener('change', loadMovements);
+  document.getElementById('mv-paths').addEventListener('click', e => {
+    ceo.showPaths = !ceo.showPaths;
+    e.target.classList.toggle('on', ceo.showPaths);
+    if (ceo.pathGroup) { ceo.pathGroup.visible = ceo.showPaths; needsRender = true; }
+  });
+  document.getElementById('mv-replay').addEventListener('click', toggleReplay);
+  loadMovements();
+}
+
+async function loadMovements(){
+  const range = Number(document.getElementById('mv-range').value);
+  const now = Date.now();
+  try {
+    const r = await fetch('/api/map?action=log&from=' + (now - range) + '&to=' + now);
+    if (!r.ok) throw new Error('API ' + r.status);
+    const data = await r.json();
+    ceo.movements = data.movements || [];
+    ceo.names = data.names || {};
+    stopReplay();
+    renderMovementList();
+    drawPaths();
+    const stalled = document.getElementById('ceo-stalled');
+    if (!data.status?.lastOkTs || now - data.status.lastOkTs > 25 * 60000) {
+      stalled.style.display = '';
+      stalled.textContent = '⚠ sampling stalled' + (data.status?.lastOkTs ? ' since ' + new Date(data.status.lastOkTs).toLocaleString() : ' — cron has never run') + (data.status?.lastError ? ' (' + data.status.lastError + ')' : '');
+    } else stalled.style.display = 'none';
+  } catch (e) {
+    document.getElementById('mv-list').innerHTML = '<div class="feed-empty">Failed to load movements (' + esc(e.message) + ')</div>';
+  }
+}
+
+function sysName(id){ const i = SYS_BY_ID.get(id); return i === undefined ? '#' + id : SYSTEMS[i].name; }
+
+function renderMovementList(){
+  const list = document.getElementById('mv-list');
+  document.getElementById('mv-count').textContent = ceo.movements.length + ' moves';
+  if (!ceo.movements.length) {
+    list.innerHTML = '<div class="feed-empty">No member movements in this window.</div>';
+    return;
+  }
+  list.innerHTML = [...ceo.movements].reverse().slice(0, 300).map(m => {
+    const t = new Date(m.ts);
+    const hh = String(t.getHours()).padStart(2,'0'), mm = String(t.getMinutes()).padStart(2,'0');
+    const day = t.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' });
+    return '<div class="mv-row"><span class="mv-time">' + day + ' ' + hh + ':' + mm + '</span>'
+      + '<span class="mv-who">' + esc(ceo.names[m.c] || ('#' + m.c)) + '</span>'
+      + '<span class="mv-route"><b>' + esc(sysName(m.f)) + '</b> → <b>' + esc(sysName(m.t)) + '</b></span></div>';
+  }).join('');
+}
+
+function drawPaths(){
+  if (ceo.pathGroup) { scene.remove(ceo.pathGroup); disposeGroup(ceo.pathGroup); }
+  const group = new THREE.Group();
+  const now = Date.now();
+  const range = Number(document.getElementById('mv-range').value);
+  const shown = ceo.movements.slice(-200);
+  for (const m of shown) {
+    const route = bfsRoute(m.f, m.t);
+    if (!route || route.length < 2) continue;
+    const pts = route.map(i => new THREE.Vector3(pos[i*3], pos[i*3+1], pos[i*3+2]));
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const age = Math.min(1, (now - m.ts) / range);
+    const line = new THREE.Line(geo, new THREE.LineDashedMaterial({
+      color: 0x39FF14, transparent: true, opacity: 0.75 - age * 0.55,
+      dashSize: 1.6, gapSize: 1.0, depthWrite: false,
+    }));
+    line.computeLineDistances();
+    m._pts = pts;
+    group.add(line);
+  }
+  group.visible = ceo.showPaths;
+  ceo.pathGroup = group;
+  scene.add(group);
+  needsRender = true;
+}
+
+function disposeGroup(g){ g.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); }); }
+
+// replay: virtual clock over the window; a glowing dot travels each route
+const replayName = document.getElementById('replay-name');
+let replayDot = null;
+function toggleReplay(){
+  if (ceo.replay) { stopReplay(); return; }
+  if (!ceo.movements.length) return;
+  if (!replayDot) {
+    replayDot = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: ringTex, color: 0x39FF14, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    }));
+    replayDot.scale.setScalar(3.2);
+    scene.add(replayDot);
+  }
+  const t0 = ceo.movements[0].ts, t1 = ceo.movements[ceo.movements.length - 1].ts + 600000;
+  ceo.replay = { vt: t0, t0, t1, wall: performance.now() };
+  document.getElementById('mv-replay').textContent = '■ Stop';
+  needsRender = true;
+}
+function stopReplay(){
+  ceo.replay = null;
+  if (replayDot) replayDot.visible = false;
+  replayName.style.display = 'none';
+  const btn = document.getElementById('mv-replay');
+  if (btn) btn.textContent = '▶ Replay';
+  needsRender = true;
+}
+
+function updateReplay(nowMs){
+  const rp = ceo.replay;
+  if (!rp) return false;
+  const speed = Number(document.getElementById('mv-speed').value);
+  rp.vt += (nowMs - rp.wall) * speed; rp.wall = nowMs;
+  if (rp.vt > rp.t1) { stopReplay(); return false; }
+  // active movement: the one whose ts is closest below vt within 10 virtual minutes
+  let active = null;
+  for (const m of ceo.movements) {
+    if (m.ts <= rp.vt && rp.vt - m.ts < 600000 && m._pts) active = m;
+    if (m.ts > rp.vt) break;
+  }
+  if (active) {
+    const prog = (rp.vt - active.ts) / 600000;
+    const pts = active._pts;
+    const fi = prog * (pts.length - 1);
+    const i0 = Math.min(pts.length - 2, Math.floor(fi));
+    const p = pts[i0].clone().lerp(pts[i0 + 1], fi - i0);
+    replayDot.position.copy(p);
+    replayDot.visible = true;
+    const proj = p.clone().project(camera);
+    replayName.style.display = 'block';
+    replayName.style.left = ((proj.x * 0.5 + 0.5) * innerWidth + 10) + 'px';
+    replayName.style.top = ((-proj.y * 0.5 + 0.5) * innerHeight - 8) + 'px';
+    replayName.textContent = (ceo.names[active.c] || '#' + active.c) + ' · ' + new Date(rp.vt).toLocaleTimeString();
+  } else {
+    replayDot.visible = false;
+    replayName.style.display = 'none';
+  }
+  return true;
+}
+
+// ────────────────────────── mobile sheets ──────────────────────────
+for (const [btnId, panelId] of [['tg-regions', 'regions-panel'], ['tg-feed', 'feed-panel']]) {
+  document.getElementById(btnId).addEventListener('click', e => {
+    const p = document.getElementById(panelId);
+    const open = p.classList.toggle('open');
+    e.target.classList.toggle('on', open);
+    if (open) for (const [ob, op] of [['tg-regions', 'regions-panel'], ['tg-feed', 'feed-panel']]) {
+      if (op !== panelId) { document.getElementById(op).classList.remove('open'); document.getElementById(ob).classList.remove('on'); }
+    }
+  });
+}
+
+// ────────────────────────── render loop ──────────────────────────
+function frame(nowMs){
+  requestAnimationFrame(frame);
+  controls.update();
+
+  if (flyAnim) {
+    const k = Math.min(1, (nowMs - flyAnim.t0) / flyAnim.dur);
+    const e = k < 0.5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2) / 2;
+    controls.target.lerpVectors(flyAnim.from.t, flyAnim.to.t, e);
+    camera.position.lerpVectors(flyAnim.from.p, flyAnim.to.p, e);
+    if (k >= 1) flyAnim = null;
+    needsRender = true;
+  }
+
+  for (let i = pulses.length - 1; i >= 0; i--) {
+    const p = pulses[i];
+    const k = (nowMs - p.t0) / p.dur;
+    if (k >= 1) {
+      p.sprite.visible = false; pulsePool.push(p.sprite); pulses.splice(i, 1);
+    } else {
+      p.sprite.scale.setScalar(0.6 + k * p.maxScale);
+      p.sprite.material.opacity = 1 - k;
+    }
+    needsRender = true;
+  }
+
+  if (updateReplay(nowMs)) needsRender = true;
+
+  if (pendingHover) {
+    const [x, y] = pendingHover; pendingHover = null;
+    const idx = pick(x, y);
+    if (idx !== hoverIdx) {
+      hoverIdx = idx;
+      if (idx >= 0) {
+        const s = SYSTEMS[idx];
+        hoverLabel.innerHTML = esc(s.name) + '<span class="hl-sec ' + secClassOf(s.sec10).replace('sec-', 'sec-') + '" style="color:' + (s.sec10 >= 5 ? 'var(--g)' : s.sec10 >= 1 ? 'var(--orange)' : 'var(--red)') + '">' + secLabelOf(s.sec10) + '</span>';
+        hoverLabel.style.display = 'block';
+      } else hoverLabel.style.display = 'none';
+    }
+    if (idx >= 0) { hoverLabel.style.left = (x + 14) + 'px'; hoverLabel.style.top = (y + 10) + 'px'; }
+    canvas.style.cursor = idx >= 0 ? 'pointer' : 'grab';
+  }
+
+  if (needsRender) {
+    needsRender = false;
+    renderer.render(scene, camera);
+  }
+}
+requestAnimationFrame(frame);
+if (TEST_MODE) window.__mapReady = true;
+</script>
+</body>
+</html>
