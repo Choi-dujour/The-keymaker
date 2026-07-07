@@ -15,8 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Sample member locations
+        # The secret goes through an env var, NOT inline ${{ }} substitution:
+        # inline substitution pastes the raw value into the bash script, where
+        # characters like $ would be re-expanded by the shell and corrupt it.
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           curl -sS -X POST \
             --retry 3 --retry-delay 5 --retry-all-errors --max-time 30 \
-            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            -H "x-cron-secret: ${CRON_SECRET}" \
             -f "https://www.the-keymaker.net/api/map?action=sample"
