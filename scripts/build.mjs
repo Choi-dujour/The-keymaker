@@ -10,7 +10,7 @@ const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const distDir = path.join(root, 'dist');
 
 const SKIP_TOP_LEVEL = new Set([
-  '.git', 'node_modules', 'api', 'scripts', 'dist', '.vercel',
+  '.git', '.github', 'node_modules', 'api', 'scripts', 'dist', '.vercel',
   'package.json', 'package-lock.json', '.gitignore', 'vercel.json',
 ]);
 
@@ -22,7 +22,10 @@ async function minifyInlineScripts(html) {
   for (const m of matches) {
     const [full, attrs, code] = m;
     if (!code.trim()) continue;
-    const result = await minify(code, { mangle: true, compress: true });
+    // importmap/JSON blocks are not JavaScript — terser would fail on them
+    if (/type\s*=\s*["']?(importmap|application\/(ld\+)?json)/i.test(attrs)) continue;
+    const isModule = /type\s*=\s*["']?module/i.test(attrs);
+    const result = await minify(code, { mangle: true, compress: true, module: isModule });
     if (result.error) throw result.error;
     out = out.replace(full, `<script${attrs}>${result.code}</script>`);
   }
@@ -34,9 +37,13 @@ async function buildFile(srcPath, destPath) {
   if (srcPath.endsWith('.html')) {
     const html = fs.readFileSync(srcPath, 'utf8');
     fs.writeFileSync(destPath, await minifyInlineScripts(html));
+  } else if (srcPath.endsWith('.min.js')) {
+    // vendored libraries are already minified — copy verbatim
+    fs.copyFileSync(srcPath, destPath);
   } else if (srcPath.endsWith('.js')) {
     const code = fs.readFileSync(srcPath, 'utf8');
-    const result = await minify(code, { mangle: true, compress: true });
+    const isModule = /^\s*(import|export)\b/m.test(code);
+    const result = await minify(code, { mangle: true, compress: true, module: isModule });
     if (result.error) throw result.error;
     fs.writeFileSync(destPath, result.code);
   } else {
