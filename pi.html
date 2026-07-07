@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Planetary Industry — The-Keymaker [THE-K]</title>
+<meta name="description" content="Planetary Industry manager for The-Keymaker — extractor timers, multi-character tracking, chain planner and importable templates."/>
+<meta name="robots" content="noindex, nofollow"/>
+<meta name="theme-color" content="#39FF14"/>
+<link rel="icon" type="image/png" href="https://images.evetech.net/corporations/98800626/logo?size=64"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060e;--s:#0c0c1a;--s2:#101020;--b:#16162a;--b2:#1e1e36;
+  --g:#39FF14;--w:#ECEDF5;--m:#5a5a7a;--m2:#8080a0;
+  --red:#ff4455;--yellow:#ffcc33;--orange:#ff8833;--blue:#4488ff;
+  --mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--w);font-family:'Inter',sans-serif;overflow-x:hidden;font-size:14px}
+#c{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(1.25rem,4vw,3rem);height:52px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);background:rgba(6,6,14,0.85);
+}
+.n-left{display:flex;align-items:center;gap:0.6rem}
+.n-logo{width:24px;height:24px;border-radius:3px;object-fit:cover;opacity:0.9}
+.n-name{font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.04em}
+.n-name em{color:var(--g);font-style:normal}
+.n-right{display:flex;gap:0.5rem;overflow-x:auto}
+.btn{font-family:'Syne',sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.85rem;cursor:pointer;transition:all .18s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;border:none;white-space:nowrap}
+.btn-o{background:transparent;border:1px solid var(--b);color:var(--m)}
+.btn-o:hover{border-color:var(--m);color:var(--w)}
+.btn-g{background:var(--g);color:#000}
+.btn-g:hover{background:#50ff30}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+
+/* AUTH GATE */
+#auth-gate{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem}
+.spin{width:28px;height:28px;border:3px solid var(--b);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gate-note{font-size:0.7rem;color:var(--m);letter-spacing:0.1em;text-transform:uppercase}
+
+/* MAIN */
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:calc(52px + 2rem) clamp(1.25rem,4vw,3rem) 3rem;display:none}
+.wrap.show{display:block}
+.head{margin-bottom:1.5rem}
+.eye{font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--g);opacity:0.7;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem}
+.eye::before{content:'';width:20px;height:1px;background:var(--g);opacity:0.6}
+h1{font-family:'Syne',sans-serif;font-size:clamp(1.5rem,4vw,2.3rem);font-weight:800;letter-spacing:-0.02em;margin-bottom:0.5rem}
+.head-sub{font-size:0.85rem;color:var(--m);max-width:55ch;line-height:1.7}
+
+/* CHARACTERS BAR */
+.chars-bar{display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1.5rem}
+.char-chip{display:flex;align-items:center;gap:0.55rem;background:var(--s);border:1px solid var(--b);padding:0.4rem 0.7rem;font-size:0.75rem}
+.char-chip.active{border-color:rgba(57,255,20,0.4)}
+.char-chip img{width:26px;height:26px;border-radius:50%;border:1px solid var(--b2)}
+.char-chip .cc-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem}
+.char-chip .cc-meta{font-size:0.6rem;color:var(--m)}
+.char-chip .cc-err{font-size:0.58rem;color:var(--yellow)}
+.char-chip .cc-x{background:none;border:none;color:var(--m);cursor:pointer;font-size:0.85rem;padding:0 0.1rem;line-height:1}
+.char-chip .cc-x:hover{color:var(--red)}
+.bar-right{margin-left:auto;display:flex;gap:0.5rem;align-items:center}
+.last-upd{font-size:0.6rem;color:var(--m)}
+
+/* TABS */
+.tabs{display:flex;gap:0.25rem;border-bottom:1px solid var(--b);margin-bottom:1.5rem;overflow-x:auto}
+.tab{font-family:'Syne',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;color:var(--m);padding:0.6rem 1rem;cursor:pointer;transition:all .15s;white-space:nowrap}
+.tab:hover{color:var(--w)}
+.tab.active{color:var(--g);border-bottom-color:var(--g)}
+.panel{display:none}
+.panel.active{display:block}
+
+/* SUMMARY CARDS */
+.sum-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--b);margin-bottom:1.5rem}
+.sum-cell{background:var(--s);padding:1rem 1.15rem}
+.sum-label{font-size:0.55rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--m);margin-bottom:0.3rem}
+.sum-val{font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:700}
+.sum-val.warn{color:var(--yellow)}
+.sum-val.danger{color:var(--red)}
+.sum-val.ok{color:var(--g)}
+
+/* PLANET CARDS */
+.char-section{margin-bottom:2rem}
+.char-section-head{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.9rem}
+.char-section-head img{width:32px;height:32px;border-radius:50%;border:1px solid var(--b2)}
+.char-section-head .csh-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem}
+.char-section-head .csh-meta{font-size:0.65rem;color:var(--m)}
+.planet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem}
+@media(max-width:700px){.planet-grid{grid-template-columns:1fr}}
+.pcard{background:var(--s);border:1px solid var(--b);padding:1.1rem 1.2rem}
+.pcard-head{display:flex;justify-content:space-between;align-items:baseline;gap:0.5rem;margin-bottom:0.6rem;flex-wrap:wrap}
+.pcard-sys{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem}
+.pcard-sys a{color:inherit;text-decoration:none}
+.pcard-sys a:hover{color:var(--g)}
+.ptype{font-family:var(--mono);font-size:0.6rem;padding:0.15rem 0.5rem;border-radius:2px;text-transform:uppercase;letter-spacing:0.08em}
+.pcard-meta{font-size:0.62rem;color:var(--m);margin-bottom:0.75rem}
+.prod-line{font-size:0.72rem;color:var(--m2);margin-bottom:0.75rem;line-height:1.9}
+.tier-badge{font-family:var(--mono);font-size:0.55rem;padding:0.08rem 0.32rem;border-radius:2px;margin-right:0.25rem;vertical-align:middle}
+.ex-row{display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0;border-top:1px solid rgba(22,22,42,0.7);font-size:0.72rem}
+.ex-prod{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ex-rate{font-family:var(--mono);font-size:0.62rem;color:var(--m)}
+.cd{font-family:var(--mono);font-size:0.66rem;padding:0.18rem 0.5rem;border-radius:2px;white-space:nowrap}
+.cd.ok{color:var(--g);background:rgba(57,255,20,0.08)}
+.cd.warn{color:var(--yellow);background:rgba(255,204,51,0.1)}
+.cd.dead{color:var(--red);background:rgba(255,68,85,0.12)}
+.ex-bar{height:3px;background:var(--b);margin-top:0.2rem;overflow:hidden}
+.ex-bar i{display:block;height:100%;background:var(--g);opacity:0.7}
+.sto-row{padding:0.4rem 0;border-top:1px solid rgba(22,22,42,0.7);font-size:0.65rem;color:var(--m)}
+.sto-head{display:flex;justify-content:space-between;margin-bottom:0.25rem}
+.sto-bar{height:4px;background:var(--b);overflow:hidden}
+.sto-bar i{display:block;height:100%;background:var(--g)}
+.sto-bar i.warn{background:var(--yellow)}
+.sto-bar i.danger{background:var(--red)}
+.sugg-toggle{background:none;border:none;color:var(--m);font-size:0.62rem;cursor:pointer;padding:0.5rem 0 0;letter-spacing:0.08em;text-transform:uppercase;font-family:'Syne',sans-serif;font-weight:700}
+.sugg-toggle:hover{color:var(--g)}
+.sugg{display:none;padding-top:0.6rem;font-size:0.68rem;color:var(--m);line-height:2}
+.sugg.open{display:block}
+.chip{display:inline-block;font-size:0.62rem;background:var(--s2);border:1px solid var(--b);padding:0.12rem 0.5rem;border-radius:2px;margin:0 0.25rem 0.25rem 0;color:var(--m2)}
+.chip.hl{border-color:rgba(57,255,20,0.35);color:var(--g)}
+.chip a{color:inherit;text-decoration:none}
+
+/* TIMERS TABLE */
+.tbl{background:var(--s);border:1px solid var(--b)}
+.trow{display:grid;grid-template-columns:1fr auto;gap:0.75rem;align-items:center;padding:0.75rem 1.1rem;border-bottom:1px solid rgba(22,22,42,0.7)}
+.trow:last-child{border-bottom:none}
+.trow-info{min-width:0}
+.trow-title{font-size:0.78rem;font-weight:500}
+.trow-meta{font-size:0.62rem;color:var(--m);margin-top:0.15rem}
+
+/* PLANNER */
+.plan-panel{background:var(--s);border:1px solid var(--b);padding:1.4rem;margin-bottom:1.5rem}
+.plan-panel label{display:block;font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--m);margin-bottom:0.4rem}
+.plan-panel select{width:100%;max-width:420px;background:var(--s2);border:1px solid var(--b);color:var(--w);padding:0.65rem 0.9rem;font-family:'Inter',sans-serif;font-size:0.85rem;outline:none}
+.plan-panel select:focus{border-color:var(--g)}
+.tree{font-size:0.78rem;line-height:1.5;margin-top:1.25rem}
+.tree-node{padding:0.45rem 0.7rem;border-left:2px solid var(--b);margin:0.3rem 0 0.3rem 0}
+.tree-node .tn-head{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap}
+.tree-node .tn-qty{font-family:var(--mono);font-size:0.62rem;color:var(--m)}
+.tree-node .tn-isk{font-family:var(--mono);font-size:0.62rem;color:var(--m2);margin-left:auto}
+.tree-kids{margin-left:1.25rem}
+.tn-mine{font-size:0.58rem;color:var(--g);letter-spacing:0.06em}
+.plan-strip{margin-top:1.25rem;font-size:0.7rem;color:var(--m);line-height:2.2}
+
+/* TEMPLATES */
+.tpl-filters{display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center}
+.tpl-filters select,.tpl-filters input{background:var(--s2);border:1px solid var(--b);color:var(--w);padding:0.5rem 0.75rem;font-family:'Inter',sans-serif;font-size:0.75rem;outline:none}
+.tpl-filters select:focus,.tpl-filters input:focus{border-color:var(--g)}
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+@media(max-width:700px){.tpl-grid{grid-template-columns:1fr}}
+.tpl-card{background:var(--s);border:1px solid var(--b);padding:1rem 1.1rem;display:flex;flex-direction:column;gap:0.45rem}
+.tpl-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem}
+.tpl-meta{font-size:0.62rem;color:var(--m);line-height:1.8}
+.tpl-card .btn{align-self:flex-start;margin-top:0.3rem}
+.tpl-credit{font-size:0.62rem;color:var(--m);opacity:0.6;margin-top:1.5rem}
+.tpl-credit a{color:var(--m2)}
+
+/* CORP TABLE */
+.corp-tbl{background:var(--s);border:1px solid var(--b);overflow-x:auto}
+.corp-tbl table{width:100%;border-collapse:collapse;font-size:0.72rem;min-width:640px}
+.corp-tbl th{font-family:'Syne',sans-serif;font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--m);text-align:left;padding:0.7rem 1rem;border-bottom:1px solid var(--b)}
+.corp-tbl td{padding:0.6rem 1rem;border-bottom:1px solid rgba(22,22,42,0.7)}
+.corp-tbl tr:last-child td{border-bottom:none}
+.corp-group-sep td{background:rgba(255,255,255,0.015);font-size:0.58rem;color:var(--m);letter-spacing:0.1em;text-transform:uppercase;padding:0.35rem 1rem}
+
+/* MISC */
+.notice{border-left:2px solid var(--g);background:rgba(57,255,20,0.04);padding:0.8rem 1.1rem;font-size:0.78rem;color:var(--m);margin-bottom:1.5rem;line-height:1.6}
+.notice strong{color:var(--w)}
+.notice.warn{border-left-color:var(--yellow);background:rgba(255,204,51,0.04)}
+.empty-state{background:var(--s);border:1px dashed var(--b);padding:3rem 2rem;text-align:center;color:var(--m);font-size:0.85rem;line-height:1.8}
+.spin-sm{display:inline-block;width:12px;height:12px;border:2px solid var(--b);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite;margin-right:0.5rem;vertical-align:middle}
+#toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(120%);z-index:300;background:var(--s2);border:1px solid rgba(57,255,20,0.4);color:var(--w);padding:0.7rem 1.4rem;font-size:0.78rem;transition:transform .25s;max-width:90vw}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:var(--red)}
+
+footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:1.1rem clamp(1.25rem,4vw,3rem);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.6rem}
+.f-name{font-family:'Syne',sans-serif;font-size:0.7rem;font-weight:700;color:var(--m)}
+.f-name em{color:var(--g);font-style:normal}
+.f-note{font-size:0.6rem;color:var(--m);opacity:0.3}
+</style>
+</head>
+<body>
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="/shared.js"></script>
+<script src="/pi-data.js"></script>
+
+<canvas id="c"></canvas>
+
+<div id="auth-gate"><div class="spin"></div><div class="gate-note">Checking access…</div></div>
+
+<nav>
+  <div class="n-left">
+    <img class="n-logo" src="https://images.evetech.net/corporations/98800626/logo?size=64" alt=""/>
+    <div class="n-name">The-<em>Keymaker</em></div>
+  </div>
+  <div class="n-right">
+    <a href="/" class="btn btn-o">← Home</a>
+    <a href="/tracker.html" class="btn btn-o">Tracker</a>
+    <a href="/arbitrage.html" class="btn btn-o">Arbitrage</a>
+    <a href="/dashboard.html" class="btn btn-o">Dashboard</a>
+  </div>
+</nav>
+
+<div class="wrap" id="app">
+  <div class="head">
+    <div class="eye">Industry tool</div>
+    <h1>Planetary Industry</h1>
+    <p class="head-sub">All your PI colonies in one place — extractor timers, storage levels, production chains and ready-to-import templates. Link your alts to track every character at once.</p>
+  </div>
+
+  <div class="chars-bar" id="chars-bar"></div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="planets">My Planets</button>
+    <button class="tab" data-tab="timers">Timers</button>
+    <button class="tab" data-tab="planner">Planner</button>
+    <button class="tab" data-tab="templates">Templates</button>
+    <button class="tab" data-tab="corp" id="tab-corp" style="display:none">Corp</button>
+  </div>
+
+  <div class="panel active" id="panel-planets">
+    <div class="empty-state"><span class="spin-sm"></span>Loading planets…</div>
+  </div>
+
+  <div class="panel" id="panel-timers">
+    <div class="empty-state"><span class="spin-sm"></span>Loading timers…</div>
+  </div>
+
+  <div class="panel" id="panel-planner">
+    <div class="plan-panel">
+      <label>Target product</label>
+      <select id="plan-select"><option value="">Choose a product…</option></select>
+      <div id="plan-tree"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-templates">
+    <div class="empty-state" id="tpl-loading"><span class="spin-sm"></span>Loading templates…</div>
+    <div id="tpl-content" style="display:none">
+      <div class="notice">Copy a template, then in-game open the planet in <strong>Planetary Industry view</strong> and use the <strong>Import</strong> (template) button. Miner templates: pick the extractor product manually after import.</div>
+      <div class="tpl-filters">
+        <select id="tpl-cat">
+          <option value="">All categories</option>
+          <option value="miner-ccu4">Miner (CCU IV)</option>
+          <option value="miner-ccu5">Miner (CCU V)</option>
+          <option value="factory-p2">Factory P2</option>
+          <option value="factory-p3">Factory P3</option>
+          <option value="factory-p4">Factory P4</option>
+        </select>
+        <select id="tpl-planet">
+          <option value="">All planet types</option>
+        </select>
+        <input type="text" id="tpl-search" placeholder="Search product…"/>
+      </div>
+      <div class="tpl-grid" id="tpl-grid"></div>
+      <div class="tpl-credit">Templates by <a href="https://github.com/MattFalahe/EVE-PI-Templates" target="_blank" rel="noopener">MattFalahe/EVE-PI-Templates</a> (MIT).</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-corp">
+    <div class="empty-state" id="corp-loading"><span class="spin-sm"></span>Loading corp overview…</div>
+    <div id="corp-content" style="display:none"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="f-name">The-<em>Keymaker</em> · [THE-K] · Hek IV</div>
+  <div class="f-note">EVE Online © CCP hf. Independent fan site.</div>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+let SESSION = null;
+let DATA = null;          // /api/pi response
+let PRICES = null;        // Map(typeId -> average_price)
+let TEMPLATES = null;     // pi-templates.json
+let tickerStarted = false;
+let clockOffset = 0;      // serverTime - client now
+
+initStarfield('c',{density:8000,rMin:0.15,rSpread:0.8,oMin:0.05,oSpread:0.3,alphaCap:0.45,flickerAmp:0.06,fullPageHeight:true});
+
+const PT_COLORS = { temperate:'#39FF14', barren:'#c9a86a', oceanic:'#4488ff', ice:'#9fd9ff', gas:'#cc88ff', lava:'#ff8833', storm:'#ffcc33', plasma:'#ff4455' };
+const STO_CAP = { launchpad:10000, storage:12000, command:500, other:0 };
+
+// ── INIT / AUTH GATE ──
+async function init(){
+  try{
+    const r = await fetch('/api/me');
+    if(!r.ok){ location.href='/'; return; }
+    SESSION = await r.json();
+    if(!SESSION.authenticated){ location.href='/'; return; }
+  }catch{ location.href='/'; return; }
+
+  document.getElementById('auth-gate').style.display='none';
+  document.getElementById('app').classList.add('show');
+  if(SESSION.isCeo) document.getElementById('tab-corp').style.display='';
+
+  // planet-type filter options (from PI_DATA so names stay canonical)
+  const ptSel = document.getElementById('tpl-planet');
+  for(const [key,pt] of Object.entries(PI_DATA.planetTypes)){
+    const o=document.createElement('option'); o.value=key; o.textContent=pt.name; ptSel.appendChild(o);
+  }
+
+  buildPlannerSelect();
+  handleLinkedParam();
+  loadPrices();
+  loadOverview(false);
+}
+
+function handleLinkedParam(){
+  const q = new URLSearchParams(location.search);
+  if(!q.has('linked')) return;
+  const v = q.get('linked');
+  if(v==='error') toast('Could not link the character — group may be full (max 8).', true);
+  else toast('Character '+v+' linked to your PI group.');
+  history.replaceState(null,'',location.pathname+location.hash);
+}
+
+// ── DATA LOAD ──
+async function loadOverview(force){
+  const btn = document.getElementById('refresh-btn');
+  if(btn){ btn.disabled = true; }
+  try{
+    const r = await fetch('/api/pi'+(force?'?refresh=1':''));
+    if(r.status===401){ location.href='/'; return; }
+    if(!r.ok) throw new Error('API '+r.status);
+    DATA = await r.json();
+    clockOffset = DATA.serverTime - Date.now();
+    renderCharsBar();
+    renderPlanets();
+    renderTimers();
+    refreshPlannerHighlights();
+    startTicker();
+  }catch(e){
+    document.getElementById('panel-planets').innerHTML =
+      '<div class="empty-state">Failed to load planet data ('+esc(e.message)+').<br/><button class="btn btn-o" onclick="loadOverview(true)" style="margin-top:1rem">Retry</button></div>';
+  }
+}
+
+async function loadPrices(){
+  try{
+    const r = await fetch('https://esi.evetech.net/latest/markets/prices/?datasource=tranquility');
+    if(!r.ok) return;
+    const arr = await r.json();
+    PRICES = new Map();
+    for(const p of arr) if(p.average_price) PRICES.set(p.type_id, p.average_price);
+    renderPlanets(); renderTimers();
+    const sel=document.getElementById('plan-select');
+    if(sel.value) renderPlanTree(Number(sel.value));
+  }catch{}
+}
+
+// ── CHARACTERS BAR ──
+function renderCharsBar(){
+  const bar = document.getElementById('chars-bar');
+  let html = '';
+  for(const ch of DATA.characters){
+    const active = String(ch.characterId)===String(DATA.activeCharacterId);
+    const planetCount = (ch.planets||[]).length;
+    html += '<div class="char-chip'+(active?' active':'')+'">'
+      + '<img src="https://images.evetech.net/characters/'+ch.characterId+'/portrait?size=64" alt=""/>'
+      + '<div><div class="cc-name">'+esc(ch.characterName||('#'+ch.characterId))+'</div>'
+      + (ch.error
+          ? '<div class="cc-err">⚠ re-login needed</div>'
+          : '<div class="cc-meta">'+planetCount+' planet'+(planetCount===1?'':'s')+(active?' · active':'')+'</div>')
+      + '</div>'
+      + (DATA.group.length>1 ? '<button class="cc-x" title="Unlink" onclick="unlinkChar(\''+ch.characterId+'\',\''+esc(ch.characterName||'')+'\')">×</button>' : '')
+      + '</div>';
+  }
+  html += '<div class="bar-right">'
+    + '<span class="last-upd" id="last-upd">'+lastUpdatedLabel()+'</span>'
+    + '<button class="btn btn-o" id="refresh-btn" onclick="loadOverview(true)">↻ Refresh</button>'
+    + '<button class="btn btn-g" onclick="addCharacter()">＋ Add character</button>'
+    + '</div>';
+  bar.innerHTML = html;
+}
+
+function lastUpdatedLabel(){
+  const times = DATA.characters.map(c=>c.fetchedAt).filter(Boolean);
+  if(!times.length) return '';
+  const d = new Date(Math.min(...times));
+  return 'updated '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+
+function addCharacter(){
+  if(confirm('You will go through EVE login with the character to add.\nAfter linking, you will be logged in AS that character (all linked characters see the same planets).\n\nContinue?')){
+    location.href='/api/login?link=1';
+  }
+}
+
+async function unlinkChar(id,name){
+  if(!confirm('Unlink '+name+' from your PI group?')) return;
+  try{
+    const r = await fetch('/api/pi?action=unlink&characterId='+id,{method:'POST'});
+    if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||('API '+r.status)); }
+    toast(name+' unlinked.');
+    loadOverview(false);
+  }catch(e){ toast('Unlink failed: '+e.message, true); }
+}
+
+// ── HELPERS ──
+function commodity(id){ return PI_DATA.commodities[id] || {name:'#'+id,tier:0,volume:0}; }
+function tierBadge(t){ return '<span class="tier-badge" style="color:'+PI_DATA.tierColor[t]+';background:'+PI_DATA.tierColor[t]+'1a">P'+t+'</span>'; }
+function iskFmt(v){
+  if(v==null) return '—';
+  if(v>=1e9) return (v/1e9).toFixed(1)+'B';
+  if(v>=1e6) return (v/1e6).toFixed(1)+'M';
+  if(v>=1e3) return (v/1e3).toFixed(0)+'k';
+  return v.toFixed(0);
+}
+function priceOf(id){ return PRICES ? (PRICES.get(id)||null) : null; }
+function now(){ return Date.now()+clockOffset; }
+function toast(msg, isErr){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=isErr?'err show':'show';
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'), 4000);
+}
+
+// ── MY PLANETS ──
+function renderPlanets(){
+  if(!DATA) return;
+  const panel = document.getElementById('panel-planets');
+  let html='';
+  for(const ch of DATA.characters){
+    html += '<div class="char-section">'
+      + '<div class="char-section-head">'
+      + '<img src="https://images.evetech.net/characters/'+ch.characterId+'/portrait?size=64" alt=""/>'
+      + '<div><div class="csh-name">'+esc(ch.characterName||('#'+ch.characterId))+'</div>'
+      + '<div class="csh-meta">'+(ch.error ? '⚠ '+esc(errLabel(ch.error)) : (ch.planets.length+' colonized planet'+(ch.planets.length===1?'':'s')+(ch.fromCache?' · cached':'')))+'</div>'
+      + '</div></div>';
+    if(!ch.planets.length){
+      html += '<div class="empty-state">No colonized planets'+(ch.error?'':' — set up PI in-game, then hit Refresh')+'.</div>';
+    }else{
+      html += '<div class="planet-grid">' + ch.planets.map(p=>planetCard(ch,p)).join('') + '</div>';
+    }
+    html += '</div>';
+  }
+  panel.innerHTML = html || '<div class="empty-state">No characters found.</div>';
+}
+
+function errLabel(e){
+  if(e==='no_token') return 'no stored login — log in once with this character';
+  if(e==='token_refresh_failed') return 'stored login expired — log in again with this character';
+  return e;
+}
+
+function planetCard(ch,p){
+  const ptName = PI_DATA.planetTypes[p.planetType]?.name || p.planetType;
+  const color = PT_COLORS[p.planetType]||'#8080a0';
+  let html = '<div class="pcard">'
+    + '<div class="pcard-head">'
+    + '<div class="pcard-sys"><a href="https://evemaps.dotlan.net/system/'+encodeURIComponent(p.solarSystemName||'')+'" target="_blank" rel="noopener">'+esc(p.solarSystemName||('#'+p.solarSystemId))+'</a></div>'
+    + '<span class="ptype" style="color:'+color+';background:'+color+'1a">'+esc(ptName)+'</span>'
+    + '</div>'
+    + '<div class="pcard-meta">Upgrade '+roman(p.upgradeLevel)+' · '+p.numPins+' pins</div>';
+
+  // produces
+  const outputs = producedOn(p);
+  if(outputs.length){
+    html += '<div class="prod-line">Produces: '+outputs.map(t=>{
+      const c=commodity(t);
+      const pr = priceOf(t);
+      return tierBadge(c.tier)+esc(c.name)+(pr?' <span style="opacity:0.6;font-family:var(--mono);font-size:0.58rem">'+iskFmt(pr)+'</span>':'');
+    }).join(' &nbsp; ')+'</div>';
+  }
+
+  // extractors
+  for(const x of p.extractors){
+    const c = commodity(x.productTypeId);
+    const perHour = x.cycleTime ? Math.round(x.qtyPerCycle*3600/x.cycleTime) : 0;
+    html += '<div class="ex-row">'
+      + '<div class="ex-prod">⛏ '+esc(x.productTypeId?c.name:'(no product set)')+'<div class="ex-rate">'+(perHour?perHour.toLocaleString()+'/h':'')+(x.heads?' · '+x.heads+' heads':'')+'</div>'
+      + extractorBar(x) + '</div>'
+      + countdownPill(x.expiryTime)
+      + '</div>';
+  }
+
+  // storage
+  for(const s of p.storage){
+    if(s.kind==='other') continue;
+    const used = s.contents.reduce((a,c)=>a + c.amount*commodity(c.typeId).volume, 0);
+    const cap = STO_CAP[s.kind]||0;
+    const pct = cap ? Math.min(100, used/cap*100) : 0;
+    const cls = pct>95?'danger':(pct>80?'warn':'');
+    html += '<div class="sto-row"><div class="sto-head"><span>'+esc(s.typeName||s.kind)+'</span><span>'+Math.round(used).toLocaleString()+' / '+cap.toLocaleString()+' m³</span></div>'
+      + '<div class="sto-bar"><i class="'+cls+'" style="width:'+pct.toFixed(1)+'%"></i></div></div>';
+  }
+
+  if(p.error) html += '<div class="sto-row" style="color:var(--yellow)">⚠ detail fetch failed: '+esc(p.error)+'</div>';
+
+  // suggestions
+  html += suggestionsBlock(p);
+  html += '</div>';
+  return html;
+}
+
+function producedOn(p){
+  const set = new Set();
+  for(const sid of Object.keys(p.factories||{})){
+    const s = PI_DATA.schematics[sid];
+    if(s) set.add(s.output);
+  }
+  return [...set].sort((a,b)=>commodity(b).tier-commodity(a).tier);
+}
+
+function extractorBar(x){
+  if(!x.installTime || !x.expiryTime) return '';
+  const t0=Date.parse(x.installTime), t1=Date.parse(x.expiryTime);
+  if(!(t1>t0)) return '';
+  const pct = Math.min(100, Math.max(0,(now()-t0)/(t1-t0)*100));
+  return '<div class="ex-bar"><i style="width:'+pct.toFixed(1)+'%"></i></div>';
+}
+
+function countdownPill(expiry){
+  if(!expiry) return '<span class="cd dead">no cycle</span>';
+  return '<span class="cd" data-expiry="'+expiry+'"></span>';
+}
+
+function suggestionsBlock(p){
+  const pt = PI_DATA.planetTypes[p.planetType];
+  if(!pt) return '';
+  const uid = 'sg'+p.planetId;
+  let html = '<button class="sugg-toggle" onclick="document.getElementById(\''+uid+'\').classList.toggle(\'open\')">▸ Suggestions</button>';
+  html += '<div class="sugg" id="'+uid+'">';
+  html += '<div>Extractable here: '+pt.p0.map(t=>'<span class="chip">'+esc(commodity(t).name)+'</span>').join('')+'</div>';
+  // P1 chains native to this planet
+  const p1s = Object.entries(PI_DATA.schematics)
+    .filter(([,s])=>commodity(s.output).tier===1 && s.inputs.every(i=>pt.p0.includes(i.t)))
+    .map(([,s])=>s.output);
+  if(p1s.length){
+    html += '<div>P1 you can make end-to-end: '+p1s.map(t=>'<span class="chip hl">'+esc(commodity(t).name)+'</span>').join('')+'</div>';
+  }
+  // P2 chains whose P1 inputs are all native
+  const nativeP1 = new Set(p1s);
+  const p2s = Object.entries(PI_DATA.schematics)
+    .filter(([,s])=>commodity(s.output).tier===2 && s.inputs.every(i=>nativeP1.has(i.t)))
+    .map(([,s])=>s.output);
+  if(p2s.length){
+    html += '<div>P2 self-sufficient chains: '+p2s.map(t=>'<span class="chip hl">'+esc(commodity(t).name)+'</span>').join('')+'</div>';
+  }
+  html += '<div><a href="#templates" onclick="filterTemplatesFor(\''+p.planetType+'\')" style="color:var(--g);font-size:0.62rem">Matching templates →</a></div>';
+  html += '</div>';
+  return html;
+}
+
+function roman(n){ return ['0','I','II','III','IV','V'][n]||n; }
+
+// ── TIMERS ──
+function renderTimers(){
+  if(!DATA) return;
+  const panel = document.getElementById('panel-timers');
+  const rows = [];
+  for(const ch of DATA.characters){
+    for(const p of ch.planets){
+      for(const x of p.extractors){
+        rows.push({ch,p,x, exp: x.expiryTime?Date.parse(x.expiryTime):0});
+      }
+    }
+  }
+  rows.sort((a,b)=>(a.exp||8.64e15)-(b.exp||8.64e15));
+
+  const t = now();
+  const total = rows.length;
+  const expiring = rows.filter(r=>r.exp && r.exp-t>0 && r.exp-t<86400000).length;
+  const depleted = rows.filter(r=>r.exp && r.exp-t<=0).length;
+
+  let html = '<div class="sum-row">'
+    + '<div class="sum-cell"><div class="sum-label">Extractors</div><div class="sum-val">'+total+'</div></div>'
+    + '<div class="sum-cell"><div class="sum-label">Expiring &lt; 24h</div><div class="sum-val'+(expiring?' warn':'')+'">'+expiring+'</div></div>'
+    + '<div class="sum-cell"><div class="sum-label">Depleted</div><div class="sum-val'+(depleted?' danger':' ok')+'">'+depleted+'</div></div>'
+    + '</div>';
+
+  if(!rows.length){
+    html += '<div class="empty-state">No extractors running on any linked character.</div>';
+  }else{
+    html += '<div class="tbl">'+rows.map(r=>{
+      const c = commodity(r.x.productTypeId);
+      const perHour = r.x.cycleTime ? Math.round(r.x.qtyPerCycle*3600/r.x.cycleTime) : 0;
+      return '<div class="trow"><div class="trow-info">'
+        + '<div class="trow-title">'+esc(r.x.productTypeId?c.name:'(no product)')+' — '+esc(r.p.solarSystemName||'')+' <span style="color:var(--m);font-size:0.62rem">'+esc(PI_DATA.planetTypes[r.p.planetType]?.name||'')+'</span></div>'
+        + '<div class="trow-meta">'+esc(r.ch.characterName||'')+(perHour?' · '+perHour.toLocaleString()+'/h':'')+(priceOf(r.x.productTypeId)?' · ~'+iskFmt(perHour*priceOf(r.x.productTypeId))+' ISK/h':'')+'</div>'
+        + '</div>'+countdownPill(r.x.expiryTime)+'</div>';
+    }).join('')+'</div>';
+  }
+  panel.innerHTML = html;
+  tickCountdowns();
+}
+
+function startTicker(){
+  if(tickerStarted) return;
+  tickerStarted = true;
+  setInterval(tickCountdowns, 1000);
+}
+
+function tickCountdowns(){
+  const t = now();
+  document.querySelectorAll('[data-expiry]').forEach(el=>{
+    const exp = Date.parse(el.dataset.expiry);
+    const d = exp - t;
+    if(d<=0){ el.className='cd dead'; el.textContent='DEPLETED'; return; }
+    el.className = 'cd '+(d<43200000?'warn':'ok');
+    el.textContent = fmtDur(d);
+  });
+}
+
+function fmtDur(ms){
+  const s = Math.floor(ms/1000);
+  const d = Math.floor(s/86400), h=Math.floor(s%86400/3600), m=Math.floor(s%3600/60), sec=s%60;
+  if(d>0) return d+'d '+String(h).padStart(2,'0')+'h '+String(m).padStart(2,'0')+'m';
+  if(h>0) return h+'h '+String(m).padStart(2,'0')+'m '+String(sec).padStart(2,'0')+'s';
+  return m+'m '+String(sec).padStart(2,'0')+'s';
+}
+
+// ── PLANNER ──
+function buildPlannerSelect(){
+  const sel = document.getElementById('plan-select');
+  for(let tier=4; tier>=1; tier--){
+    const grp = document.createElement('optgroup');
+    grp.label = 'P'+tier;
+    Object.entries(PI_DATA.commodities)
+      .filter(([,c])=>c.tier===tier)
+      .sort((a,b)=>a[1].name.localeCompare(b[1].name))
+      .forEach(([id,c])=>{
+        const o=document.createElement('option'); o.value=id; o.textContent=c.name; grp.appendChild(o);
+      });
+    sel.appendChild(grp);
+  }
+  sel.addEventListener('change',()=>{ if(sel.value) renderPlanTree(Number(sel.value)); });
+}
+
+function myProducedSet(){
+  const set = new Set();
+  if(!DATA) return set;
+  for(const ch of DATA.characters) for(const p of ch.planets){
+    for(const t of producedOn(p)) set.add(t);
+    for(const x of p.extractors) if(x.productTypeId) set.add(x.productTypeId);
+  }
+  return set;
+}
+
+function renderPlanTree(typeId){
+  const mine = myProducedSet();
+  const planetsNeeded = new Set();
+
+  function nodeHtml(tid, unitsPerOutput){
+    const c = commodity(tid);
+    const sid = PI_DATA.byOutput[tid];
+    const pr = priceOf(tid);
+    let extractHint = '';
+    if(c.tier===0){
+      const pts = Object.entries(PI_DATA.planetTypes).filter(([,pt])=>pt.p0.includes(tid));
+      pts.forEach(([k])=>planetsNeeded.add(k));
+      extractHint = pts.map(([k,pt])=>'<span class="chip" style="border-color:'+(PT_COLORS[k]||'#333')+'55;color:'+(PT_COLORS[k]||'#999')+'">'+esc(pt.name)+'</span>').join('');
+    }
+    let html = '<div class="tree-node" style="border-left-color:'+PI_DATA.tierColor[c.tier]+'55">'
+      + '<div class="tn-head">'+tierBadge(c.tier)+'<strong>'+esc(c.name)+'</strong>'
+      + '<span class="tn-qty">×'+fmtQty(unitsPerOutput)+' per unit</span>'
+      + (mine.has(tid)?'<span class="tn-mine">✓ you produce this</span>':'')
+      + (pr?'<span class="tn-isk">'+iskFmt(pr*unitsPerOutput)+' ISK</span>':'')
+      + '</div>'
+      + (extractHint?'<div style="margin-top:0.3rem">'+extractHint+'</div>':'');
+    if(sid){
+      const s = PI_DATA.schematics[sid];
+      html += '<div class="tree-kids">'+s.inputs.map(i=>nodeHtml(i.t, unitsPerOutput*i.q/s.qty)).join('')+'</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  let html = nodeHtml(typeId, 1);
+  const c = commodity(typeId);
+  const pr = priceOf(typeId);
+  let strip = '<div class="plan-strip">Planet types needed for raw materials: '
+    + [...planetsNeeded].map(k=>'<span class="chip" style="border-color:'+(PT_COLORS[k]||'#333')+'55;color:'+(PT_COLORS[k]||'#999')+'">'+esc(PI_DATA.planetTypes[k].name)+'</span>').join('');
+  if(pr) strip += ' &nbsp;·&nbsp; Market value: <strong style="color:var(--w)">'+iskFmt(pr)+' ISK</strong>/unit';
+  const sid = PI_DATA.byOutput[typeId];
+  if(sid){
+    const s = PI_DATA.schematics[sid];
+    strip += ' &nbsp;·&nbsp; Factory output: '+s.qty+' / '+(s.cycle/60)+' min cycle';
+  }
+  strip += '</div>';
+  document.getElementById('plan-tree').innerHTML = html + strip;
+}
+
+function fmtQty(v){
+  if(v>=100) return Math.round(v).toLocaleString();
+  if(v===Math.round(v)) return String(v);
+  return v.toFixed(2);
+}
+
+function refreshPlannerHighlights(){
+  const sel = document.getElementById('plan-select');
+  if(sel.value) renderPlanTree(Number(sel.value));
+}
+
+// ── TEMPLATES ──
+let tplPromise = null;
+function loadTemplates(){
+  if(!tplPromise) tplPromise = doLoadTemplates();
+  return tplPromise;
+}
+async function doLoadTemplates(){
+  try{
+    const r = await fetch('/pi-templates.json');
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    TEMPLATES = await r.json();
+    document.getElementById('tpl-loading').style.display='none';
+    document.getElementById('tpl-content').style.display='';
+    renderTemplates();
+  }catch(e){
+    tplPromise = null;
+    document.getElementById('tpl-loading').innerHTML =
+      'Failed to load templates ('+esc(e.message)+'). <button class="btn btn-o" onclick="loadTemplates()" style="margin-left:0.6rem">Retry</button>';
+  }
+}
+
+function renderTemplates(){
+  if(!TEMPLATES) return;
+  const cat = document.getElementById('tpl-cat').value;
+  const planet = document.getElementById('tpl-planet').value;
+  const q = document.getElementById('tpl-search').value.trim().toLowerCase();
+  const CAT_LABEL = {'miner-ccu4':'Miner · CCU IV','miner-ccu5':'Miner · CCU V','factory-p2':'Factory · P2','factory-p3':'Factory · P3','factory-p4':'Factory · P4'};
+
+  const list = TEMPLATES.templates.filter(t=>{
+    if(cat && t.category!==cat) return false;
+    if(planet && t.validPlanets && !t.validPlanets.includes(planet)) return false;
+    if(q && !t.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  document.getElementById('tpl-grid').innerHTML = list.length ? list.map((t,i)=>{
+    const planets = t.validPlanets
+      ? t.validPlanets.map(k=>'<span class="chip" style="border-color:'+(PT_COLORS[k]||'#333')+'55;color:'+(PT_COLORS[k]||'#999')+'">'+esc(PI_DATA.planetTypes[k]?.name||k)+'</span>').join('')
+      : '<span class="chip">Any planet</span>';
+    return '<div class="tpl-card">'
+      + '<div class="tpl-name">'+esc(t.name)+'</div>'
+      + '<div class="tpl-meta">'+esc(CAT_LABEL[t.category]||t.category)+' · Command Center '+roman(t.cmdCtrLv||0)+' · '+t.pins+' pins</div>'
+      + '<div>'+planets+'</div>'
+      + '<button class="btn btn-g" onclick="copyTemplate('+TEMPLATES.templates.indexOf(t)+')">⧉ Copy for import</button>'
+      + '</div>';
+  }).join('') : '<div class="empty-state" style="grid-column:1/-1">No templates match these filters.</div>';
+}
+
+async function filterTemplatesFor(planetType){
+  switchTab('templates');
+  await loadTemplates();
+  if(!TEMPLATES) return;
+  document.getElementById('tpl-planet').value = planetType;
+  document.getElementById('tpl-cat').value = '';
+  renderTemplates();
+}
+
+async function copyTemplate(idx){
+  const t = TEMPLATES.templates[idx];
+  try{
+    await navigator.clipboard.writeText(t.raw);
+    toast('"'+t.name+'" copied — import it from the in-game PI window.');
+  }catch{
+    const ta=document.createElement('textarea');
+    ta.value=t.raw; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast('"'+t.name+'" copied — import it from the in-game PI window.'); }
+    catch{ toast('Copy failed — clipboard unavailable.', true); }
+    ta.remove();
+  }
+}
+
+// ── CORP (CEO) ──
+let corpLoaded = false;
+async function loadCorp(){
+  if(corpLoaded) return;
+  corpLoaded = true;
+  try{
+    const r = await fetch('/api/pi?action=all');
+    if(!r.ok) throw new Error('API '+r.status);
+    const data = await r.json();
+    const el = document.getElementById('corp-content');
+    document.getElementById('corp-loading').style.display='none';
+    el.style.display='';
+
+    if(!data.groups.length){
+      el.innerHTML='<div class="empty-state">No PI data yet — it appears as members visit this page.</div>';
+      return;
+    }
+    let rows='';
+    data.groups.forEach((g,gi)=>{
+      if(g.members.length>1) rows+='<tr class="corp-group-sep"><td colspan="5">Group of '+g.members.length+'</td></tr>';
+      for(const m of g.members){
+        const exp = m.nextExpiry ? Date.parse(m.nextExpiry) : null;
+        const d = exp ? exp-now() : null;
+        const expLabel = exp===null ? '—' : (d<=0 ? '<span class="cd dead">DEPLETED</span>' : '<span class="cd '+(d<43200000?'warn':'ok')+'">'+fmtDur(d)+'</span>');
+        rows += '<tr>'
+          + '<td>'+esc(m.characterName||('#'+m.characterId))+'</td>'
+          + '<td>'+m.planetCount+'</td>'
+          + '<td>'+m.planetTypes.map(pt=>esc(PI_DATA.planetTypes[pt]?.name||pt)).join(', ')+'</td>'
+          + '<td>'+expLabel+'</td>'
+          + '<td style="color:var(--m)">'+(m.fetchedAt?new Date(m.fetchedAt).toLocaleString():'—')+'</td>'
+          + '</tr>';
+      }
+    });
+    el.innerHTML = '<div class="notice">Snapshot data — refreshed each time a member opens this page ('+data.totalCharacters+' characters, '+data.totalPlanets+' planets tracked).</div>'
+      + '<div class="corp-tbl"><table><thead><tr><th>Character</th><th>Planets</th><th>Types</th><th>Next expiry</th><th>Last update</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }catch(e){
+    document.getElementById('corp-loading').innerHTML='Failed to load corp overview ('+esc(e.message)+').';
+  }
+}
+
+// ── TABS ──
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+name));
+  if(name==='templates') loadTemplates();
+  if(name==='corp') loadCorp();
+  if(history.replaceState) history.replaceState(null,'','#'+name);
+}
+document.getElementById('tabs').addEventListener('click', e=>{
+  const b = e.target.closest('.tab');
+  if(b) switchTab(b.dataset.tab);
+});
+document.getElementById('tpl-cat').addEventListener('change', renderTemplates);
+document.getElementById('tpl-planet').addEventListener('change', renderTemplates);
+document.getElementById('tpl-search').addEventListener('input', renderTemplates);
+
+// deep-link: #timers etc. (corp excluded — its tab is CEO-gated at init)
+if(location.hash && ['planets','timers','planner','templates'].includes(location.hash.slice(1))){
+  switchTab(location.hash.slice(1));
+}
+
+init();
+</script>
+</body>
+</html>

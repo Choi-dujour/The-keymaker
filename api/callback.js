@@ -1,6 +1,9 @@
 // api/callback.js
 
+import crypto from 'crypto';
+
 const CORP_ID = 98800626;
+const PI_LINK_CLEAR = 'pi_link=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/';
 
 export default async function handler(req, res) {
   const { code, state } = req.query;
@@ -81,7 +84,9 @@ export default async function handler(req, res) {
       );
 
       const applicantCookie = Buffer.from(JSON.stringify({ characterId, characterName })).toString('base64');
-      res.setHeader('Set-Cookie', `eve_applicant=${applicantCookie}; HttpOnly; Secure; SameSite=Lax; Max-Age=600; Path=/`);
+      const applicantCookies = [`eve_applicant=${applicantCookie}; HttpOnly; Secure; SameSite=Lax; Max-Age=600; Path=/`];
+      if (cookies.pi_link) applicantCookies.push(PI_LINK_CLEAR); // no PI linking for applicants
+      res.setHeader('Set-Cookie', applicantCookies);
       return res.redirect(302, '/apply.html?status=submitted&name=' + encodeURIComponent(characterName));
     }
 
@@ -98,14 +103,15 @@ export default async function handler(req, res) {
 
     const encoded = Buffer.from(sessionData).toString('base64');
 
+    const setCookies = [];
     // Controlla dimensione cookie (max ~4000 bytes sicuri)
     if (encoded.length > 3800) {
       // Sessione troppo grande: salva senza accessToken (verrà refreshato da me.js)
       const slim = JSON.stringify({ characterId, characterName, refreshToken, isCeo, expires: 0 });
       const slimEncoded = Buffer.from(slim).toString('base64');
-      res.setHeader('Set-Cookie', `eve_session=${slimEncoded}; HttpOnly; Secure; SameSite=Lax; Max-Age=3600; Path=/`);
+      setCookies.push(`eve_session=${slimEncoded}; HttpOnly; Secure; SameSite=Lax; Max-Age=3600; Path=/`);
     } else {
-      res.setHeader('Set-Cookie', `eve_session=${encoded}; HttpOnly; Secure; SameSite=Lax; Max-Age=3600; Path=/`);
+      setCookies.push(`eve_session=${encoded}; HttpOnly; Secure; SameSite=Lax; Max-Age=3600; Path=/`);
     }
 
     // Auto-save member data to KV for vetting (background, non-blocking)
@@ -113,12 +119,68 @@ export default async function handler(req, res) {
       console.warn('KV save failed (non-critical):', e.message)
     );
 
-    return res.redirect(302, '/dashboard.html');
+    // PI character linking (see api/login.js): a signed pi_link cookie carries
+    // the characterId that initiated "Add character" — merge the two PI groups.
+    let redirectTo = '/dashboard.html';
+    if (cookies.pi_link) {
+      setCookies.push(PI_LINK_CLEAR);
+      const linkerId = verifyPiLink(cookies.pi_link);
+      if (linkerId && linkerId !== String(characterId)) {
+        try {
+          await mergePiGroups(linkerId, String(characterId));
+          redirectTo = '/pi.html?linked=' + encodeURIComponent(characterName);
+        } catch (e) {
+          console.warn('PI link failed:', e.message);
+          redirectTo = '/pi.html?linked=error';
+        }
+      } else {
+        redirectTo = '/pi.html';
+      }
+    }
+
+    res.setHeader('Set-Cookie', setCookies);
+    return res.redirect(302, redirectTo);
 
   } catch (err) {
     console.error('Callback error:', err.message, err.stack);
     return res.status(500).send(`Auth error: ${err.message}`);
   }
+}
+
+// Validates the HMAC-signed pi_link cookie set by api/login.js; returns the
+// linking characterId or null.
+function verifyPiLink(raw) {
+  try {
+    const [payload, sig] = raw.split('.');
+    if (!payload || !sig) return null;
+    const expected = crypto.createHmac('sha256', process.env.EVE_CLIENT_SECRET).update(payload).digest('hex');
+    const a = Buffer.from(sig, 'hex');
+    const b = Buffer.from(expected, 'hex');
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (!data.cid || !/^\d+$/.test(data.cid) || Date.now() > data.exp) return null;
+    return data.cid;
+  } catch {
+    return null;
+  }
+}
+
+// Joins two characters' PI groups into one, mirroring the merged member list
+// under every member's pi:group:{id} key (api/pi.js reads the caller's own key).
+async function mergePiGroups(a, b) {
+  const { kvGet, kvSet } = await import('./_kv.js');
+  const [docA, docB] = await Promise.all([
+    kvGet(`pi:group:${a}`).catch(() => null),
+    kvGet(`pi:group:${b}`).catch(() => null),
+  ]);
+  const members = [...new Set([
+    ...(Array.isArray(docA?.members) ? docA.members.map(String) : [a]),
+    ...(Array.isArray(docB?.members) ? docB.members.map(String) : [b]),
+    a, b,
+  ])];
+  if (members.length > 8) throw new Error(`merged group would have ${members.length} characters (max 8)`);
+  const doc = { members, updatedAt: Date.now() };
+  await Promise.all(members.map(id => kvSet(`pi:group:${id}`, doc)));
 }
 
 function parseCookies(cookieHeader) {
