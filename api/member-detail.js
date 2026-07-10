@@ -49,6 +49,17 @@ export default async function handler(req, res) {
 
   const result = await fetchFullMemberData(newToken.access_token, characterId);
   if (prefix === 'applicant') result.isApplicant = true;
+
+  // Declared alts: the PI link groups double as the corp's alt registry
+  try {
+    const group = await kvGet(`pi:group:${characterId}`);
+    const others = (group?.members || []).map(String).filter(id => id !== String(characterId));
+    const names = others.length ? await resolveNamesBatch(others.map(Number)) : {};
+    result.linkedCharacters = others.map(id => ({ id: Number(id), name: names[id] || `#${id}` }));
+  } catch {
+    result.linkedCharacters = [];
+  }
+
   return res.status(200).json(result);
 }
 
@@ -188,8 +199,13 @@ async function resolveEverything(out, headers) {
   (out.contracts || []).forEach(c => {
     if (c.issuer_id) ids.add(c.issuer_id);
     if (c.assignee_id) ids.add(c.assignee_id);
+    if (c.acceptor_id) ids.add(c.acceptor_id);
     if (c.start_location_id) ids.add(c.start_location_id);
     if (c.end_location_id) ids.add(c.end_location_id);
+  });
+  (out.walletJournal || []).forEach(j => {
+    if (j.first_party_id) ids.add(j.first_party_id);
+    if (j.second_party_id) ids.add(j.second_party_id);
   });
   (out.industryJobs || []).forEach(j => {
     if (j.blueprint_type_id) ids.add(j.blueprint_type_id);

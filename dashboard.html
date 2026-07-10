@@ -48,6 +48,12 @@ aside{
 .sb-portrait{width:30px;height:30px;border-radius:50%;border:1px solid var(--b);object-fit:cover}
 .sb-uname{font-size:0.78rem;font-weight:500;line-height:1.2}
 .sb-role{font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--g);margin-top:0.1rem}
+.sb-link-char{margin:0.55rem 1.25rem 0.15rem;padding:0.4rem 0.6rem;background:transparent;border:1px solid var(--b);color:var(--m);font-family:'Syne',sans-serif;font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.sb-link-char:hover{border-color:var(--g);color:var(--g)}
+#dash-toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(150%);z-index:300;background:var(--s2);border:1px solid rgba(57,255,20,0.4);color:var(--w);padding:0.7rem 1.4rem;font-size:0.78rem;transition:transform .25s;max-width:90vw}
+#dash-toast.show{transform:translateX(-50%) translateY(0)}
+#dash-toast.err{border-color:var(--red)}
+.grp-row td{font-size:0.6rem !important;letter-spacing:0.12em;text-transform:uppercase;padding:0.5rem 1.25rem !important;background:rgba(57,255,20,0.03)}
 
 .sb-nav{flex:1;padding:0.5rem 0}
 @media(max-width:768px){
@@ -276,6 +282,7 @@ tr:hover td{background:rgba(255,255,255,0.015)}
     <img id="sb-portrait" class="sb-portrait" src="https://images.evetech.net/characters/1/portrait?size=64" alt=""/>
     <div><div class="sb-uname" id="sb-name">—</div><div class="sb-role" id="sb-role">Member</div></div>
   </div>
+  <button class="sb-link-char" onclick="linkCharacter()" title="Declare an alt: log in once with each of your characters to link them">⧉ Link a character</button>
   <nav class="sb-nav">
     <div class="sb-section">Overview</div>
     <a class="sb-item active" data-page="overview" href="#"><span class="sb-icon">◈</span>Overview</a>
@@ -597,7 +604,29 @@ async function init(){
     document.querySelectorAll('.sb-item.nav-ceo').forEach(el=>el.style.display='flex');
     document.querySelectorAll('.ov-ceo').forEach(el=>el.style.display='');
   }
+
+  // returning from the character-link SSO round trip
+  const q=new URLSearchParams(location.search);
+  if(q.has('linked')){
+    const v=q.get('linked');
+    if(v==='error') dashToast('Could not link the character — group may be full (max 8).',true);
+    else dashToast('Character '+v+' linked to your account.');
+    history.replaceState(null,'',location.pathname);
+  }
+
   loadOverview();
+}
+
+function linkCharacter(){
+  if(confirm('You will go through EVE login with the character to link.\nAfter linking, you will be logged in AS that character.\nLinked characters count as your declared alts.\n\nContinue?')){
+    location.href='/api/login?link=1&back=dashboard';
+  }
+}
+function dashToast(msg,isErr){
+  let t=document.getElementById('dash-toast');
+  if(!t){t=document.createElement('div');t.id='dash-toast';document.body.appendChild(t)}
+  t.textContent=msg;t.className=isErr?'err show':'show';
+  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),4500);
 }
 
 // ── ESI ──
@@ -713,11 +742,41 @@ async function loadMembers(){
     });
     const names=await nr.json();
     names.forEach(c=>{memberNameCache[c.id]=c.name});
-    tb.innerHTML=names.map(c=>`
+
+    // CEO: overlay the declared alt registry (the SSO link groups)
+    let groups=[];
+    if(SESSION.isCeo){
+      try{
+        const gr=await fetch('/api/members');
+        if(gr.ok) groups=(await gr.json()).groups||[];
+      }catch{}
+    }
+    const inCorp=new Set(names.map(c=>c.id));
+    const clusters=groups.map(g=>g.map(Number).filter(id=>inCorp.has(id))).filter(g=>g.length>=2);
+    const grouped=new Set(clusters.flat());
+
+    const row=c=>`
       <tr onclick="openMemberDetail(${c.id})"><td><div class="td-port">
         <img class="td-img" src="https://images.evetech.net/characters/${c.id}/portrait?size=32" loading="lazy"/>
         ${esc(c.name)}
-      </div></td><td><span class="badge g">Active</span></td></tr>`).join('');
+      </div></td><td><span class="badge g">Active</span></td></tr>`;
+
+    let html='';
+    clusters.forEach(g=>{
+      html+='<tr class="grp-row"><td colspan="2" style="color:var(--g)">⧉ Linked characters — group of '+g.length+'</td></tr>';
+      html+=g.map(id=>row({id,name:memberNameCache[id]||('#'+id)})).join('');
+    });
+    const solos=names.filter(c=>!grouped.has(c.id));
+    if(clusters.length&&solos.length){
+      html+='<tr class="grp-row"><td colspan="2" style="color:var(--m)">No alts declared</td></tr>';
+    }
+    html+=solos.map(row).join('');
+    tb.innerHTML=html;
+
+    if(SESSION.isCeo){
+      const head=document.querySelector('#page-members .tbl-head div:last-child');
+      if(head) head.textContent=names.length+' pilots · '+clusters.length+' alt group'+(clusters.length===1?'':'s')+' · '+solos.length+' undeclared';
+    }
   }catch(e){tb.innerHTML=`<tr class="empty-row"><td colspan="2">Error: ${e.message}</td></tr>`}
 }
 
@@ -1412,6 +1471,57 @@ function renderCorpHistory(d){
   const rows=list.map(c=>'<div class="mdm-row"><span class="lbl">'+esc(nameOf(d,c.corporation_id))+'</span><span class="sub">'+new Date(c.start_date).toLocaleDateString()+'</span></div>').join('');
   return '<div class="mdm-list">'+rows+'</div>';
 }
+// Standard corp alt vetting: declared alts (SSO link groups) cross-checked
+// against recurring wallet/contract transfer partners — the classic signal
+// recruiters use to spot undeclared alts.
+function renderAltCheck(d){
+  const meId=Number(d.characterId);
+  const declared=d.linkedCharacters||[];
+  const declaredIds=new Set(declared.map(x=>Number(x.id)));
+
+  const partners={}; // charId -> {n, isk}
+  (d.walletJournal||[]).forEach(j=>{
+    if(!/^player_/.test(j.ref_type||''))return; // player_donation, player_trading
+    [j.first_party_id,j.second_party_id].forEach(p=>{
+      if(!p||Number(p)===meId)return;
+      const e=partners[p]=partners[p]||{n:0,isk:0};
+      e.n++;e.isk+=Math.abs(j.amount||0);
+    });
+  });
+  (d.contracts||[]).forEach(c=>{
+    if(c.type!=='item_exchange'||((c.price||0)+(c.reward||0))>0)return; // free item hand-offs
+    [c.issuer_id,c.assignee_id,c.acceptor_id].forEach(p=>{
+      if(!p||Number(p)===meId)return;
+      const e=partners[p]=partners[p]||{n:0,isk:0};
+      e.n++;
+    });
+  });
+
+  const declaredHtml=declared.length
+    ? declared.map(x=>'<span class="mdm-badge pos" style="margin-right:0.35rem">✓ '+esc(x.name)+'</span>').join('')
+    : '<span class="mdm-empty-note">none — ask the pilot to link their characters (sidebar button or PI page)</span>';
+
+  const rows=Object.entries(partners)
+    .filter(([,v])=>v.n>=2)
+    .sort((a,b)=>b[1].n-a[1].n)
+    .slice(0,15)
+    .map(([id,v])=>{
+      const idN=Number(id);
+      const badge=declaredIds.has(idN)
+        ? '<span class="mdm-badge pos">✓ declared alt</span>'
+        : (memberNameCache[idN]
+          ? '<span class="mdm-badge neu">corp member</span>'
+          : '<span class="mdm-badge neg">⚠ undeclared</span>');
+      return '<div class="mdm-row"><span class="lbl">'+esc(nameOf(d,idN))
+        +'<span class="sub" style="margin-left:0.5rem">'+v.n+' transfer'+(v.n===1?'':'s')+(v.isk?' · '+fisk(v.isk)+' ISK':'')+'</span></span>'+badge+'</div>';
+    }).join('');
+
+  return '<div style="margin-bottom:0.7rem;font-size:0.78rem">Declared alts: '+declaredHtml+'</div>'
+    +(rows
+      ?'<div class="mdm-empty-note" style="margin-bottom:0.35rem">Recurring ISK/item transfer partners (from recent journal & contracts):</div><div class="mdm-list">'+rows+'</div>'
+      :'<span class="mdm-empty-note">No recurring transfer partners in the recent wallet journal or contracts.</span>');
+}
+
 function renderJournal(d){
   const list=d.walletJournal||[];
   if(!list.length)return mdmErrOr(d,'walletJournal','<span class="mdm-empty-note">No recent transactions.</span>');
@@ -1552,6 +1662,7 @@ function renderMemberDetail(d){
   h+='<div class="mdm-section-title">Contacts</div><div class="mdm-full">'+renderContacts(d)+'</div>';
   h+='<div class="mdm-section-title">NPC standings</div><div class="mdm-full">'+renderStandings(d)+'</div>';
   h+='<div class="mdm-section-title">Corp history</div><div class="mdm-full">'+renderCorpHistory(d)+'</div>';
+  h+='<div class="mdm-section-title">Alt check</div><div class="mdm-full">'+renderAltCheck(d)+'</div>';
   h+='<div class="mdm-section-title">Wallet journal (recent)</div><div class="mdm-full">'+renderJournal(d)+'</div>';
   h+='<div class="mdm-section-title">Notifications</div><div class="mdm-full">'+renderNotifications(d)+'</div>';
   h+='<div class="mdm-section-title">Contracts</div><div class="mdm-full">'+renderContracts(d)+'</div>';

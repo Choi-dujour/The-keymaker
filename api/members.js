@@ -52,7 +52,26 @@ async function listMembers(req, res) {
   const members = values.filter(Boolean);
   members.sort((a, b) => (b.registeredAt || 0) - (a.registeredAt || 0));
 
-  return res.status(200).json({ members, total: members.length });
+  // Declared alt groups (the PI link groups double as the alt registry).
+  // Deduped by sorted-member signature since each group is mirrored per member.
+  let groups = [];
+  try {
+    const groupKeys = await kvKeys('pi:group:*');
+    if (groupKeys.length) {
+      const docs = await kvMGet(groupKeys);
+      const seen = new Set();
+      for (const doc of docs) {
+        if (!Array.isArray(doc?.members) || doc.members.length < 2) continue;
+        const sorted = [...doc.members].map(String).sort();
+        const sig = sorted.join(',');
+        if (!seen.has(sig)) { seen.add(sig); groups.push(sorted); }
+      }
+    }
+  } catch (e) {
+    console.warn('members: group read failed —', e.message);
+  }
+
+  return res.status(200).json({ members, total: members.length, groups });
 }
 
 async function deleteMember(req, res) {
