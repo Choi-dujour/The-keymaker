@@ -72,8 +72,24 @@ export default async function handler(req, res) {
       console.warn('ESI corp membership check failed:', e.message);
     }
 
+    // CEO rilevato automaticamente dal dato pubblico della corp (ceo_id). La env
+    // CEO_CHARACTER_ID resta come override/fallback (admin non-CEO, o ESI down).
+    let realCeoId = null;
+    try {
+      const corpInfo = await fetch(`https://esi.evetech.net/latest/corporations/${CORP_ID}/?datasource=tranquility`)
+        .then(r => r.json());
+      if (corpInfo.ceo_id) {
+        realCeoId = String(corpInfo.ceo_id);
+        // Salva il CEO corrente per il cron di map.js (fire-and-forget, non critico)
+        import('./_kv.js').then(({ kvSet }) => kvSet('corp:ceo', { ceoId: realCeoId, at: Date.now() }))
+          .catch(e => console.warn('corp:ceo save failed:', e.message));
+      }
+    } catch (e) {
+      console.warn('ESI corp CEO lookup failed:', e.message);
+    }
+
     const isAllowed = isWhitelisted || isCorpMember;
-    const isCeo     = characterId === String(ceoId);
+    const isCeo     = characterId === realCeoId || (ceoId != null && characterId === String(ceoId));
 
     if (!isAllowed) {
       // Not a member (yet) — treat this as an application instead of a hard denial.
