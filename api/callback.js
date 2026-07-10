@@ -124,17 +124,18 @@ export default async function handler(req, res) {
     let redirectTo = '/dashboard.html';
     if (cookies.pi_link) {
       setCookies.push(PI_LINK_CLEAR);
-      const linkerId = verifyPiLink(cookies.pi_link);
-      if (linkerId && linkerId !== String(characterId)) {
+      const link = verifyPiLink(cookies.pi_link);
+      const backPage = link?.back === 'dashboard' ? '/dashboard.html' : '/pi.html';
+      if (link && link.cid !== String(characterId)) {
         try {
-          await mergePiGroups(linkerId, String(characterId));
-          redirectTo = '/pi.html?linked=' + encodeURIComponent(characterName);
+          await mergePiGroups(link.cid, String(characterId));
+          redirectTo = backPage + '?linked=' + encodeURIComponent(characterName);
         } catch (e) {
-          console.warn('PI link failed:', e.message);
-          redirectTo = '/pi.html?linked=error';
+          console.warn('character link failed:', e.message);
+          redirectTo = backPage + '?linked=error';
         }
       } else {
-        redirectTo = '/pi.html';
+        redirectTo = backPage;
       }
     }
 
@@ -147,8 +148,8 @@ export default async function handler(req, res) {
   }
 }
 
-// Validates the HMAC-signed pi_link cookie set by api/login.js; returns the
-// linking characterId or null.
+// Validates the HMAC-signed pi_link cookie set by api/login.js; returns
+// {cid, back} or null.
 function verifyPiLink(raw) {
   try {
     const [payload, sig] = raw.split('.');
@@ -159,7 +160,7 @@ function verifyPiLink(raw) {
     if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
     const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
     if (!data.cid || !/^\d+$/.test(data.cid) || Date.now() > data.exp) return null;
-    return data.cid;
+    return { cid: data.cid, back: data.back === 'dashboard' ? 'dashboard' : 'pi' };
   } catch {
     return null;
   }

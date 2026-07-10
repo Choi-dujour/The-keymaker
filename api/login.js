@@ -88,7 +88,9 @@ export default function handler(req, res) {
     try {
       const cookies = parseCookies(req.headers.cookie || '');
       const session = JSON.parse(Buffer.from(cookies.eve_session, 'base64').toString('utf8'));
-      const payload = Buffer.from(JSON.stringify({ cid: String(session.characterId), exp: Date.now() + 600000 })).toString('base64url');
+      // 'back' rides inside the signed payload; strict whitelist, default = pi
+      const back = req.query.back === 'dashboard' ? 'dashboard' : 'pi';
+      const payload = Buffer.from(JSON.stringify({ cid: String(session.characterId), exp: Date.now() + 600000, back })).toString('base64url');
       const sig = crypto.createHmac('sha256', process.env.EVE_CLIENT_SECRET).update(payload).digest('hex');
       setCookies.push(`pi_link=${payload}.${sig}; HttpOnly; Secure; SameSite=Lax; Max-Age=600; Path=/`);
     } catch {
