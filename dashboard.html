@@ -743,6 +743,13 @@ async function loadMembers(){
     const names=await nr.json();
     names.forEach(c=>{memberNameCache[c.id]=c.name});
 
+    // Current CEO from the corp's public data — marks the pilot automatically
+    let ceoId=null;
+    try{
+      const ci=await fetch(`https://esi.evetech.net/latest/corporations/${CORP}/?datasource=tranquility`).then(r=>r.json());
+      ceoId=ci.ceo_id||null;
+    }catch{}
+
     // CEO: overlay the declared alt registry (the SSO link groups)
     let groups=[];
     if(SESSION.isCeo){
@@ -758,7 +765,7 @@ async function loadMembers(){
     const row=c=>`
       <tr onclick="openMemberDetail(${c.id})"><td><div class="td-port">
         <img class="td-img" src="https://images.evetech.net/characters/${c.id}/portrait?size=32" loading="lazy"/>
-        ${esc(c.name)}
+        ${esc(c.name)}${c.id===ceoId?' <span class="badge g" style="margin-left:0.4rem">CEO</span>':''}
       </div></td><td><span class="badge g">Active</span></td></tr>`;
 
     let html='';

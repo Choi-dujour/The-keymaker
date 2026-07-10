@@ -38,8 +38,9 @@ async function sample(req, res) {
   };
 
   try {
-    // 1. CEO token
-    const ceoId = process.env.CEO_CHARACTER_ID;
+    // 1. CEO token — prefer the corp's real CEO (auto-detected at login, stored
+    // in corp:ceo by callback.js), falling back to the env override.
+    const ceoId = (await kvGet('corp:ceo').catch(() => null))?.ceoId || process.env.CEO_CHARACTER_ID;
     if (!ceoId) return fail('no_ceo_configured');
     const tokenDoc = await kvGet(`member:${ceoId}:token`).catch(() => null);
     if (!tokenDoc?.refreshToken) return fail('no_ceo_token');
